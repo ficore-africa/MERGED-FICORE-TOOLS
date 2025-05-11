@@ -1,16 +1,56 @@
-<!DOCTYPE html>
-<html lang="{{ language }}">
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ translations['Monthly Budget Planner'] }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
-        .header { background: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #2E7D32, #0288D1); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .header h2 { color: #FFFFFF; margin: 0; }
         .header p { font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0; }
         .dashboard-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0; transform: translateY(20px); }
@@ -24,20 +64,30 @@
         .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
         .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
         .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
-        .summary-box:hover, .badges-box:hover, .tips-box:hover { transform: scale(1.02); }
-        .section-header { color: #1E7F71; font-weight: 600; margin-bottom: 15px; }
+        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .summary-box:hover, .badges-box:hover, .tips-box:hover, .chart-box:hover { transform: scale(1.02); }
+        .section-header { color: #2E7D32; font-weight: 600; margin-bottom: 15px; }
         .badge-item, .tip-item { margin-bottom: 10px; }
         .badge-item strong, .tip-item strong { color: #0288D1; }
+        .deficit { color: #D32F2F; font-weight: 600; }
+        .chart-container { position: relative; height: 300px; width: 100%; margin: 0 auto; }
         .text-center { margin-top: 20px; }
-        /* Added CSS for dynamic color based on outcome_status */
-        .outcome-value { font-weight: bold; }
-        .outcome-savings { color: #2E7D32; } /* Green for Savings */
-        .outcome-overspend { color: #DC3545; } /* Red for Overspend */
-        @media (max-width: 576px) { 
-            .container { padding: 10px; } 
-            .dashboard-card { padding: 1rem; } 
-            .summary-box, .badges-box, .tips-box { padding: 15px; } 
-            .btn-primary, .btn-secondary { font-size: 1rem; } 
+        .info-icon { cursor: pointer; color: #0288D1; margin-left: 5px; }
+        .info-icon:hover { color: #2E7D32; }
+        .tooltip-text { visibility: hidden; width: 220px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; }
+        .info-icon:hover .tooltip-text, .info-icon.active .tooltip-text { visibility: visible; opacity: 1; }
+        .footer { text-align: center; margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .footer p { margin: 0; color: #0288D1; }
+        .footer-links a { color: #2E7D32; margin: 0 10px; text-decoration: none; }
+        .footer-links a:hover { text-decoration: underline; }
+        .social-icons a { color: #0288D1; margin: 0 8px; font-size: 1.2rem; }
+        .social-icons a:hover { color: #2E7D32; }
+        @media (max-width: 576px) {
+            .container { padding: 10px; }
+            .dashboard-card { padding: 1rem; }
+            .summary-box, .badges-box, .tips-box, .chart-box { padding: 15px; }
+            .btn-primary, .btn-secondary { font-size: 1rem; }
+            .chart-container { height: 250px; }
         }
     </style>
 </head>
@@ -67,96 +117,137 @@
                     <li><strong>{{ translations['Transport'] }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
                     <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
                     <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Savings'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
-                    <li>
-                        <strong>{{ translations[outcome_status] }}:</strong> 
-                        <span class="outcome-value outcome-{{ 'savings' if outcome_status == 'Savings' else 'overspend' }}">
-                            {{ surplus_deficit | format_currency('NGN') }}
-                        </span>
+                    <li><strong>{{ translations['Savings Goal'] }}:</strong> {{ savings_goal | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Balance'] }}:</strong> <span {% if balance < 0 %}class="deficit"{% endif %}>{{ balance | format_currency('NGN') }}</span>
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Income minus expenses and savings goal.'] }}</span></span>
                     </li>
-                    <li><strong>{{ translations['Your ranking'] }}:</strong> {{ translations['Rank'] }} {{ rank }} {{ translations['out of'] }} {{ total_users }} {{ translations['users'] }}</li>
                 </ul>
             </div>
+            <div class="chart-box" aria-labelledby="chart-header">
+                <h3 id="chart-header" class="section-header">{{ translations['Expense Breakdown'] }}</h3>
+                <div class="chart-container">
+                    <canvas id="expenseChart" aria-label="{{ translations['Pie chart of expense breakdown'] }}"></canvas>
+                </div>
+            </div>
             <div class="badges-box" aria-labelledby="badges-header">
-                <h3 id="badges-header" class="section-header">{{ translations['Badges with Emoji'] }}</h3>
+                <h3 id="badges-header" class="section-header">{{ translations['Badges'] }}</h3>
                 {% if badges %}
                     {% for badge in badges %}
-                        <div class="badge-item">
-                            <strong>{{ badge }}</strong>: {{ translations[badge] }}
+                        <div class="badge-item" aria-label="{{ translations[badge] }}">
+                            <strong>{{ translations[badge] }}</strong>
+                            <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Earned for managing your budget effectively.'] }}</span></span>
                         </div>
                     {% endfor %}
                 {% else %}
-                    <p>{{ translations['No Badges Yet'] }}</p>
+                    <p>{{ translations['No badges earned yet.'] }}</p>
                 {% endif %}
             </div>
             <div class="tips-box" aria-labelledby="tips-header">
-                <h3 id="tips-header" class="section-header">{{ translations['Tips with Emoji'] }}</h3>
-                {% set tips = [] %}
-                {% if outcome_status == 'Savings' %}
-                    {% set _ = tips.append({'title': translations['Great job! Save or invest your surplus.'], 'description': translations['Great job! Save or invest your surplus to grow your wealth.']}) %}
+                <h3 id="tips-header" class="section-header">{{ translations['Tips'] }}</h3>
+                {% if tips %}
+                    {% for tip in tips %}
+                        <div class="tip-item" aria-describedby="tip-{{ loop.index }}">
+                            <strong>{{ translations['Tip'] }} {{ loop.index }}:</strong> {{ translations[tip] }}
+                            <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Actionable advice to improve your budget.'] }}</span></span>
+                        </div>
+                    {% endfor %}
                 {% else %}
-                    {% set _ = tips.append({'title': translations['Spend less on non-essentials to balance your budget.'], 'description': translations['Reduce non-essential spending to balance your budget.']}) %}
+                    <p>{{ translations['No tips available.'] }}</p>
                 {% endif %}
-                {% if housing_expenses / monthly_income > 0.3 %}
-                    {% set _ = tips.append({'title': translations['Housing costs are high.'], 'description': translations['Housing costs are high. Look for cheaper rent or utilities.']}) %}
-                {% endif %}
-                {% if food_expenses / monthly_income > 0.3 %}
-                    {% set _ = tips.append({'title': translations['Food spending is high.'], 'description': translations['Food spending is high. Try cooking at home more.']}) %}
-                {% endif %}
-                {% set _ = tips.append({'title': translations['Keep tracking your expenses every month.'], 'description': translations['Keep tracking your expenses every month.']}) %}
-                {% for tip in tips %}
-                    <div class="tip-item">
-                        <strong>{{ tip.title }}</strong>: {{ tip.description }}
-                    </div>
-                {% endfor %}
             </div>
             <div class="text-center">
-                <a href="{{ url_for('step1') }}" class="btn btn-secondary">{{ translations['Back'] }}</a>
+                <a href="{{ url_for('step4') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Savings & Review'] }}">{{ translations['Back'] }}</a>
+                <a href="{{ course_url }}" class="btn btn-primary" aria-label="{{ translations['Join Financial Course'] }}">{{ translations['Join Course'] }}</a>
             </div>
         </div>
-        <footer class="mt-4 text-center">
-            <p>© 2025 Ficore Africa. All rights reserved.</p>
+        <footer class="footer">
+            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <div class="footer-links">
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+            </div>
+            <div class="social-icons">
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
         </footer>
     </div>
-    <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error(e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Animation for dashboard card
             const dashboardCard = document.querySelector('.dashboard-card');
             setTimeout(() => dashboardCard.classList.add('slide-in'), 100);
+
+            // Pie chart for expenses
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [
+                        '{{ translations["Housing"] }}',
+                        '{{ translations["Food"] }}',
+                        '{{ translations["Transport"] }}',
+                        '{{ translations["Other"] }}'
+                    ],
+                    datasets: [{
+                        data: [
+                            {{ housing_expenses }},
+                            {{ food_expenses }},
+                            {{ transport_expenses }},
+                            {{ other_expenses }}
+                        ],
+                        backgroundColor: [
+                            '#2E7D32',
+                            '#0288D1',
+                            '#FBC02D',
+                            '#D32F2F'
+                        ],
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Poppins', size: 14 },
+                                color: '#0288D1'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#555',
+                            titleFont: { family: 'Poppins' },
+                            bodyFont: { family: 'Poppins' },
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return `${context.label}: ₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Tooltip click support
+            const infoIcons = document.querySelectorAll('.info-icon');
+            infoIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    const tooltip = icon.querySelector('.tooltip-text');
+                    const isVisible = tooltip.style.visibility === 'visible';
+                    tooltip.style.visibility = isVisible ? 'hidden' : 'visible';
+                    tooltip.style.opacity = isVisible ? '0' : '1';
+                    icon.classList.toggle('active', !isVisible);
+                });
+            });
         });
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93daad45bdedc0ac',t:'MTc0Njg5MzExMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

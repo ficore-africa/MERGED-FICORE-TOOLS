@@ -1,26 +1,66 @@
-<!DOCTYPE html>
-<html lang="{{ language }}">
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ translations['Monthly Budget Planner'] }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: auto; }
-        .header { background: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #2E7D32, #0288D1); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .header h2 { color: #FFFFFF; margin: 0; }
         .header p { font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0; }
-        .form-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0; transform: translateY(20px); }
+        .form-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0; transform: translateY(20px); position: relative; }
         .form-card.slide-in { opacity: 1; transform: translateY(0); }
         .progress { height: 10px; margin-bottom: 20px; background: #e9ecef; border-radius: 5px; }
         .progress-bar { background: #2E7D32; transition: width 0.3s ease; }
         .form-group { position: relative; margin-bottom: 1.5rem; }
         .form-label { color: #0288D1; font-weight: 500; margin-bottom: 5px; }
-        .form-control { border: 2px solid #0288D1; border-radius: 8px; padding: 10px; transition: border-color 0.3s ease; min-height: 48px; }
-        .form-control:focus { border-color: #2E7D32; box-shadow: 0 0 8px rgba(46,125,50,0.3); outline: none; }
+        .form-control { border: 2px solid #0288D1; border-radius: 8px; padding: 10px; transition: border-color 0.3s ease, background-color 0.3s ease; min-height: 48px; }
+        .form-control:focus { border-color: #2E7D32; box-shadow: 0 0 8px rgba(46,125,50,0.3); outline: none; background-color: #f8f9fa; }
         .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; }
         .btn-primary:hover { transform: scale(1.05); background: linear-gradient(135deg, #1B5E20, #01579B); }
         .btn-secondary { background: #6c757d; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; margin-right: 10px; }
@@ -28,13 +68,24 @@
         .info-icon { cursor: pointer; color: #0288D1; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
         .info-icon:hover { color: #2E7D32; }
         .tooltip-text { visibility: hidden; width: 220px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; }
-        .info-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .info-icon:hover .tooltip-text, .info-icon.active .tooltip-text { visibility: visible; opacity: 1; }
         .valid-feedback, .invalid-feedback { font-size: 0.9rem; display: none; }
         .form-control.is-valid ~ .valid-feedback { display: block; color: #28a745; }
         .form-control.is-invalid ~ .invalid-feedback { display: block; color: #dc3545; }
         .form-control.is-valid { border-color: #28a745; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right calc(0.375em + 0.1875rem) center; background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem); }
         .form-control.is-invalid { border-color: #dc3545; }
         .error-message { color: #dc3545; font-size: 0.9rem; margin-top: 10px; display: none; text-align: center; }
+        .spinner-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 10; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #2E7D32; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .spinner-text { color: #2E7D32; font-size: 1rem; margin-top: 10px; }
+        .visual-icon { margin-right: 8px; font-size: 1.2rem; }
+        .footer { text-align: center; margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .footer p { margin: 0; color: #0288D1; }
+        .footer-links a { color: #2E7D32; margin: 0 10px; text-decoration: none; }
+        .footer-links a:hover { text-decoration: underline; }
+        .social-icons a { color: #0288D1; margin: 0 8px; font-size: 1.2rem; }
+        .social-icons a:hover { color: #2E7D32; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 576px) { .container { padding: 10px; } .form-card { padding: 1rem; } .btn-primary, .btn-secondary { font-size: 1rem; } }
     </style>
 </head>
@@ -56,60 +107,42 @@
         {% endwith %}
         <div class="form-card slide-in">
             <h3>{{ translations['Step 2'] }}: {{ translations['Income'] }}</h3>
-            <form method="POST" id="step2-form">
+            <form method="POST" id="step2-form" action="{{ url_for('step2') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="income" class="form-label">{{ translations['Monthly Income'] }}</label>
+                    <label for="income" class="form-label"><span class="visual-icon">💰</span> {{ translations['Monthly Income'] }}</label>
                     <div style="position: relative;">
-                        {{ form.income(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦150,000'], **{'aria-required': 'true'}) }}
+                        {{ form.income(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦150,000'], **{'aria-required': 'true', 'aria-label': translations['Monthly Income']}) }}
                         <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Your monthly pay or income.'] }}</span></span>
                     </div>
                     <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
                     <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('step1') }}" class="btn btn-secondary">{{ translations['Back'] }}</a>
+                    <a href="{{ url_for('budget') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Personal Information'] }}">{{ translations['Back'] }}</a>
                     {{ form.submit(class="btn btn-primary", value=translations['Continue to Expenses'] + ' →', **{'aria-label': translations['Continue to Expenses']}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations['Please enter a valid income amount'] }}</div>
+                <div class="spinner-container" id="spinner" aria-live="polite">
+                    <div class="spinner"></div>
+                    <div class="spinner-text">{{ translations['Processing your income'] }}</div>
+                </div>
             </form>
         </div>
-        <footer class="mt-4 text-center">
-            <p>© 2025 Ficore Africa. All rights reserved.</p>
+        <footer class="footer">
+            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <div class="footer-links">
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+            </div>
+            <div class="social-icons">
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
         </footer>
     </div>
-    <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error(e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -119,6 +152,7 @@
             const form = document.getElementById('step2-form');
             const errorMessage = document.getElementById('form-error');
             const incomeInput = document.getElementById('income');
+            const spinner = document.getElementById('spinner');
 
             // Prevent form submission if income is invalid
             form.addEventListener('submit', (e) => {
@@ -130,10 +164,22 @@
                 } else {
                     errorMessage.style.display = 'none';
                     incomeInput.classList.add('is-valid');
+                    spinner.style.display = 'flex';
                 }
+            });
+
+            // Tooltip click support
+            const infoIcons = document.querySelectorAll('.info-icon');
+            infoIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    const tooltip = icon.querySelector('.tooltip-text');
+                    const isVisible = tooltip.style.visibility === 'visible';
+                    tooltip.style.visibility = isVisible ? 'hidden' : 'visible';
+                    tooltip.style.opacity = isVisible ? '0' : '1';
+                    icon.classList.toggle('active', !isVisible);
+                });
             });
         });
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93daad452bc6b047',t:'MTc0Njg5MzExMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
