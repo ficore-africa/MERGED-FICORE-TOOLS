@@ -967,23 +967,23 @@ class Step4Form(FlaskForm):
 
 class HealthForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
-    income_revenue = StringField('Income Revenue', validators=[DataRequired()])
-    expenses_costs = StringField('Expenses Costs', validators=[DataRequired()])
-    debt_loan = StringField('Debt Loan', validators=[DataRequired()])
-    debt_interest_rate = StringField('Debt Interest Rate', validators=[DataRequired()])
+    income_revenue = FloatField('Income Revenue', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Income/Revenue must be non-negative.')])
+    expenses_costs = FloatField('Expenses Costs', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Expenses/Costs must be non-negative.')])
+    debt_loan = FloatField('Debt Loan', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Debt/Loan must be non-negative.')])
+    debt_interest_rate = FloatField('Debt Interest Rate', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Debt Interest Rate must be non-negative.')])
     auto_email = StringField('Confirm Your Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
+    phone_number = StringField('Phone Number', validators=[Optional()])
     first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name')
+    last_name = StringField('Last Name', validators=[Optional()])
     user_type = SelectField('User Type', choices=[('Business', 'Business'), ('Individual', 'Individual')], validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    language = SelectField('Language', choices=[('English', 'English'), ('Hausa', 'Hausa')], validators=[DataRequired()])
+    language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], validators=[DataRequired()])
     submit = SubmitField('Submit')
 
     def validate_auto_email(self, auto_email):
         if auto_email.data != self.email.data:
-            raise ValidationError('Email addresses must match.')
-
+            raise ValidationError(translations[self.language.data or 'en']['Email addresses must match.'])
+            
     def validate_income_revenue(self, income_revenue):
         try:
             value = float(re.sub(r'[,]', '', income_revenue.data))
@@ -1096,9 +1096,8 @@ def health_score_form():
         form.language.data = language
 
         if form.validate_on_submit():
-            # Process POST request (form submission)
             try:
-                # Sanitize and validate form data
+                # Sanitize and collect form data
                 health_data = {
                     'first_name': sanitize_input(form.first_name.data),
                     'last_name': sanitize_input(form.last_name.data or ''),
@@ -1108,39 +1107,34 @@ def health_score_form():
                     'language': form.language.data,
                     'business_name': sanitize_input(form.business_name.data),
                     'user_type': form.user_type.data,
-                    'income_revenue': float(form.income_revenue.data or 0),
-                    'expenses_costs': float(form.expenses_costs.data or 0),
-                    'debt_loan': float(form.debt_loan.data or 0),
-                    'debt_interest_rate': float(form.debt_interest_rate.data or 0)
+                    'income_revenue': form.income_revenue.data,
+                    'expenses_costs': form.expenses_costs.data,
+                    'debt_loan': form.debt_loan.data,
+                    'debt_interest_rate': form.debt_interest_rate.data
                 }
 
-                # Validate email confirmation
-                if health_data['email'] != health_data['auto_email']:
-                    logger.error("Email confirmation mismatch")
-                    flash(translations[language].get('Email addresses must match.', 'Email addresses must match.'), 'error')
-                    return render_template(
-                        'health_score_form.html',
-                        form=form,
-                        translations=translations,
-                        language=language,
-                        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-                        LINKEDIN_URL=LINKEDIN_URL,
-                        TWITTER_URL=TWITTER_URL
-                    )
-
-                # Store data in session
-                session['health_data'] = health_data
+                # Store data in session, preserving existing data
+                if 'health_data' not in session:
+                    session['health_data'] = {}
+                session['health_data'].update(health_data)
+                session['language'] = form.language.data
                 logger.info(f"Health form submitted successfully for {health_data['email']}")
 
                 # Redirect to health dashboard
                 return redirect(url_for('health_score_submit'))
 
-            except ValueError as ve:
-                logger.error(f"Invalid numerical input: {str(ve)}")
-                flash(translations[language].get('Invalid numerical input provided.', 'Invalid numerical input provided.'), 'error')
             except Exception as e:
                 logger.error(f"Error processing health form: {str(e)}")
                 flash(translations[language].get('An error occurred while processing your request.', 'An error occurred while processing your request.'), 'error')
+                return render_template(
+                    'health_score_form.html',
+                    form=form,
+                    translations=translations,
+                    language=language,
+                    FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+                    LINKEDIN_URL=LINKEDIN_URL,
+                    TWITTER_URL=TWITTER_URL
+                )
 
         # Handle GET request or failed POST
         return render_template(
@@ -1155,8 +1149,17 @@ def health_score_form():
 
     except Exception as e:
         logger.critical(f"Unexpected error in health_score_form route: {str(e)}")
-        flash(translations.get('en', translations['en']).get('An unexpected error occurred. Please try again later.', 'An unexpected error occurred. Please try again later.'), 'error')
-        return redirect(url_for('home'))
+        form = HealthForm()  # Initialize form for error case
+        flash(translations['en'].get('An unexpected error occurred. Please try again later.', 'An unexpected error occurred. Please try again later.'), 'error')
+        return render_template(
+            'health_score_form.html',
+            form=form,
+            translations=translations,
+            language='en',
+            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+            LINKEDIN_URL=LINKEDIN_URL,
+            TWITTER_URL=TWITTER_URL
+        )
         
 @app.route('/health_score_submit', methods=['GET'])
 def health_score_submit():
@@ -1238,12 +1241,14 @@ def health_score_submit():
 
         # Update badges in Google Sheet
         try:
-            with sheets_lock:
-                worksheet = app.config['sheets'].worksheet('Sheet1')  # Assuming sheets is in app.config
-                user_rows = all_users_df[all_users_df['email'] == health_data['email']].index.tolist()
-                if user_rows:
-                    worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_HEALTH.index('badges') + 1, ','.join(badges))
-                    logger.info(f"Updated badges for {health_data['email']}: {badges}")
+            client = get_sheets_client()
+            if client:
+                with sheets_lock:
+                    worksheet = client.worksheet('Sheet1')
+                    user_rows = all_users_df[all_users_df['email'] == health_data['email']].index.tolist()
+                    if user_rows:
+                        worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_HEALTH.index('badges') + 1, ','.join(badges))
+                        logger.info(f"Updated badges for {health_data['email']}: {badges}")
         except Exception as e:
             logger.error(f"Error updating badges in Google Sheet: {str(e)}")
             flash(translations[language].get('Error updating badges in database. Dashboard will display current badges.', 'Error updating badges in database. Dashboard will display current badges.'), 'warning')
@@ -1316,19 +1321,18 @@ def health_score_submit():
             comparison_plot=comparison_plot,
             course_title=user_df.iloc[0].get('CourseTitle', ''),
             course_url=user_df.iloc[0].get('CourseURL', ''),
-            step=1,  # Start at step 1
+            step=step,  # Use step from query parameter
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
             LINKEDIN_URL=LINKEDIN_URL,
             TWITTER_URL=TWITTER_URL
-            step=step
         )
 
     except Exception as e:
         logger.critical(f"Unexpected error in health_score_submit: {str(e)}")
         flash(translations.get('en', translations['en']).get('An unexpected error occurred. Please try again later.', 'An unexpected error occurred. Please try again later.'), 'error')
-        return redirect(url_for('home'))
+        return redirect(url_for('health_score_form'))  # Re-render form instead of home
         
 @app.route('/step2', methods=['GET', 'POST'])
 def step2():
@@ -1549,4 +1553,5 @@ def budget_submit():
 
 if __name__ == '__main__':
     load_dotenv()
+    initialize_sheets()
     app.run(debug=True, host='0.0.0.0', port=5000)
