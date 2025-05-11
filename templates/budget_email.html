@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations['Your Budget Report'] }}</title>
+    <title>{{ translations[language].get('Your Budget Report', translations['en']['Your Budget Report']) }}</title>
     <style>
         body { font-family: 'Poppins', Arial, sans-serif; background: #F5F7FA; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
@@ -42,68 +42,68 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>{{ translations['Your Budget Report'] }}</h2>
-            <p>{{ translations['Financial growth passport for Africa'] }}</p>
+            <h2>{{ translations[language].get('Your Budget Report', translations['en']['Your Budget Report']) }}</h2>
+            <p>{{ translations[language].get('Financial growth passport for Africa', translations['en']['Financial growth passport for Africa']) }}</p>
         </div>
         <div class="content">
-            <p>{{ translations['Dear'] }} {{ user_name }},</p>
-            <p>{{ translations['Here is your monthly budget summary.'] }}</p>
+            <p>{{ translations[language].get('Dear', translations['en']['Dear']) }} {{ user_name }},</p>
+            <p>{{ translations[language].get('Here is your monthly budget summary.', translations['en']['Here is your monthly budget summary.']) }}</p>
             <div class="summary-box" role="region" aria-labelledby="summary-header">
-                <h3 id="summary-header" class="section-header">{{ translations['Summary with Emoji'] }}</h3>
+                <h3 id="summary-header" class="section-header">{{ translations[language].get('Summary with Emoji', translations['en']['Summary with Emoji']) }}</h3>
                 <ul>
-                    <li><strong>{{ translations['Monthly Income'] }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Housing'] }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Food'] }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Transport'] }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Savings Goal'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Surplus/Deficit'] }}:</strong> <span {% if surplus_deficit < 0 %}class="deficit"{% endif %}>{{ surplus_deficit | format_currency('NGN') }}</span></li>
+                    <li><strong>{{ translations[language].get('Monthly Income', translations['en']['Monthly Income']) }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Housing', translations['en']['Housing']) }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Food', translations['en']['Food']) }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Transport', translations['en']['Transport']) }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Other', translations['en']['Other']) }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Total Expenses', translations['en']['Total Expenses']) }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Savings Goal', translations['en']['Savings Goal']) }}:</strong> {{ savings | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations[language].get('Surplus/Deficit', translations['en']['Surplus/Deficit']) }}:</strong> <span {% if surplus_deficit < 0 %}class="deficit"{% endif %}>{{ surplus_deficit | format_currency('NGN') }}</span></li>
                 </ul>
             </div>
             <div class="chart-box" role="region" aria-labelledby="chart-header">
-                <h3 id="chart-header" class="section-header">{{ translations['Budget Breakdown'] }}</h3>
+                <h3 id="chart-header" class="section-header">{{ translations[language].get('Budget Breakdown', translations['en']['Budget Breakdown']) }}</h3>
                 {% if chart_data %}
                     <div>{{ chart_data | safe }}</div>
                 {% else %}
-                    <p>{{ translations['Chart Unavailable'] }}</p>
+                    <p>{{ translations[language].get('Chart Unavailable', translations['en']['Chart Unavailable']) }}</p>
                 {% endif %}
             </div>
             <div class="badges-box" role="region" aria-labelledby="badges-header">
-                <h3 id="badges-header" class="section-header">{{ translations['Badges with Emoji'] }}</h3>
+                <h3 id="badges-header" class="section-header">{{ translations[language].get('Badges with Emoji', translations['en']['Badges with Emoji']) }}</h3>
                 {% if badges %}
                     <ul>
                         {% for badge in badges %}
-                            <li aria-label="{{ translations[badge] }}">{{ translations[badge] }}</li>
+                            <li aria-label="{{ translations[language].get(badge, translations['en'][badge]) }}">{{ translations[language].get(badge, translations['en'][badge]) }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{{ translations['No Badges Yet'] }}</p>
+                    <p>{{ translations[language].get('No Badges Yet', translations['en']['No Badges Yet']) }}</p>
                 {% endif %}
             </div>
             <div class="tips-box" role="region" aria-labelledby="tips-header">
-                <h3 id="tips-header" class="section-header">{{ translations['Tips with Emoji'] }}</h3>
+                <h3 id="tips-header" class="section-header">{{ translations[language].get('Tips with Emoji', translations['en']['Tips with Emoji']) }}</h3>
                 {% if advice %}
                     <ul>
                         {% for tip in advice %}
-                            <li aria-describedby="tip-{{ loop.index }}">{{ translations[tip] }}</li>
+                            <li aria-describedby="tip-{{ loop.index }}">{{ translations[language].get(tip, translations['en'][tip]) }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{{ translations['No tips available.'] }}</p>
+                    <p>{{ translations[language].get('No tips available.', translations['en']['No tips available.']) }}</p>
                 {% endif %}
             </div>
             <div style="text-align: center;">
-                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ translations['Join Financial Course'] }}">{{ translations['Join Course'] }}</a>
+                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ translations[language].get('Join Financial Course', translations['en']['Join Financial Course']) }}">{{ translations[language].get('Join Course', translations['en']['Join Course']) }}</a>
             </div>
-            <p>{{ translations['Thank you for choosing Ficore Africa!'] }}</p>
+            <p>{{ translations[language].get('Thank you for choosing Ficore Africa!', translations['en']['Thank you for choosing Ficore Africa!']) }}</p>
         </div>
         <div class="footer">
-            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <p>{{ translations[language].get('About Ficore Africa: Empowering financial growth across Africa since 2023', translations['en']['About Ficore Africa: Empowering financial growth across Africa since 2023']) }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations[language].get('Provide Feedback', translations['en']['Provide Feedback']) }}">{{ translations[language].get('Feedback', translations['en']['Feedback']) }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}">{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations[language].get('Book Consultancy', translations['en']['Book Consultancy']) }}">{{ translations[language].get('Consultancy', translations['en']['Consultancy']) }}</a>
             </div>
             <div class="social-icons">
                 <a href="{{ linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
