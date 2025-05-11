@@ -119,186 +119,6 @@
         }
         .guide-section ul {
             list-style-type: disc;
-            padding-left: 20 موتور
-
-System: ### Analysis of `health_score_form.html` Alignment with Flask App and Updated `index.html` (Continued)
-
-The `health_score_form.html` template is critical for the **Financial Health Score** feature, corresponding to the `/health_score_form` route in the Flask app. It uses a multi-step form to collect data via `HealthForm` and submits to `/health_score_submit`. The goal is to ensure this template aligns with the Flask app’s routes, the updated `index.html`, and `budget_step1.html`, maintaining consistency in styling, translations, accessibility, and functionality. Below, I complete the analysis, address the misalignments, and provide an updated template. After this, we can resume aligning the Budget Planner templates (`step2.html`, `step3.html`, `step4.html`).
-
----
-
-#### **Alignment Check (Continued)**
-
-10. **Consistency with Flask App’s Flow**:
-    - **Issue**: The Flask app’s `/health` route renders `step1.html` (using `Step1Form`), while `/health_score_form` renders `health_score_form.html` (using `HealthForm`). The `index.html` links to `/health` for the Financial Health Score, not `/health_score_form`. This suggests `health_score_form.html` may be incorrectly linked in `index.html`, or the app’s flow needs clarification.
-    - **Aligned**: The form submits to `/health_score_submit`, which processes `HealthForm` and renders `health_dashboard.html`, matching the app’s logic.
-    - **Issue**: The multi-step client-side navigation (three steps) assumes all data is collected before submission, but the Flask app processes `HealthForm` in a single POST. If users abandon the form mid-process, no data is saved, which could affect UX.
-
-11. **External Links**:
-    - **Aligned**: The template includes `LINKEDIN_URL`, `TWITTER_URL`, and `FEEDBACK_FORM_URL`, consistent with `index.html` and `budget_step1.html`.
-    - **Issue**: The email link uses a Cloudflare-obfuscated address (`/cdn-cgi/l/email-protection#...`), while `index.html` and `budget_step1.html` use `mailto:support@ficoreafrica.com`. This should be standardized.
-    - **Issue**: The footer lacks the "About Ficore Africa" text present in `index.html` and `budget_step1.html`.
-
-12. **Static Assets**:
-    - **Aligned**: The template references `static/css/bootstrap.min.css`, `static/js/bootstrap.bundle.min.js`, `static/img/ficore_logo.png`, and `static/favicon.ico`, which should exist in the Flask app’s static directory.
-    - **Issue**: The `static/css/styles.css` file (used in `index.html` and `budget_step1.html`) is not included, which could lead to inconsistent styling. It should be added for shared styles.
-
----
-
-#### **Summary of Misalignments (Consolidated)**
-- Hardcoded `lang="en"` instead of `lang="{{ language }}"` with validation.
-- Route mismatch: `index.html` links to `/health`, but this template is for `/health_score_form`.
-- Missing translation fallbacks (e.g., `{{ translations[language][KEY] or 'Fallback' }}`).
-- Inconsistent styling: Open Sans, white header vs. Poppins, gradient header in `index.html` and `budget_step1.html`.
-- Hardcoded progress bar (33% instead of dynamic 33.33%, 66.67%, 100%).
-- Unnecessary Cloudflare script and email obfuscation.
-- Inconsistent tooltip styling and missing ARIA labels for info icons.
-- No "Back" button to return to `/`.
-- Missing "About Ficore Africa" in footer.
-- Number input fields use `type="text"` instead of `type="number"` for better UX.
-- Multi-step form may not align with Flask’s single POST to `/health_score_submit`.
-- Missing `static/css/styles.css` for shared styling.
-
----
-
-### **Updated `health_score_form.html`**
-
-The updated template aligns with the Flask app, `index.html`, and `budget_step1.html`. Key changes include:
-- Set `lang="{{ language if language in ['en', 'ha'] else 'en' }}"`.
-- Added translation fallbacks for all keys.
-- Switched to Poppins font and gradient header (`#2E7D32`, `#0288D1`).
-- Included `static/css/styles.css` for shared styling.
-- Standardized footer with "About Ficore Africa" and `mailto:support@ficoreafrica.com`.
-- Removed Cloudflare script and email obfuscation.
-- Made progress bar dynamic (33.33%, 66.67%, 100%).
-- Added a "Back" button to `/`.
-- Improved accessibility with ARIA labels for info icons and navigation buttons.
-- Changed number inputs to `type="number"` with spinner removal.
-- Aligned tooltips with `budget_step1.html`’s custom style.
-- Ensured multi-step form submits all fields to `/health_score_submit`.
-
-<xaiArtifact artifact_id="415e0d7c-5f48-46b1-b25c-8c72fe608718" artifact_version_id="f1da90c1-e7eb-408a-8d6c-628425015fc9" title="health_score_form.html" contentType="text/html">
-<!DOCTYPE html>
-<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ translations[language]['Complete the health score form with Ficore Africa to calculate your personalized financial health score.'] or 'Complete the health score form with Ficore Africa to calculate your personalized financial health score.' }}">
-    <meta name="keywords" content="ficore africa, health score form, financial health, Africa SME finance">
-    <meta name="author" content="Ficore Africa">
-    <title>{{ translations[language]['Ficore Africa Financial Health Score'] or 'Ficore Africa Financial Health Score' }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-        }
-        header {
-            background: linear-gradient(45deg, #2E7D32, #0288D1);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            text-align: center;
-            color: white;
-        }
-        .logo-container {
-            margin-bottom: 1rem;
-        }
-        .logo-container img {
-            max-width: 200px;
-        }
-        .form-card {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-        .form-card:hover {
-            transform: translateY(-5px);
-        }
-        h3 {
-            color: #2E7D32;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-        .form-label {
-            color: #0288D1;
-            font-weight: 500;
-        }
-        .form-control, .form-select {
-            border: 2px solid #0288D1;
-            border-radius: 8px;
-            padding: 10px;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #2E7D32;
-            box-shadow: 0 0 8px rgba(46, 125, 50, 0.3);
-            outline: none;
-        }
-        .form-control[type="number"]::-webkit-inner-spin-button,
-        .form-control[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .form-control[type="number"] {
-            -moz-appearance: textfield;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #2E7D32, #0288D1);
-            border: none;
-            padding: 12px 24px;
-            font-weight: 600;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            color: white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .btn-primary:hover {
-            transform: scale(1.05);
-            background: linear-gradient(135deg, #1B5E20, #01579B);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        }
-        .btn-back {
-            background: #6c757d;
-            border: none;
-            padding: 12px 24px;
-            font-weight: 600;
-            border-radius: 8px;
-            color: white;
-            transition: transform 0.2s ease;
-        }
-        .btn-back:hover {
-            transform: scale(1.05);
-            background: #5a6268;
-        }
-        .alert {
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        .guide-section {
-            background: #E3F2FD;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        .guide-section ul {
-            list-style-type: disc;
             padding-left: 20px;
         }
         .guide-section li {
@@ -488,7 +308,7 @@ The updated template aligns with the Flask app, `index.html`, and `budget_step1.
             {% if messages %}
                 <div class="alert-container my-3">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
                             {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ translations[language]['Close'] or 'Close' }}"></button>
                         </div>
@@ -518,10 +338,12 @@ The updated template aligns with the Flask app, `index.html`, and `budget_step1.
 
                     <!-- Progress Bar -->
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: 33.33%;" aria-valuenow="33.33" aria-valuemin="0" aria-valuemax="100">{{ translations[language]['Step 1 of 3'] or 'Step 1 of 3' }}</div>
+                        <div class="progress-bar" role="progressbar" style="width: 33.33%;" aria-valuenow="33.33" aria-valuemin="0" aria-valuemax="100">
+                            {{ translations[language]['Step'] or 'Step' }} 1 {{ translations[language]['of'] or 'of' }} 3
+                        </div>
                     </div>
 
-                    <form id="submission-form" method="POST" action="{{ url_for('health_score_submit') }}">
+                    <form id="submission-form" method="POST" action="{{ url_for('health_score_form') }}">
                         {{ form.hidden_tag() }}
 
                         <!-- Step 1: Personal Information -->
@@ -689,6 +511,14 @@ The updated template aligns with the Flask app, `index.html`, and `budget_step1.
                     input.reportValidity();
                     isValid = false;
                 }
+                // Ensure positive numbers for financial fields
+                if (input.type === 'number' && input.value < 0) {
+                    input.setCustomValidity("{{ translations[language]['Value must be positive.'] or 'Value must be positive.' }}");
+                    input.reportValidity();
+                    isValid = false;
+                } else if (input.type === 'number') {
+                    input.setCustomValidity('');
+                }
             });
 
             // Email confirmation validation
@@ -746,7 +576,7 @@ The updated template aligns with the Flask app, `index.html`, and `budget_step1.
             // Custom validation with translated error messages
             document.querySelectorAll('.form-control, .form-select').forEach(input => {
                 input.addEventListener('invalid', function(e) {
-                    e.target.setCustomValidity(e.target.dataset.error);
+                    e.target.setCustomValidity(e.target.dataset.error || '');
                 });
                 input.addEventListener('input', function(e) {
                     e.target.setCustomValidity('');
