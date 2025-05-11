@@ -1048,8 +1048,7 @@ def generate_breakdown_plot(user_df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
-        # Sanitize output to avoid JSON parsing issues
-        return fig.to_html(full_html=False, include_plotlyjs=False, default_format='div')
+        return fig.to_html(full_html=False, include_plotlyjs=False)  # Removed default_format
     except Exception as e:
         logger.error(f"Error generating breakdown plot: {e}", exc_info=True)
         return None
@@ -1075,8 +1074,7 @@ def generate_comparison_plot(user_df, all_users_df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
-        # Sanitize output to avoid JSON parsing issues
-        return fig.to_html(full_html=False, include_plotlyjs=False, default_format='div')
+        return fig.to_html(full_html=False, include_plotlyjs=False)  # Removed default_format
     except Exception as e:
         logger.error(f"Error generating comparison plot: {e}", exc_info=True)
         return None
@@ -1558,6 +1556,11 @@ def health_dashboard():
         rank = sum(all_users_df['HealthScore'] > results['health_score']) + 1
         total_users = len(all_users_df)
 
+        # Compute average_score for peerData
+        average_score = 50  # Default value
+        if total_users > 0 and not all_users_df.empty:
+            average_score = all_users_df['HealthScore'].mean()
+
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
 
@@ -1584,7 +1587,8 @@ def health_dashboard():
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
             linkedin_url=LINKEDIN_URL,
-            twitter_url=TWITTER_URL
+            twitter_url=TWITTER_URL,
+            average_score=average_score  # Pass average_score to template
         )
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}", exc_info=True)
