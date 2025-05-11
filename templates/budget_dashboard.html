@@ -29,6 +29,10 @@
         .badge-item, .tip-item { margin-bottom: 10px; }
         .badge-item strong, .tip-item strong { color: #0288D1; }
         .text-center { margin-top: 20px; }
+        /* Added CSS for dynamic color based on outcome_status */
+        .outcome-value { font-weight: bold; }
+        .outcome-savings { color: #2E7D32; } /* Green for Savings */
+        .outcome-overspend { color: #DC3545; } /* Red for Overspend */
         @media (max-width: 576px) { 
             .container { padding: 10px; } 
             .dashboard-card { padding: 1rem; } 
@@ -64,7 +68,12 @@
                     <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
                     <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
                     <li><strong>{{ translations['Savings'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations['Surplus/Deficit'] }}:</strong> {{ surplus_deficit | format_currency('NGN') }}</li>
+                    <li>
+                        <strong>{{ translations[outcome_status] }}:</strong> 
+                        <span class="outcome-value outcome-{{ 'savings' if outcome_status == 'Savings' else 'overspend' }}">
+                            {{ surplus_deficit | format_currency('NGN') }}
+                        </span>
+                    </li>
                     <li><strong>{{ translations['Your ranking'] }}:</strong> {{ translations['Rank'] }} {{ rank }} {{ translations['out of'] }} {{ total_users }} {{ translations['users'] }}</li>
                 </ul>
             </div>
@@ -83,7 +92,7 @@
             <div class="tips-box" aria-labelledby="tips-header">
                 <h3 id="tips-header" class="section-header">{{ translations['Tips with Emoji'] }}</h3>
                 {% set tips = [] %}
-                {% if surplus_deficit >= 0 %}
+                {% if outcome_status == 'Savings' %}
                     {% set _ = tips.append({'title': translations['Great job! Save or invest your surplus.'], 'description': translations['Great job! Save or invest your surplus to grow your wealth.']}) %}
                 {% else %}
                     {% set _ = tips.append({'title': translations['Spend less on non-essentials to balance your budget.'], 'description': translations['Reduce non-essential spending to balance your budget.']}) %}
@@ -102,7 +111,7 @@
                 {% endfor %}
             </div>
             <div class="text-center">
-                <a href="{{ url_for('step1') }}" class="btn btn-secondary">{{ translations['Start Over'] }}</a>
+                <a href="{{ url_for('step1') }}" class="btn btn-secondary">{{ translations['Back'] }}</a>
             </div>
         </div>
         <footer class="mt-4 text-center">
