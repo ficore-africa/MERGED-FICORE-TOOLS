@@ -92,7 +92,7 @@
                     <div class="invalid-feedback">{{ translations[language].get('Language required', translations['en']['Language required']) }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('home') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Home', translations['en']['Back to Home']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Home', translations['en']['Back to Home']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
                     {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Income', translations['en']['Continue to Income']) + ' →', **{'aria-label': translations[language].get('Continue to Income', translations['en']['Continue to Income'])}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations[language].get('Please fill all required fields', translations['en']['Please fill all required fields']) }}</div>
