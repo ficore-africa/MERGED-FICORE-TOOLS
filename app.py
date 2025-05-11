@@ -195,6 +195,7 @@ translations = {
         'Welcome': 'Welcome',
         'Your Budget Summary': 'Your Budget Summary',
         'Refresh': 'Refresh',
+        '500 Error': 'Server Error',
         'Home': 'Home',
         'Monthly Income': 'Monthly Income',
         'Housing': 'Housing',
@@ -646,6 +647,7 @@ translations = {
         'Choose a Tool': 'Zaɓi Kayan Aiki',
         'Select an option': 'Zaɓi wani zaɓi',
         'Start': 'Fara',
+        '500 Error': 'Server Error',
         'Worksheet Not Found': 'Lambar da ake nema ba ta samu ba. An ƙirƙira ta ta atomatik.',
         'Invalid Endpoint': 'Wurin da ake nema ba ya samuwa. Da fatan za a sake gwadawa.'
     }
