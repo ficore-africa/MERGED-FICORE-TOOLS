@@ -121,7 +121,7 @@ app.jinja_env.filters['format_currency'] = format_currency
 
 # Google Sheets setup
 SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = os.getenv('1J14gDlM1kHXtfcWw2WzSWDkHZDpgRXN1IiU4V1BLZl4')
+SPREADSHEET_ID = os.getenv('12N6srDoN0NjN56uGWPv07NjK_WNNNQGKeUB9BxYhtYw')
 sheets = None
 sheets_lock = threading.Lock()
 
