@@ -106,7 +106,7 @@ PREDETERMINED_HEADERS_HEALTH = [
 
 translations = {
     'en': {
-        # Budget Planner translations (from budget_planner_app)
+        # Budget Planner translations
         'First Budget Completed!': 'First Budget Completed!',
         'Check Inbox': 'Check your inbox for the budget report.',
         'Submission Success': 'Budget submitted successfully!',
@@ -232,7 +232,7 @@ translations = {
         'Advice with Emoji': 'Advice 💡',
         'Recommended Learning with Emoji': 'Recommended Learning 📚',
 
-        # Financial Health Score translations (from app (21))
+        # Financial Health Score translations
         'Your Financial Health Summary': 'Your Financial Health Summary:',
         'Your Financial Health Score': 'Your Financial Health Score',
         'Ranked': 'Ranked',
@@ -304,7 +304,7 @@ translations = {
         'Start': 'Start'
     },
     'ha': {
-        # Budget Planner translations (from budget_planner_app)
+        # Budget Planner translations
         'First Budget Completed!': 'An kammala kasafin kuɗi na farko!',
         'Check Inbox': 'Duba akwatin saƙonku don rahoton kasafin kuɗi.',
         'Submission Success': 'An ƙaddamar da kasafin kuɗi cikin nasara!',
@@ -430,7 +430,7 @@ translations = {
         'Advice with Emoji': 'Shawara 💡',
         'Recommended Learning with Emoji': 'Koyon da Aka Shawarta 📚',
 
-        # Financial Health Score translations (from app (21))
+        # Financial Health Score translations
         'Your Financial Health Summary': 'Takaitaccen Bayanai Akan Lafiyar Kuɗin Ku!',
         'Your Financial Health Score': 'Maki Da Lafiyar Kuɗin Ku Ta Samu:',
         'Ranked': 'Darajar Lafiyar Kuɗin Ku',
@@ -616,17 +616,23 @@ def get_sheets_client():
     return sheets
 
 @cache.memoize(timeout=600)
-def fetch_data_from_sheet(email=None, headers=PREDETERMINED_HEADERS_HEALTH, max_retries=5, backoff_factor=2):
+def fetch_data_from_sheet(email=None, headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health', max_retries=5, backoff_factor=2):
     for attempt in range(max_retries):
         try:
             client = get_sheets_client()
             if client is None:
                 logger.error(f"Attempt {attempt + 1}: Google Sheets client not initialized.")
                 return pd.DataFrame(columns=headers)
-            worksheet = client.worksheet('Sheet1')
+            try:
+                worksheet = client.worksheet(worksheet_name)
+            except gspread.exceptions.WorksheetNotFound:
+                logger.info(f"Worksheet '{worksheet_name}' not found. Creating new worksheet.")
+                client.sheet.add_worksheet(worksheet_name, rows=100, cols=len(headers))
+                worksheet = client.worksheet(worksheet_name)
+                worksheet.update('A1:' + chr(64 + len(headers)) + '1', [headers])
             values = worksheet.get_all_values()
             if not values:
-                logger.info(f"Attempt {attempt + 1}: No data in Google Sheet.")
+                logger.info(f"Attempt {attempt + 1}: No data in worksheet '{worksheet_name}'.")
                 return pd.DataFrame(columns=headers)
             headers_actual = values[0]
             rows = values[1:] if len(values) > 1 else []
@@ -638,65 +644,73 @@ def fetch_data_from_sheet(email=None, headers=PREDETERMINED_HEADERS_HEALTH, max_
             df['language'] = df['language'].replace('', 'en').apply(lambda x: x if x in translations else 'en')
             if email:
                 df = df[df['email'] == email].head(1) if headers == PREDETERMINED_HEADERS_BUDGET else df[df['email'] == email]
-            logger.info(f"Fetched {len(df)} rows for email {email if email else 'all'}.")
+            logger.info(f"Fetched {len(df)} rows for email {email if email else 'all'} from worksheet '{worksheet_name}'.")
             return df
         except gspread.exceptions.APIError as e:
-            logger.error(f"Google Sheets API error on attempt {attempt + 1}: {e}")
+            logger.error(f"Google Sheets API error on attempt {attempt + 1} for worksheet '{worksheet_name}': {e}")
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor ** attempt)
-        except gspread.exceptions.WorksheetNotFound as e:
-            logger.error(f"Worksheet 'Sheet1' not found: {e}")
-            return pd.DataFrame(columns=headers)
         except Exception as e:
-            logger.error(f"Attempt {attempt + 1} failed: {e}")
+            logger.error(f"Attempt {attempt + 1} failed for worksheet '{worksheet_name}': {e}")
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor ** attempt)
-    logger.error("Max retries reached while fetching data.")
+    logger.error(f"Max retries reached while fetching data from worksheet '{worksheet_name}'.")
     return pd.DataFrame(columns=headers)
 
-def set_sheet_headers(headers):
+def set_sheet_headers(headers, worksheet_name='Health'):
     try:
         client = get_sheets_client()
         if client is None:
-            logger.error("Google Sheets client not initialized for setting headers.")
+            logger.error(f"Google Sheets client not initialized for setting headers in worksheet '{worksheet_name}'.")
             return False
-        worksheet = client.worksheet('Sheet1')
+        try:
+            worksheet = client.worksheet(worksheet_name)
+        except gspread.exceptions.WorksheetNotFound:
+            logger.info(f"Worksheet '{worksheet_name}' not found. Creating new worksheet.")
+            client.sheet.add_worksheet(worksheet_name, rows=100, cols=len(headers))
+            worksheet = client.worksheet(worksheet_name)
         worksheet.update('A1:' + chr(64 + len(headers)) + '1', [headers])
-        logger.info("Sheet1 headers updated.")
+        logger.info(f"Headers updated in worksheet '{worksheet_name}'.")
         return True
     except gspread.exceptions.APIError as e:
-        logger.error(f"Google Sheets API error setting headers: {e}")
+        logger.error(f"Google Sheets API error setting headers in worksheet '{worksheet_name}': {e}")
         return False
     except Exception as e:
-        logger.error(f"Unexpected error setting headers: {e}")
+        logger.error(f"Unexpected error setting headers in worksheet '{worksheet_name}': {e}")
         return False
 
-def append_to_sheet(data, headers):
+def append_to_sheet(data, headers, worksheet_name='Health'):
     with sheets_lock:
         try:
             if not data or len(data) != len(headers):
-                logger.error(f"Invalid data length ({len(data)}) for headers ({len(headers)}): {data}")
+                logger.error(f"Invalid data length ({len(data)}) for headers ({len(headers)}) in worksheet '{worksheet_name}': {data}")
                 return False
             client = get_sheets_client()
             if client is None:
-                logger.error("Google Sheets client not initialized for appending data.")
+                logger.error(f"Google Sheets client not initialized for appending data to worksheet '{worksheet_name}'.")
                 return False
-            worksheet = client.worksheet('Sheet1')
+            try:
+                worksheet = client.worksheet(worksheet_name)
+            except gspread.exceptions.WorksheetNotFound:
+                logger.info(f"Worksheet '{worksheet_name}' not found. Creating new worksheet.")
+                client.sheet.add_worksheet(worksheet_name, rows=100, cols=len(headers))
+                worksheet = client.worksheet(worksheet_name)
+                worksheet.update('A1:' + chr(64 + len(headers)) + '1', [headers])
             current_headers = worksheet.row_values(1)
             if not current_headers or current_headers != headers:
-                logger.info("Headers missing or incorrect. Setting headers.")
-                if not set_sheet_headers(headers):
-                    logger.error("Failed to set sheet headers.")
+                logger.info(f"Headers missing or incorrect in worksheet '{worksheet_name}'. Setting headers.")
+                if not set_sheet_headers(headers, worksheet_name):
+                    logger.error(f"Failed to set sheet headers in worksheet '{worksheet_name}'.")
                     return False
             worksheet.append_row(data, value_input_option='RAW')
-            logger.info(f"Appended data to sheet: {data}")
+            logger.info(f"Appended data to worksheet '{worksheet_name}': {data}")
             time.sleep(1)  # Respect API rate limits
             return True
         except gspread.exceptions.APIError as e:
-            logger.error(f"Google Sheets API error appending to sheet: {e}")
+            logger.error(f"Google Sheets API error appending to worksheet '{worksheet_name}': {e}")
             return False
         except Exception as e:
-            logger.error(f"Unexpected error appending to sheet: {e}")
+            logger.error(f"Unexpected error appending to worksheet '{worksheet_name}': {e}")
             return False
 
 def calculate_budget_metrics(df):
@@ -712,7 +726,6 @@ def calculate_budget_metrics(df):
             axis=1
         )
         df['surplus_deficit'] = df['monthly_income'] - df['total_expenses'] - df['savings']
-        # Updated logic for user-friendly outcome
         df['outcome_status'] = df['surplus_deficit'].apply(
             lambda x: 'Savings' if x >= 0 else 'Overspend'
         )
@@ -744,7 +757,7 @@ def assign_badges_budget(user_df):
     except Exception as e:
         logger.error(f"Error in assign_badges_budget: {e}")
         return badges
-      
+
 def calculate_health_score(df):
     try:
         if df.empty:
@@ -983,38 +996,6 @@ class HealthForm(FlaskForm):
     def validate_auto_email(self, auto_email):
         if auto_email.data != self.email.data:
             raise ValidationError(translations[self.language.data or 'en']['Email addresses must match.'])
-            
-    def validate_income_revenue(self, income_revenue):
-        try:
-            value = float(re.sub(r'[,]', '', income_revenue.data))
-            if value < 0:
-                raise ValidationError('Income/Revenue must be a non-negative number.')
-        except ValueError:
-            raise ValidationError('Income/Revenue must be a valid number.')
-
-    def validate_expenses_costs(self, expenses_costs):
-        try:
-            value = float(re.sub(r'[,]', '', expenses_costs.data))
-            if value < 0:
-                raise ValidationError('Expenses/Costs must be a non-negative number.')
-        except ValueError:
-            raise ValidationError('Expenses/Costs must be a valid number.')
-
-    def validate_debt_loan(self, debt_loan):
-        try:
-            value = float(re.sub(r'[,]', '', debt_loan.data))
-            if value < 0:
-                raise ValidationError('Debt/Loan must be a non-negative number.')
-        except ValueError:
-            raise ValidationError('Debt/Loan must be a valid number.')
-
-    def validate_debt_interest_rate(self, debt_interest_rate):
-        try:
-            value = float(re.sub(r'[,]', '', debt_interest_rate.data))
-            if value < 0:
-                raise ValidationError('Debt Interest Rate must be a non-negative number.')
-        except ValueError:
-            raise ValidationError('Debt Interest Rate must be a valid number.')
 
 @app.route('/change_language', methods=['POST'])
 def change_language():
@@ -1045,7 +1026,7 @@ def home():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL
     )
-    
+
 @app.route('/budget', methods=['GET', 'POST'])
 def budget():
     logger.info("Accessing budget route")
@@ -1082,22 +1063,15 @@ def budget():
 @app.route('/health_score_form', methods=['GET', 'POST'])
 def health_score_form():
     try:
-        # Initialize form
         form = HealthForm()
-
-        # Get language from session or default to 'en'
         language = session.get('language', 'en')
         if language not in translations:
             logger.warning(f"Invalid language '{language}' detected, defaulting to 'en'")
             language = 'en'
             session['language'] = language
-
-        # Prepopulate language field
         form.language.data = language
-
         if form.validate_on_submit():
             try:
-                # Sanitize and collect form data
                 health_data = {
                     'first_name': sanitize_input(form.first_name.data),
                     'last_name': sanitize_input(form.last_name.data or ''),
@@ -1112,17 +1086,12 @@ def health_score_form():
                     'debt_loan': form.debt_loan.data,
                     'debt_interest_rate': form.debt_interest_rate.data
                 }
-
-                # Store data in session, preserving existing data
                 if 'health_data' not in session:
                     session['health_data'] = {}
                 session['health_data'].update(health_data)
                 session['language'] = form.language.data
                 logger.info(f"Health form submitted successfully for {health_data['email']}")
-
-                # Redirect to health dashboard
                 return redirect(url_for('health_score_submit'))
-
             except Exception as e:
                 logger.error(f"Error processing health form: {str(e)}")
                 flash(translations[language].get('An error occurred while processing your request.', 'An error occurred while processing your request.'), 'error')
@@ -1135,8 +1104,6 @@ def health_score_form():
                     LINKEDIN_URL=LINKEDIN_URL,
                     TWITTER_URL=TWITTER_URL
                 )
-
-        # Handle GET request or failed POST
         return render_template(
             'health_score_form.html',
             form=form,
@@ -1146,10 +1113,9 @@ def health_score_form():
             LINKEDIN_URL=LINKEDIN_URL,
             TWITTER_URL=TWITTER_URL
         )
-
     except Exception as e:
         logger.critical(f"Unexpected error in health_score_form route: {str(e)}")
-        form = HealthForm()  # Initialize form for error case
+        form = HealthForm()
         flash(translations['en'].get('An unexpected error occurred. Please try again later.', 'An unexpected error occurred. Please try again later.'), 'error')
         return render_template(
             'health_score_form.html',
@@ -1160,111 +1126,88 @@ def health_score_form():
             LINKEDIN_URL=LINKEDIN_URL,
             TWITTER_URL=TWITTER_URL
         )
-        
+
 @app.route('/health_score_submit', methods=['GET'])
 def health_score_submit():
     step = int(request.args.get('step', 1))
     if step < 1 or step > 6:
         step = 1
     try:
-        # Check for session data
         if 'health_data' not in session:
             logger.warning("No health_data in session for health_score_submit")
             flash(translations.get(session.get('language', 'en'), translations['en']).get('Session expired. Please try again.', 'Session expired. Please try again.'), 'error')
             return redirect(url_for('health_score_form'))
 
-        # Get language and validate
         health_data = session['health_data']
         language = health_data.get('language', 'en')
         if language not in translations:
-            logger.warning(f"Invalid language '{language}' detected, defaulting to 'en'")
+            logger.warning(f"Invalid language '{language}' in health_data. Defaulting to English.")
             language = 'en'
-            health_data['language'] = language
 
-        # Prepare data for Google Sheet
+        # Prepare data for Google Sheets
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        data = [
+        data_row = [
             timestamp,
-            health_data.get('business_name', ''),
-            str(health_data.get('income_revenue', 0)),
-            str(health_data.get('expenses_costs', 0)),
-            str(health_data.get('debt_loan', 0)),
-            str(health_data.get('debt_interest_rate', 0)),
-            health_data.get('auto_email', ''),
-            health_data.get('phone_number', ''),
-            health_data.get('first_name', ''),
-            health_data.get('last_name', ''),
-            health_data.get('user_type', ''),
-            health_data.get('email', ''),
-            '',  # badges (updated later)
-            language
+            health_data['business_name'],
+            health_data['income_revenue'],
+            health_data['expenses_costs'],
+            health_data['debt_loan'],
+            health_data['debt_interest_rate'],
+            health_data['auto_email'],
+            health_data['phone_number'],
+            health_data['first_name'],
+            health_data['last_name'],
+            health_data['user_type'],
+            health_data['email'],
+            '',  # badges (to be updated later)
+            health_data['language']
         ]
 
-        # Append to Google Sheet
-        if not append_to_sheet(data, PREDETERMINED_HEADERS_HEALTH):
-            logger.error("Failed to append data to Google Sheet")
-            flash(translations[language].get('Error saving data. Please try again.', 'Error saving data. Please try again.'), 'error')
+        # Append data to Google Sheets
+        if not append_to_sheet(data_row, PREDETERMINED_HEADERS_HEALTH, 'Health'):
+            logger.error(f"Failed to append health data for {health_data['email']} to Google Sheets.")
+            flash(translations[language]['Error saving data. Please try again.'], 'error')
             return redirect(url_for('health_score_form'))
 
-        # Fetch all users' data
-        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH)
-        if all_users_df is None:
-            logger.error("Failed to fetch all users' data from Google Sheet")
-            flash(translations[language].get('Error retrieving data. Please try again.', 'Error retrieving data. Please try again.'), 'error')
+        # Fetch and process data
+        all_users_df = fetch_data_from_sheet(worksheet_name='Health', headers=PREDETERMINED_HEADERS_HEALTH)
+        user_df = fetch_data_from_sheet(
+            email=health_data['email'],
+            worksheet_name='Health',
+            headers=PREDETERMINED_HEADERS_HEALTH
+        )
+
+        if user_df.empty:
+            logger.error(f"No data retrieved for {health_data['email']} after submission.")
+            flash(translations[language]['Error retrieving data. Please try again.'], 'error')
             return redirect(url_for('health_score_form'))
 
-        # Fetch user-specific data
-        user_df = fetch_data_from_sheet(email=health_data['email'], headers=PREDETERMINED_HEADERS_HEALTH)
-        if user_df is None or user_df.empty:
-            logger.error(f"Failed to fetch user data for email: {health_data['email']}")
-            flash(translations[language].get('Error retrieving user data. Please try again.', 'Error retrieving user data. Please try again.'), 'error')
-            return redirect(url_for('health_score_form'))
-
-        # Calculate health scores
-        try:
-            all_users_df = calculate_health_score(all_users_df)
-            user_df = calculate_health_score(user_df)
-        except Exception as e:
-            logger.error(f"Error calculating health scores: {str(e)}")
-            flash(translations[language].get('An error occurred while calculating your score. Please try again.', 'An error occurred while calculating your score. Please try again.'), 'error')
-            return redirect(url_for('health_score_form'))
+        # Calculate health score
+        user_df = calculate_health_score(user_df)
+        all_users_df = calculate_health_score(all_users_df)
 
         # Assign badges
-        try:
-            badges = assign_badges_health(user_df, all_users_df)
-            user_df['badges'] = ','.join(badges) if badges else ''
-        except Exception as e:
-            logger.error(f"Error assigning badges: {str(e)}")
-            badges = []
-            user_df['badges'] = ''
-            flash(translations[language].get('Error assigning badges. Dashboard will display without badges.', 'Error assigning badges. Dashboard will display without badges.'), 'warning')
+        badges = assign_badges_health(user_df, all_users_df)
+        user_df['badges'] = [', '.join(badges)] * len(user_df)
 
-        # Update badges in Google Sheet
+        # Update badges in Google Sheets
         try:
             client = get_sheets_client()
             if client:
-                with sheets_lock:
-                    worksheet = client.worksheet('Sheet1')
-                    user_rows = all_users_df[all_users_df['email'] == health_data['email']].index.tolist()
-                    if user_rows:
-                        worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_HEALTH.index('badges') + 1, ','.join(badges))
-                        logger.info(f"Updated badges for {health_data['email']}: {badges}")
+                worksheet = client.worksheet('Health')
+                user_row = user_df.iloc[0]
+                cell = worksheet.find(health_data['email'])
+                if cell:
+                    worksheet.update_cell(cell.row, PREDETERMINED_HEADERS_HEALTH.index('badges') + 1, ', '.join(badges))
+                    logger.info(f"Updated badges for {health_data['email']} in Google Sheets.")
         except Exception as e:
-            logger.error(f"Error updating badges in Google Sheet: {str(e)}")
-            flash(translations[language].get('Error updating badges in database. Dashboard will display current badges.', 'Error updating badges in database. Dashboard will display current badges.'), 'warning')
+            logger.error(f"Error updating badges for {health_data['email']}: {e}")
 
         # Calculate rank
-        try:
-            all_users_df = all_users_df.dropna(subset=['HealthScore'])
-            all_users_df['HealthScore'] = pd.to_numeric(all_users_df['HealthScore'], errors='coerce')
-            all_users_df = all_users_df.sort_values(by='HealthScore', ascending=False)
-            total_users = len(all_users_df)
-            user_rank = all_users_df[all_users_df['email'] == health_data['email']].index[0] + 1 if not all_users_df.empty else 1
-        except Exception as e:
-            logger.error(f"Error calculating rank: {str(e)}")
-            user_rank = 1
-            total_users = 1
-            flash(translations[language].get('Error calculating rank. Displaying default values.', 'Error calculating rank. Displaying default values.'), 'warning')
+        all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
+        user_score = user_df.iloc[0]['HealthScore']
+        rank = sum(all_scores > user_score) + 1
+        total_users = len(all_scores)
 
         # Generate plots
         breakdown_plot = None
@@ -1272,56 +1215,105 @@ def health_score_submit():
         try:
             breakdown_plot = generate_breakdown_plot(user_df)
             comparison_plot = generate_comparison_plot(user_df, all_users_df)
-            if not breakdown_plot or not comparison_plot:
-                logger.warning("Failed to generate one or both plots")
-                flash(translations[language].get('Error generating plots. Dashboard will display without plots.', 'Error generating plots. Dashboard will display without plots.'), 'warning')
         except Exception as e:
-            logger.error(f"Error generating plots: {str(e)}")
-            flash(translations[language].get('Error generating plots. Dashboard will display without plots.', 'Error generating plots. Dashboard will display without plots.'), 'warning')
+            logger.error(f"Error generating plots for {health_data['email']}: {e}")
+            flash(translations[language]['Error generating plots. Dashboard will display without plots.'], 'warning')
 
-        # Send email
-        try:
-            if health_data.get('auto_email'):
-                user_row = user_df.iloc[0]
-                send_health_email(
-                    health_data['email'],
-                    health_data['first_name'],
-                    user_row['HealthScore'],
-                    user_row.get('ScoreDescription', ''),
-                    user_rank,
-                    total_users,
-                    user_row.get('CourseTitle', ''),
-                    user_row.get('CourseURL', ''),
-                    language
-                )
-                logger.info(f"Health email sent to {health_data['email']}")
-        except IndexError:
-            logger.error(f"User data empty for email: {health_data['email']}")
-            flash(translations[language].get('Error retrieving user data for email. Email not sent.', 'Error retrieving user data for email. Email not sent.'), 'warning')
-        except Exception as e:
-            logger.error(f"Error sending health email: {str(e)}")
-            flash(translations[language].get('Error sending email. Please check your email address.', 'Error sending email. Please check your email address.'), 'warning')
+        # Send email if auto_email is set
+        if health_data['auto_email']:
+            email_sent = send_health_email(
+                to_email=health_data['email'],
+                user_name=health_data['first_name'],
+                health_score=user_score,
+                score_description=user_df.iloc[0]['ScoreDescription'],
+                rank=rank,
+                total_users=total_users,
+                course_title=user_df.iloc[0]['CourseTitle'],
+                course_url=user_df.iloc[0]['CourseURL'],
+                language=language
+            )
+            if email_sent:
+                flash(translations[language]['Check Inbox'], 'info')
+            else:
+                flash(translations[language]['Check Inbox'], 'warning')
 
-        # Clear session data
-        session.pop('health_data', None)
+        # Determine rank category
+        if rank <= total_users * 0.1:
+            rank_category = translations[language]['Top 10%']
+        elif rank <= total_users * 0.3:
+            rank_category = translations[language]['Top 30%']
+        elif rank <= total_users * 0.7:
+            rank_category = translations[language]['Middle Range']
+        else:
+            rank_category = translations[language]['Lower Range']
+
+        # Determine score category and advice
+        score = user_score
+        if score >= 75:
+            score_category = translations[language]['Strong Financial Health']
+        elif score >= 50:
+            score_category = translations[language]['Stable Finances']
+        elif score >= 25:
+            score_category = translations[language]['Financial Strain']
+        else:
+            score_category = translations[language]['Urgent Attention Needed']
+
+        # Prepare tips based on score
+        tips = []
+        if score >= 75:
+            tips.extend([
+                translations[language]['Invest Wisely'],
+                translations[language]['Scale Smart']
+            ])
+        elif score >= 50:
+            tips.extend([
+                translations[language]['Build Savings'],
+                translations[language]['Cut Costs']
+            ])
+        elif score >= 25:
+            tips.extend([
+                translations[language]['Reduce Debt'],
+                translations[language]['Cut Costs']
+            ])
+        else:
+            tips.extend([
+                translations[language]['Reduce Debt'],
+                translations[language]['Boost Income']
+            ])
+
+        # Prepare component analysis
+        components = []
+        cash_flow = user_df.iloc[0]['CashFlowRatio']
+        debt_to_income = user_df.iloc[0]['DebtToIncomeRatio']
+        debt_interest = user_df.iloc[0]['DebtInterestBurden']
+        if cash_flow > 0.5 and debt_to_income < 0.3 and debt_interest < 0.3:
+            components.append(translations[language]['Balanced Components'])
+        else:
+            if cash_flow < 0.3:
+                components.append(translations[language]['Components Need Attention'])
+            if debt_to_income > 0.5 or debt_interest > 0.5:
+                components.append(translations[language]['Components Indicate Challenges'])
 
         # Render dashboard
         return render_template(
             'health_dashboard.html',
-            translations=translations,
+            translations=translations[language],
             language=language,
-            user_data=user_df.iloc[0].to_dict(),
-            health_score=user_df.iloc[0]['HealthScore'],
-            first_name=health_data['first_name'],
-            email=health_data['email'],
-            rank=user_rank,
+            health_score=user_score,
+            score_category=score_category,
+            rank=rank,
             total_users=total_users,
+            rank_category=rank_category,
             badges=badges,
             breakdown_plot=breakdown_plot,
             comparison_plot=comparison_plot,
-            course_title=user_df.iloc[0].get('CourseTitle', ''),
-            course_url=user_df.iloc[0].get('CourseURL', ''),
-            step=step,  # Use step from query parameter
+            course_title=user_df.iloc[0]['CourseTitle'],
+            course_url=user_df.iloc[0]['CourseURL'],
+            tips=tips,
+            components=components,
+            cash_flow_description=translations[language]['Cash Flow Description'],
+            debt_to_income_description=translations[language]['Debt-to-Income Description'],
+            debt_interest_description=translations[language]['Debt Interest Description'],
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
@@ -1330,33 +1322,30 @@ def health_score_submit():
         )
 
     except Exception as e:
-        logger.critical(f"Unexpected error in health_score_submit: {str(e)}")
-        flash(translations.get('en', translations['en']).get('An unexpected error occurred. Please try again later.', 'An unexpected error occurred. Please try again later.'), 'error')
-        return redirect(url_for('health_score_form'))  # Re-render form instead of home
-        
+        logger.error(f"Error in health_score_submit: {e}\n{traceback.format_exc()}")
+        flash(translations[language]['An unexpected error occurred. Please try again.'], 'error')
+        return redirect(url_for('health_score_form'))
+
 @app.route('/step2', methods=['GET', 'POST'])
 def step2():
+    logger.info("Accessing step2 route")
     if 'budget_data' not in session:
-        logger.warning("No session data found for step2.")
-        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        logger.warning("No budget_data in session for step2")
+        flash(translations['en']['Session Expired'], 'error')
         return redirect(url_for('budget'))
-    
+
     language = session['budget_data'].get('language', 'en')
-    if language not in translations:
-        language = 'en'
-    
     form = Step2Form()
+
     if form.validate_on_submit():
-        session['budget_data'].update({
-            'monthly_income': form.income.data
-        })
-        logger.info(f"Step 2: Updated session with income for {session['budget_data']['email']}.")
+        session['budget_data']['monthly_income'] = form.income.data
+        logger.info(f"Step2: Income saved for {session['budget_data']['email']}. Redirecting to step3.")
         return redirect(url_for('step3'))
-    
+
     return render_template(
         'step2.html',
         form=form,
-        translations=translations,
+        translations=translations[language],
         language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         LINKEDIN_URL=LINKEDIN_URL,
@@ -1365,16 +1354,15 @@ def step2():
 
 @app.route('/step3', methods=['GET', 'POST'])
 def step3():
+    logger.info("Accessing step3 route")
     if 'budget_data' not in session:
-        logger.warning("No session data found for step3.")
-        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        logger.warning("No budget_data in session for step3")
+        flash(translations['en']['Session Expired'], 'error')
         return redirect(url_for('budget'))
-    
+
     language = session['budget_data'].get('language', 'en')
-    if language not in translations:
-        language = 'en'
-    
     form = Step3Form()
+
     if form.validate_on_submit():
         session['budget_data'].update({
             'housing_expenses': form.housing.data,
@@ -1382,13 +1370,13 @@ def step3():
             'transport_expenses': form.transport.data,
             'other_expenses': form.other.data
         })
-        logger.info(f"Step 3: Updated session with expenses for {session['budget_data']['email']}.")
+        logger.info(f"Step3: Expenses saved for {session['budget_data']['email']}. Redirecting to step4.")
         return redirect(url_for('step4'))
-    
+
     return render_template(
         'step3.html',
         form=form,
-        translations=translations,
+        translations=translations[language],
         language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         LINKEDIN_URL=LINKEDIN_URL,
@@ -1397,156 +1385,193 @@ def step3():
 
 @app.route('/step4', methods=['GET', 'POST'])
 def step4():
+    logger.info("Accessing step4 route")
     if 'budget_data' not in session:
-        logger.warning("No session data found for step4.")
-        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        logger.warning("No budget_data in session for step4")
+        flash(translations['en']['Session Expired'], 'error')
         return redirect(url_for('budget'))
-    
+
     language = session['budget_data'].get('language', 'en')
-    if language not in translations:
-        language = 'en'
-    
     form = Step4Form()
+
     if form.validate_on_submit():
         session['budget_data'].update({
-            'savings_goal': form.savings_goal.data,
+            'savings_goal': form.savings_goal.data or 0.0,
             'auto_email': form.auto_email.data
         })
-        logger.info(f"Step 4: Updated session with savings and email preference for {session['budget_data']['email']}.")
-        return redirect(url_for('budget_submit'))
-    
+        logger.info(f"Step4: Savings goal and email preference saved for {session['budget_data']['email']}. Redirecting to dashboard.")
+        return redirect(url_for('dashboard'))
+
     return render_template(
         'step4.html',
         form=form,
-        translations=translations,
+        translations=translations[language],
         language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL
     )
 
-@app.route('/budget_submit', methods=['POST'])
-def budget_submit():
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    logger.info("Accessing dashboard route")
     if 'budget_data' not in session:
-        logger.warning("No session data found for budget_submit.")
-        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        logger.warning("No budget_data in session for dashboard")
+        flash(translations['en']['Session Expired'], 'error')
         return redirect(url_for('budget'))
 
-    language = session['budget_data'].get('language', 'en')
-    if language not in translations:
-        language = 'en'
+    budget_data = session['budget_data']
+    language = budget_data.get('language', 'en')
+    email = budget_data['email']
 
+    # Prepare data for Google Sheets
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    data = [
+    total_expenses = (
+        budget_data.get('housing_expenses', 0) +
+        budget_data.get('food_expenses', 0) +
+        budget_data.get('transport_expenses', 0) +
+        budget_data.get('other_expenses', 0)
+    )
+    savings = budget_data.get('savings_goal', 0)
+    surplus_deficit = budget_data.get('monthly_income', 0) - total_expenses - savings
+
+    data_row = [
         timestamp,
-        session['budget_data']['first_name'],
-        session['budget_data']['email'],
-        session['budget_data']['language'],
-        session['budget_data'].get('monthly_income', 0),
-        session['budget_data'].get('housing_expenses', 0),
-        session['budget_data'].get('food_expenses', 0),
-        session['budget_data'].get('transport_expenses', 0),
-        session['budget_data'].get('other_expenses', 0),
-        session['budget_data'].get('savings_goal', 0),
-        str(session['budget_data'].get('auto_email', False)),
-        0,  # total_expenses (to be calculated)
-        0,  # savings (to be calculated)
-        0,  # surplus_deficit (to be calculated)
-        '',  # badges (to be assigned)
-        0,  # rank (to be calculated)
-        0   # total_users (to be calculated)
+        budget_data['first_name'],
+        email,
+        language,
+        budget_data.get('monthly_income', 0),
+        budget_data.get('housing_expenses', 0),
+        budget_data.get('food_expenses', 0),
+        budget_data.get('transport_expenses', 0),
+        budget_data.get('other_expenses', 0),
+        savings,
+        budget_data.get('auto_email', False),
+        total_expenses,
+        savings,
+        surplus_deficit,
+        '',  # badges (to be updated later)
+        '',  # rank (to be updated later)
+        ''   # total_users (to be updated later)
     ]
 
-    if not append_to_sheet(data, PREDETERMINED_HEADERS_BUDGET):
+    # Append to Google Sheets
+    if not append_to_sheet(data_row, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
+        logger.error(f"Failed to append budget data for {email} to Google Sheets.")
         flash(translations[language]['Error saving data. Please try again.'], 'error')
-        return redirect(url_for('step4', language=language))
+        return redirect(url_for('budget'))
 
-    all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET)
-    if all_users_df is None:
+    # Fetch and process data
+    user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
+    if user_df.empty:
+        logger.error(f"No data retrieved for {email} after submission.")
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-        return redirect(url_for('step4', language=language))
+        return redirect(url_for('budget'))
 
-    user_df = fetch_data_from_sheet(email=session['budget_data']['email'], headers=PREDETERMINED_HEADERS_BUDGET)
-    if user_df is None or user_df.empty:
-        flash(translations[language]['Error retrieving user data. Please try again.'], 'error')
-        return redirect(url_for('step4', language=language))
-
-    try:
-        all_users_df = calculate_budget_metrics(all_users_df)
-        user_df = calculate_budget_metrics(user_df)
-    except Exception as e:
-        logger.error(f"Error calculating budget metrics: {e}")
-        flash(translations[language]['An unexpected error occurred. Please try again.'], 'error')
-        return redirect(url_for('step4', language=language))
-
+    user_df = calculate_budget_metrics(user_df)
     badges = assign_badges_budget(user_df)
-    user_df['badges'] = ','.join(badges) if badges else ''
 
-    if sheets:
-        with sheets_lock:
-            try:
-                worksheet = sheets.worksheet('Sheet1')
-                user_rows = all_users_df[all_users_df['email'] == session['budget_data']['email']].index.tolist()
-                if user_rows:
-                    worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_BUDGET.index('badges') + 1, ','.join(badges))
-                    worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_BUDGET.index('total_expenses') + 1, user_df['total_expenses'].iloc[0])
-                    worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_BUDGET.index('savings') + 1, user_df['savings'].iloc[0])
-                    worksheet.update_cell(user_rows[0] + 2, PREDETERMINED_HEADERS_BUDGET.index('surplus_deficit') + 1, user_df['surplus_deficit'].iloc[0])
-                    logger.info(f"Updated budget metrics and badges for {session['budget_data']['email']}: {badges}")
-            except Exception as e:
-                logger.error(f"Error updating budget metrics in Google Sheet: {e}")
+    # Update badges in Google Sheets
+    try:
+        client = get_sheets_client()
+        if client:
+            worksheet = client.worksheet('Budget')
+            cell = worksheet.find(email)
+            if cell:
+                worksheet.update_cell(cell.row, PREDETERMINED_HEADERS_BUDGET.index('badges') + 1, ', '.join(badges))
+                logger.info(f"Updated badges for {email} in Google Sheets.")
+    except Exception as e:
+        logger.error(f"Error updating badges for {email}: {e}")
 
-    all_users_df = all_users_df.dropna(subset=['surplus_deficit'])
-    all_users_df['surplus_deficit'] = pd.to_numeric(all_users_df['surplus_deficit'], errors='coerce')
-    all_users_df = all_users_df.sort_values(by='surplus_deficit', ascending=False)
-    total_users = len(all_users_df)
-    user_rank = all_users_df[all_users_df['email'] == session['budget_data']['email']].index[0] + 1 if not all_users_df.empty else 1
-
-    pie_chart_data = {
-        'labels': ['Housing', 'Food', 'Transport', 'Other'],
-        'values': [
-            user_df['housing_expenses'].iloc[0],
-            user_df['food_expenses'].iloc[0],
-            user_df['transport_expenses'].iloc[0],
-            user_df['other_expenses'].iloc[0]
-        ],
-        'type': 'pie'
-    }
-    bar_chart_data = {
-        'labels': ['Income', 'Expenses', 'Savings', 'Surplus/Deficit'],
-        'values': [
-            user_df['monthly_income'].iloc[0],
-            user_df['total_expenses'].iloc[0],
-            user_df['savings'].iloc[0],
-            user_df['surplus_deficit'].iloc[0]
-        ],
-        'type': 'bar'
-    }
-
-    if session['budget_data'].get('auto_email', False):
-        send_budget_email(
-            session['budget_data'],
-            user_df['total_expenses'].iloc[0],
-            user_df['savings'].iloc[0],
-            user_df['surplus_deficit'].iloc[0],
-            pie_chart_data,
-            bar_chart_data
+    # Generate plots
+    try:
+        user_row = user_df.iloc[0]
+        pie_fig = px.pie(
+            names=['Housing', 'Food', 'Transport', 'Other'],
+            values=[
+                user_row['housing_expenses'],
+                user_row['food_expenses'],
+                user_row['transport_expenses'],
+                user_row['other_expenses']
+            ],
+            title=translations[language]['Budget Breakdown']
         )
+        pie_fig.update_layout(
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=300,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        chart_data = pie_fig.to_html(full_html=False, include_plotlyjs=False)
 
-    flash(translations[language]['Submission Success'], 'success')
+        bar_fig = px.bar(
+            x=['Income', 'Expenses', 'Savings'],
+            y=[
+                user_row['monthly_income'],
+                user_row['total_expenses'],
+                user_row['savings']
+            ],
+            title=translations[language]['Income vs Expenses']
+        )
+        bar_fig.update_layout(
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=300,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        bar_data = bar_fig.to_html(full_html=False, include_plotlyjs=False)
+    except Exception as e:
+        logger.error(f"Error generating plots for {email}: {e}")
+        chart_data = None
+        bar_data = None
+        flash(translations[language]['Error generating plots. Dashboard will display without plots.'], 'warning')
+
+    # Send email if auto_email is set
+    if budget_data.get('auto_email'):
+        email_sent = send_budget_email(
+            budget_data,
+            total_expenses,
+            savings,
+            surplus_deficit,
+            chart_data,
+            bar_data
+        )
+        if email_sent:
+            flash(translations[language]['Submission Success'], 'success')
+        else:
+            flash(translations[language]['Check Inbox'], 'warning')
+
+    # Prepare advice
+    advice = []
+    if surplus_deficit >= 0:
+        advice.append(translations[language]['Great job! Save or invest your surplus to grow your wealth.'])
+    else:
+        advice.append(translations[language]['Reduce non-essential spending to balance your budget.'])
+    if user_row['housing_expenses'] / user_row['monthly_income'] > 0.4:
+        advice.append(translations[language]['Housing costs are high. Look for cheaper rent or utilities.'])
+    if user_row['food_expenses'] / user_row['monthly_income'] > 0.3:
+        advice.append(translations[language]['Food spending is high. Try cooking at home more.'])
+    if user_row['other_expenses'] / user_row['monthly_income'] > 0.2:
+        advice.append(translations[language]['Other spending is high. Cut back on non-essentials like clothes or entertainment.'])
+
     return render_template(
-        'budget_dashboard.html',
-        translations=translations,
+        'dashboard.html',
+        translations=translations[language],
         language=language,
-        user_data=user_df.iloc[0].to_dict(),
-        rank=user_rank,
-        total_users=total_users,
+        budget_data=budget_data,
+        total_expenses=total_expenses,
+        savings=savings,
+        surplus_deficit=surplus_deficit,
+        outcome_status=user_row['outcome_status'],
+        chart_data=chart_data,
+        bar_data=bar_data,
         badges=badges,
-        pie_chart_data=pie_chart_data,
-        bar_chart_data=bar_chart_data,
+        advice=advice,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         WAITLIST_FORM_URL=WAITLIST_FORM_URL,
         CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        COURSE_URL=COURSE_URL,
+        COURSE_TITLE=COURSE_TITLE,
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL
     )
@@ -1554,4 +1579,4 @@ def budget_submit():
 if __name__ == '__main__':
     load_dotenv()
     initialize_sheets()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
