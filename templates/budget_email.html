@@ -1,135 +1,41 @@
 <!DOCTYPE html>
-<html lang="{{ language }}">
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations['Budget Report Subject'] }}</title>
+    <title>{{ translations['Your Budget Report'] }}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            background-color: #F5F7FA;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #FFFFFF;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        .header {
-            background-color: #1E7F71;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h2 {
-            color: #FFFFFF;
-            margin: 0;
-        }
-        .header p {
-            font-style: italic;
-            color: #E0F7FA;
-            font-size: 0.9rem;
-            margin: 5px 0 0 0;
-        }
-        h3 {
-            color: #2E7D32;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        p {
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-        li strong {
-            display: inline-block;
-            width: 150px;
-            color: #0288D1;
-        }
-        .budget-value {
-            font-weight: 700;
-        }
-        .deficit {
-            color: #D32F2F;
-        }
-        a {
-            display: inline-block;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            margin: 5px 0;
-        }
-        .course-link {
-            background-color: #FBC02D;
-            color: #333;
-        }
-        .feedback-link {
-            background-color: #2E7D32;
-            color: white;
-        }
-        .waitlist-link {
-            background-color: #0288D1;
-            color: white;
-        }
-        .consultancy-link {
-            background-color: #D81B60;
-            color: white;
-        }
-        .footer {
-            text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 20px;
-        }
-        .summary-box {
-            border: 2px solid #2E7D32;
-            background: #E8F5E9;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .advice-box {
-            border: 2px solid #FBC02D;
-            background: #FFFDE7;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .learning-box {
-            border: 2px solid #0288D1;
-            background: #E3F2FD;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        @media (max-width: 600px) {
-            .container {
-                padding: 10px;
-            }
-            .summary-box, .advice-box, .learning-box {
-                padding: 15px;
-            }
-            li strong {
-                width: 120px;
-            }
-            a {
-                padding: 8px 16px;
-                font-size: 0.85rem;
-            }
+        body { font-family: 'Poppins', Arial, sans-serif; background: #F5F7FA; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #2E7D32, #0288D1); padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
+        .header h2 { color: #FFFFFF; margin: 0; font-size: 24px; }
+        .header p { font-style: italic; color: #E0F7FA; font-size: 14px; margin: 5px 0 0 0; }
+        .content { padding: 20px; }
+        .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .section-header { color: #2E7D32; font-weight: 600; font-size: 18px; margin-bottom: 15px; }
+        .deficit { color: #D32F2F; font-weight: 600; }
+        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
+        .chart-box img { max-width: 100%; height: auto; }
+        .button { display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E7D32, #0288D1); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 10px 0; }
+        .button:hover { background: linear-gradient(135deg, #1B5E20, #01579B); color: #FFFFFF; }
+        .footer { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 0 0 12px 12px; }
+        .footer p { color: #0288D1; font-size: 14px; margin: 0; }
+        .footer-links a { color: #2E7D32; margin: 0 10px; font-size: 14px; text-decoration: none; }
+        .footer-links a:hover { text-decoration: underline; }
+        .social-icons a { color: #0288D1; margin: 0 8px; font-size: 18px; text-decoration: none; }
+        .social-icons a:hover { color: #2E7D32; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; font-size: 16px; }
+        li strong { color: #0288D1; }
+        @media only screen and (max-width: 600px) {
+            body { padding: 10px; }
+            .container { max-width: 100%; }
+            .content { padding: 15px; }
+            .summary-box, .badges-box, .tips-box, .chart-box { padding: 15px; }
+            .button { padding: 10px 20px; font-size: 14px; }
+            .chart-box img { width: 100%; }
         }
     </style>
 </head>
@@ -139,74 +45,71 @@
             <h2>{{ translations['Your Budget Report'] }}</h2>
             <p>{{ translations['Financial growth passport for Africa'] }}</p>
         </div>
-        <p>{{ translations['Dear'] }} {{ user_name | safe }},</p>
-        <p>{{ translations['Here is your monthly budget summary.'] }}</p>
-        
-        <div class="summary-box" aria-labelledby="summary-header">
-            <h3 id="summary-header">{{ translations['Summary with Emoji'] }}</h3>
-            <ul>
-                <li><strong>{{ translations['Monthly Income'] }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Housing'] }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Food'] }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Transport'] }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Savings'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
-                <li><strong>{{ translations['Surplus/Deficit'] }}:</strong> 
-                    <span class="budget-value {{ 'deficit' if surplus_deficit < 0 else '' }}">{{ surplus_deficit | format_currency('NGN') }}</span>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="advice-box" aria-labelledby="advice-header">
-            <h3 id="advice-header">{{ translations['Advice with Emoji'] }}</h3>
-            <ul style="list-style-type: disc; padding-left: 20px;">
-                {% if surplus_deficit >= 0 %}
-                    <li>{{ translations['Great job! Save or invest your surplus to grow your wealth.'] }}</li>
-                    {% if housing_expenses > monthly_income * 0.4 %}
-                        <li>{{ translations['Housing costs are high. Look for cheaper rent or utilities.'] }}</li>
-                    {% endif %}
-                    {% if food_expenses > monthly_income * 0.3 %}
-                        <li>{{ translations['Food spending is high. Try cooking at home more.'] }}</li>
-                    {% endif %}
+        <div class="content">
+            <p>{{ translations['Dear'] }} {{ user_name }},</p>
+            <p>{{ translations['Here is your monthly budget summary.'] }}</p>
+            <div class="summary-box" role="region" aria-labelledby="summary-header">
+                <h3 id="summary-header" class="section-header">{{ translations['Summary with Emoji'] }}</h3>
+                <ul>
+                    <li><strong>{{ translations['Monthly Income'] }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Housing'] }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Food'] }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Transport'] }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Savings Goal'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Surplus/Deficit'] }}:</strong> <span {% if surplus_deficit < 0 %}class="deficit"{% endif %}>{{ surplus_deficit | format_currency('NGN') }}</span></li>
+                </ul>
+            </div>
+            <div class="chart-box" role="region" aria-labelledby="chart-header">
+                <h3 id="chart-header" class="section-header">{{ translations['Budget Breakdown'] }}</h3>
+                {% if chart_data %}
+                    <div>{{ chart_data | safe }}</div>
                 {% else %}
-                    <li>{{ translations['Reduce non-essential spending to balance your budget.'] }}</li>
-                    {% if housing_expenses > monthly_income * 0.4 %}
-                        <li>{{ translations['Housing costs are high. Look for cheaper rent or utilities.'] }}</li>
-                    {% endif %}
-                    {% if food_expenses > monthly_income * 0.3 %}
-                        <li>{{ translations['Food spending is high. Try cooking at home more.'] }}</li>
-                    {% endif %}
-                    {% if other_expenses > monthly_income * 0.2 %}
-                        <li>{{ translations['Other spending is high. Cut back on non-essentials like clothes or entertainment.'] }}</li>
-                    {% endif %}
+                    <p>{{ translations['Chart Unavailable'] }}</p>
                 {% endif %}
-            </ul>
+            </div>
+            <div class="badges-box" role="region" aria-labelledby="badges-header">
+                <h3 id="badges-header" class="section-header">{{ translations['Badges with Emoji'] }}</h3>
+                {% if badges %}
+                    <ul>
+                        {% for badge in badges %}
+                            <li aria-label="{{ translations[badge] }}">{{ translations[badge] }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>{{ translations['No Badges Yet'] }}</p>
+                {% endif %}
+            </div>
+            <div class="tips-box" role="region" aria-labelledby="tips-header">
+                <h3 id="tips-header" class="section-header">{{ translations['Tips with Emoji'] }}</h3>
+                {% if advice %}
+                    <ul>
+                        {% for tip in advice %}
+                            <li aria-describedby="tip-{{ loop.index }}">{{ translations[tip] }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>{{ translations['No tips available.'] }}</p>
+                {% endif %}
+            </div>
+            <div style="text-align: center;">
+                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ translations['Join Financial Course'] }}">{{ translations['Join Course'] }}</a>
+            </div>
+            <p>{{ translations['Thank you for choosing Ficore Africa!'] }}</p>
         </div>
-        
-        <div class="learning-box" aria-labelledby="learning-header">
-            <h3 id="learning-header">{{ translations['Recommended Learning with Emoji'] }}</h3>
-            <p>{{ translations['Learn more about budgeting!'] }}</p>
-            <a href="{{ course_url }}" class="course-link">{{ course_title }}</a>
-        </div>
-        
-        <h3>{{ translations['Whats Next'] }}</h3>
-        <p>
-            <a href="{{ FEEDBACK_FORM_URL }}" class="feedback-link">{{ translations['Provide Feedback'] }}</a>
-            <a href="{{ WAITLIST_FORM_URL }}" class="waitlist-link">{{ translations['Join Waitlist'] }}</a>
-            <a href="{{ CONSULTANCY_FORM_URL }}" class="consultancy-link">{{ translations['Book Consultancy'] }}</a>
-        </p>
-        
-        <p>{{ translations['Thank you for choosing Ficore Africa!'] }}</p>
-        
         <div class="footer">
-            <p>{{ translations['Contact Us'] }} <a href="mailto:ficore.ai.africa@gmail.com">{{ translations['Click to Email'] }}</a> {{ translations['for support'] }}</p>
-            <p>© 2025 Ficore Africa. All rights reserved.</p>
+            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <div class="footer-links">
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+            </div>
+            <div class="social-icons">
+                <a href="{{ linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ twitter_url }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
         </div>
     </div>
-    
-    {% macro format_currency(value, currency='NGN') %}
-        {{ '{:,.2f}'.format(float(value)) }} {{ currency }}
-    {% endmacro %}
 </body>
 </html>
