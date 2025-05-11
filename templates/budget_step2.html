@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations['Monthly Budget Planner'] }}</title>
+    <title>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -92,8 +53,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>{{ translations['Monthly Budget Planner'] }}</h2>
-            <p>{{ translations['Financial growth passport for Africa'] }}</p>
+            <h2>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</h2>
+            <p>{{ translations[language].get('Financial growth passport for Africa', translations['en']['Financial growth passport for Africa']) }}</p>
         </div>
         <div class="progress">
             <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
@@ -106,35 +67,35 @@
             {% endif %}
         {% endwith %}
         <div class="form-card slide-in">
-            <h3>{{ translations['Step 2'] }}: {{ translations['Income'] }}</h3>
+            <h3>{{ translations[language].get('Step 2', translations['en']['Step 2']) }}: {{ translations[language].get('Income', translations['en']['Income']) }}</h3>
             <form method="POST" id="step2-form" action="{{ url_for('step2') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="income" class="form-label"><span class="visual-icon">💰</span> {{ translations['Monthly Income'] }}</label>
+                    <label for="income" class="form-label"><span class="visual-icon">💰</span> {{ translations[language].get('Monthly Income', translations['en']['Monthly Income']) }}</label>
                     <div style="position: relative;">
-                        {{ form.income(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦150,000'], **{'aria-required': 'true', 'aria-label': translations['Monthly Income']}) }}
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Your monthly pay or income.'] }}</span></span>
+                        {{ form.income(class="form-control", type="number", step="0.01", min="0", placeholder=translations[language].get('e.g. ₦150,000', translations['en']['e.g. ₦150,000']), **{'aria-required': 'true', 'aria-label': translations[language].get('Monthly Income', translations['en']['Monthly Income'])}) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Your monthly pay or income.', translations['en']['Your monthly pay or income.']) }}</span></span>
                     </div>
-                    <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
-                    <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
+                    <div class="valid-feedback">{{ translations[language].get('Valid amount!', translations['en']['Valid amount!']) }}</div>
+                    <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('budget') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Personal Information'] }}">{{ translations['Back'] }}</a>
-                    {{ form.submit(class="btn btn-primary", value=translations['Continue to Expenses'] + ' →', **{'aria-label': translations['Continue to Expenses']}) }}
+                    <a href="{{ url_for('budget') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Personal Information', translations['en']['Back to Personal Information']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
+                    {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Expenses', translations['en']['Continue to Expenses']) + ' →', **{'aria-label': translations[language].get('Continue to Expenses', translations['en']['Continue to Expenses'])}) }}
                 </div>
-                <div class="error-message" id="form-error">{{ translations['Please enter a valid income amount'] }}</div>
+                <div class="error-message" id="form-error">{{ translations[language].get('Please enter a valid income amount', translations['en']['Please enter a valid income amount']) }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
                     <div class="spinner"></div>
-                    <div class="spinner-text">{{ translations['Processing your income'] }}</div>
+                    <div class="spinner-text">{{ translations[language].get('Processing your income', translations['en']['Processing your income']) }}</div>
                 </div>
             </form>
         </div>
         <footer class="footer">
-            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <p>{{ translations[language].get('About Ficore Africa: Empowering financial growth across Africa since 2023', translations['en']['About Ficore Africa: Empowering financial growth across Africa since 2023']) }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations[language].get('Provide Feedback', translations['en']['Provide Feedback']) }}">{{ translations[language].get('Feedback', translations['en']['Feedback']) }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}">{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations[language].get('Book Consultancy', translations['en']['Book Consultancy']) }}">{{ translations[language].get('Consultancy', translations['en']['Consultancy']) }}</a>
             </div>
             <div class="social-icons">
                 <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
