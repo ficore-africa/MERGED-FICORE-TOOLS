@@ -1196,15 +1196,6 @@ def health_score_form():
                     sanitize_input(form.email.data),
                     form.language.data,
                     '',  # Placeholder for monthly_income
-                    '',  # Placeholder for total_expenses
-                    '',  # Placeholder for cash_flow
-                    '',  # Placeholder for debt_to_income
-                    '',  # Placeholder for debt_interest
-                    '',  # Placeholder for health_score
-                    '',  # Placeholder for score_description
-                    '',  # Placeholder for course_title
-                    '',  # Placeholder for course_url
-                    ''   # Placeholder for badges (will be updated below)
                 ]
                 # Fetch all users data to calculate badges
                 all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
