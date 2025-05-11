@@ -80,7 +80,7 @@
                     <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('budget') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Personal Information', translations['en']['Back to Personal Information']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
+                    <a href="{{ url_for('budget_step2') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Personal Information', translations['en']['Back to Personal Information']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
                     {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Expenses', translations['en']['Continue to Expenses']) + ' →', **{'aria-label': translations[language].get('Continue to Expenses', translations['en']['Continue to Expenses'])}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations[language].get('Please enter a valid income amount', translations['en']['Please enter a valid income amount']) }}</div>
