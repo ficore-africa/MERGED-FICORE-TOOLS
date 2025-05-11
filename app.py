@@ -1371,8 +1371,8 @@ def budget_dashboard():
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
 
-@app.route('/health', methods=['GET', 'POST'])
-def health():
+@app.route('/health_score_form', methods=['GET', 'POST'])
+def health_score_form():
     form = HealthForm()
     language = session.get('language', 'en')
     if language not in translations:
@@ -1471,10 +1471,10 @@ def health():
                         )
                     ).start()
 
-                return redirect(url_for('health_dashboard'))
+                return redirect(url_for('health_dashboard.html'))
             else:
                 flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-                return redirect(url_for('health'))
+                return redirect(url_for('health_score_form'))
 
         except Exception as e:
             logger.error(f"Error processing health form for {health_data['email']}: {e}")
