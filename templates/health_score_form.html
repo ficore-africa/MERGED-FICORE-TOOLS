@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ translations[language]['Complete the health score form with Ficore Africa to calculate your personalized financial health score.'] or 'Complete the health score form with Ficore Africa to calculate your personalized financial health score.' }}">
+    <meta name="description" content="{{ trans.get('Complete the health score form with Ficore Africa to calculate your personalized financial health score.', 'Complete the health score form with Ficore Africa to calculate your personalized financial health score.') }}">
     <meta name="keywords" content="ficore africa, health score form, financial health, Africa SME finance">
     <meta name="author" content="Ficore Africa">
-    <title>{{ translations[language]['Ficore Africa Financial Health Score'] or 'Ficore Africa Financial Health Score' }}</title>
+    <title>{{ trans.get('Ficore Africa Financial Health Score', 'Ficore Africa Financial Health Score') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -297,10 +297,10 @@
     <div class="container">
         <header class="my-4">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ translations[language]['Ficore Africa Logo'] or 'Ficore Africa Logo' }}" class="img-fluid">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
             </div>
-            <h1>{{ translations[language]['Ficore Africa Financial Health Score'] or 'Ficore Africa Financial Health Score' }}</h1>
-            <p class="lead">{{ translations[language]['Get Your Score'] or 'Get Your Score' }}</p>
+            <h1>{{ trans.get('Ficore Africa Financial Health Score', 'Ficore Africa Financial Health Score') }}</h1>
+            <p class="lead">{{ trans.get('Get Your Score', 'Get Your Score') }}</p>
         </header>
 
         <!-- Flash Messages -->
@@ -310,7 +310,7 @@
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ translations[language]['Close'] or 'Close' }}"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -324,22 +324,22 @@
                     <!-- Guide Toggle -->
                     <div class="book-toggle" id="guide-toggle">
                         <div class="book-icon" id="book-icon"></div>
-                        <span class="book-label">{{ translations[language]['New to finances? Click here to get guided tips on how to fill this form.'] or 'New to finances? Click here to get guided tips on how to fill this form.' }}</span>
+                        <span class="book-label">{{ trans.get('New to finances? Click here to get guided tips on how to fill this form.', 'New to finances? Click here to get guided tips on how to fill this form.') }}</span>
                     </div>
                     <div class="guide-section" id="guide-content">
-                        <h4>{{ translations[language]['Getting Started with Ficore Africa'] or 'Getting Started with Ficore Africa' }}</h4>
+                        <h4>{{ trans.get('Getting Started with Ficore Africa', 'Getting Started with Ficore Africa') }}</h4>
                         <ul>
-                            <li><strong>{{ translations[language]['Personal Information'] or 'Personal Information' }}</strong>: {{ translations[language]['Fill in your name, email, and phone number. Choose your language—English or Hausa.'] or 'Fill in your name, email, and phone number. Choose your language—English or Hausa.' }}</li>
-                            <li><strong>{{ translations[language]['User Information'] or 'User Information' }}</strong>: {{ translations[language]['Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.'] or 'Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.' }}</li>
-                            <li><strong>{{ translations[language]['Financial Information'] or 'Financial Information' }}</strong>: {{ translations[language]['Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.'] or 'Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.' }}</li>
-                            <li><strong>{{ translations[language]['Submit'] or 'Submit' }}</strong>: {{ translations[language]['Double-check your details, then click Submit to get your financial health score!'] or 'Double-check your details, then click Submit to get your financial health score!' }}</li>
+                            <li><strong>{{ trans.get('Personal Information', 'Personal Information') }}</strong>: {{ trans.get('Fill in your name, email, and phone number. Choose your language—English or Hausa.', 'Fill in your name, email, and phone number. Choose your language—English or Hausa.') }}</li>
+                            <li><strong>{{ trans.get('User Information', 'User Information') }}</strong>: {{ trans.get('Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.', 'Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.') }}</li>
+                            <li><strong>{{ trans.get('Financial Information', 'Financial Information') }}</strong>: {{ trans.get('Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.', 'Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.') }}</li>
+                            <li><strong>{{ trans.get('Submit', 'Submit') }}</strong>: {{ trans.get('Double-check your details, then click Submit to get your financial health score!', 'Double-check your details, then click Submit to get your financial health score!') }}</li>
                         </ul>
                     </div>
 
                     <!-- Progress Bar -->
                     <div class="progress">
                         <div class="progress-bar" role="progressbar" style="width: 33.33%;" aria-valuenow="33.33" aria-valuemin="0" aria-valuemax="100">
-                            {{ translations[language]['Step'] or 'Step' }} 1 {{ translations[language]['of'] or 'of' }} 3
+                            {{ trans.get('Step', 'Step') }} 1 {{ trans.get('of', 'of') }} 3
                         </div>
                     </div>
 
@@ -348,106 +348,106 @@
 
                         <!-- Step 1: Personal Information -->
                         <div class="form-step active" id="step-1">
-                            <h3>{{ translations[language]['Personal Information'] or 'Personal Information' }}</h3>
+                            <h3>{{ trans.get('Personal Information', 'Personal Information') }}</h3>
                             <div class="mb-3">
                                 {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
-                                {{ form.first_name(class="form-control", placeholder=translations[language]['Enter your first name'] or 'Enter your first name', required=True, **{'data-error': translations[language]['First Name Required'] or 'First Name Required', 'aria-required': 'true'}) }}
+                                {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, **{'data-error': trans.get('First Name Required', 'First Name Required'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.last_name.label(class="form-label", **{'for': 'last_name'}) }}
-                                {{ form.last_name(class="form-control", placeholder=translations[language]['Enter your last name (optional)'] or 'Enter your last name (optional)') }}
+                                {{ form.last_name(class="form-control", placeholder=trans.get('Enter your last name (optional)', 'Enter your last name (optional)')) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.email.label(class="form-label", **{'for': 'email'}) }}
-                                {{ form.email(class="form-control", placeholder=translations[language]['Enter your email'] or 'Enter your email', type="email", required=True, **{'data-error': translations[language]['Invalid Email'] or 'Invalid Email', 'aria-required': 'true'}) }}
+                                {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, **{'data-error': trans.get('Invalid Email', 'Invalid Email'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
-                                {{ form.auto_email(class="form-control", placeholder=translations[language]['Confirm your email'] or 'Confirm your email', type="email", required=True, **{'data-error': translations[language]['Invalid Email'] or 'Invalid Email', 'aria-required': 'true'}) }}
+                                {{ form.auto_email(class="form-control", placeholder=trans.get('Confirm your email', 'Confirm your email'), type="email", required=True, **{'data-error': trans.get('Invalid Email', 'Invalid Email'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
-                                {{ form.phone_number(class="form-control", placeholder=translations[language]['Enter phone number (optional)'] or 'Enter phone number (optional)', type="tel") }}
+                                {{ form.phone_number(class="form-control", placeholder=trans.get('Enter phone number (optional)', 'Enter phone number (optional)'), type="tel") }}
                             </div>
                             <div class="mb-3">
-                                <p class="note-text">{{ translations[language]['Language'] or 'Language' }}: {{ translations[language]['English or Hausa'] or 'English or Hausa' }}</p>
+                                <p class="note-text">{{ trans.get('Language', 'Language') }}: {{ trans.get('English or Hausa', 'English or Hausa') }}</p>
                                 {{ form.language.label(class="form-label", **{'for': 'language'}) }}
                                 {{ form.language(class="form-select", required=True, **{'aria-required': 'true'}) }}
                             </div>
                             <div class="step-navigation">
-                                <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back'] or 'Back' }}</a>
-                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(2)" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</button>
+                                <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
+                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(2)" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
                             </div>
                         </div>
 
                         <!-- Step 2: User Information -->
                         <div class="form-step" id="step-2">
-                            <h3>{{ translations[language]['User Information'] or 'User Information' }}</h3>
+                            <h3>{{ trans.get('User Information', 'User Information') }}</h3>
                             <div class="mb-3">
                                 {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
-                                {{ form.business_name(class="form-control", placeholder=translations[language]['Type personal name if no business'] or 'Type personal name if no business', required=True, **{'data-error': translations[language]['Business Name Required'] or 'Business Name Required', 'aria-required': 'true'}) }}
+                                {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, **{'data-error': trans.get('Business Name Required', 'Business Name Required'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
-                                <p class="note-text">{{ translations[language]['User Type'] or 'User Type' }}: {{ translations[language]['Business or Individual'] or 'Business or Individual' }}</p>
+                                <p class="note-text">{{ trans.get('User Type', 'User Type') }}: {{ trans.get('Business or Individual', 'Business or Individual') }}</p>
                                 {{ form.user_type.label(class="form-label", **{'for': 'user_type'}) }}
                                 {{ form.user_type(class="form-select", required=True, **{'aria-required': 'true'}) }}
                             </div>
                             <div class="step-navigation">
-                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(1)" aria-label="{{ translations[language]['Previous'] or 'Previous' }}">{{ translations[language]['Previous'] or 'Previous' }}</button>
-                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(3)" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</button>
+                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(1)" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</button>
+                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(3)" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
                             </div>
                         </div>
 
                         <!-- Step 3: Financial Information -->
                         <div class="form-step" id="step-3">
-                            <h3>{{ translations[language]['Financial Information'] or 'Financial Information' }}</h3>
+                            <h3>{{ trans.get('Financial Information', 'Financial Information') }}</h3>
                             <div class="mb-3">
                                 <div class="field-container">
                                     <span class="visual-icon">💰</span>
                                     {{ form.income_revenue.label(class="form-label", **{'for': 'income_revenue'}) }}
-                                    <span class="info-icon" aria-label="{{ translations[language]['Income information'] or 'Income information' }}">
+                                    <span class="info-icon" aria-label="{{ trans.get('Income information', 'Income information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ translations[language]['Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.'] or 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.' }}</span>
+                                        <span class="tooltip-fallback">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.income_revenue(class="form-control", placeholder=translations[language]['e.g. 150000'] or 'e.g. 150000', type="number", step="0.01", min="0", required=True, **{'data-error': translations[language]['Invalid Number'] or 'Invalid Number', 'aria-required': 'true'}) }}
+                                {{ form.income_revenue(class="form-control", placeholder=trans.get('e.g. 150000', 'e.g. 150000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
                                     <span class="visual-icon">💸</span>
                                     {{ form.expenses_costs.label(class="form-label", **{'for': 'expenses_costs'}) }}
-                                    <span class="info-icon" aria-label="{{ translations[language]['Expenses information'] or 'Expenses information' }}">
+                                    <span class="info-icon" aria-label="{{ trans.get('Expenses information', 'Expenses information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ translations[language]['All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.'] or 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.' }}</span>
+                                        <span class="tooltip-fallback">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.expenses_costs(class="form-control", placeholder=translations[language]['e.g. 60000'] or 'e.g. 60000', type="number", step="0.01", min="0", required=True, **{'data-error': translations[language]['Invalid Number'] or 'Invalid Number', 'aria-required': 'true'}) }}
+                                {{ form.expenses_costs(class="form-control", placeholder=trans.get('e.g. 60000', 'e.g. 60000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
                                     <span class="visual-icon">🏦</span>
                                     {{ form.debt_loan.label(class="form-label", **{'for': 'debt_loan'}) }}
-                                    <span class="info-icon" aria-label="{{ translations[language]['Debt information'] or 'Debt information' }}">
+                                    <span class="info-icon" aria-label="{{ trans.get('Debt information', 'Debt information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ translations[language]['Money you owe, like loans, IOUs, borrowings, or funds lent to you.'] or 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.' }}</span>
+                                        <span class="tooltip-fallback">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.debt_loan(class="form-control", placeholder=translations[language]['e.g. 25000'] or 'e.g. 25000', type="number", step="0.01", min="0", required=True, **{'data-error': translations[language]['Invalid Number'] or 'Invalid Number', 'aria-required': 'true'}) }}
+                                {{ form.debt_loan(class="form-control", placeholder=trans.get('e.g. 25000', 'e.g. 25000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
                                     <span class="visual-icon">📈</span>
                                     {{ form.debt_interest_rate.label(class="form-label", **{'for': 'debt_interest_rate'}) }}
-                                    <span class="info-icon" aria-label="{{ translations[language]['Interest rate information'] or 'Interest rate information' }}">
+                                    <span class="info-icon" aria-label="{{ trans.get('Interest rate information', 'Interest rate information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ translations[language]['Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.'] or 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.' }}</span>
+                                        <span class="tooltip-fallback">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.debt_interest_rate(class="form-control", placeholder=translations[language]['e.g. 10'] or 'e.g. 10', type="number", step="0.01", min="0", required=True, **{'data-error': translations[language]['Invalid Number'] or 'Invalid Number', 'aria-required': 'true'}) }}
+                                {{ form.debt_interest_rate(class="form-control", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
                             </div>
                             <div class="step-navigation">
-                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(2)" aria-label="{{ translations[language]['Previous'] or 'Previous' }}">{{ translations[language]['Previous'] or 'Previous' }}</button>
-                                {{ form.submit(class="btn btn-primary btn-lg", value=translations[language]['Submit'] or 'Submit', **{'aria-label': translations[language]['Submit'] or 'Submit'}) }}
+                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(2)" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</button>
+                                {{ form.submit(class="btn btn-primary btn-lg", value=trans.get('Submit', 'Submit'), **{'aria-label': trans.get('Submit', 'Submit')}) }}
                             </div>
                         </div>
                     </form>
@@ -457,14 +457,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>{{ translations[language]['About Ficore Africa: Empowering financial growth across Africa since 2023'] or 'About Ficore Africa: Empowering financial growth across Africa since 2023' }}</p>
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="social-icons">
                 <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="mailto:support@ficoreafrica.com">{{ translations[language]['Click to Email'] or 'Click to Email' }} {{ translations[language]['for support'] or 'for support' }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ translations[language]['Provide Feedback'] or 'Provide Feedback' }}</a>
+                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
             </p>
         </footer>
     </div>
@@ -486,7 +486,7 @@
             const progressBar = document.querySelector('.progress-bar');
             progressBar.style.width = `${progressPercent}%`;
             progressBar.setAttribute('aria-valuenow', progressPercent);
-            progressBar.textContent = `{{ translations[language]['Step'] or 'Step' }} ${step} {{ translations[language]['of'] or 'of' }} ${totalSteps}`;
+            progressBar.textContent = `{{ trans.get('Step', 'Step') }} ${step} {{ trans.get('of', 'of') }} ${totalSteps}`;
             
             currentStep = step;
         }
@@ -513,7 +513,7 @@
                 }
                 // Ensure positive numbers for financial fields
                 if (input.type === 'number' && input.value < 0) {
-                    input.setCustomValidity("{{ translations[language]['Value must be positive.'] or 'Value must be positive.' }}");
+                    input.setCustomValidity("{{ trans.get('Value must be positive.', 'Value must be positive.') }}");
                     input.reportValidity();
                     isValid = false;
                 } else if (input.type === 'number') {
@@ -526,7 +526,7 @@
                 const email = document.getElementById('email').value;
                 const autoEmail = document.getElementById('auto_email').value;
                 if (email !== autoEmail) {
-                    document.getElementById('auto_email').setCustomValidity("{{ translations[language]['Email addresses must match.'] or 'Email addresses must match.' }}");
+                    document.getElementById('auto_email').setCustomValidity("{{ trans.get('Email addresses must match.', 'Email addresses must match.') }}");
                     document.getElementById('auto_email').reportValidity();
                     isValid = false;
                 } else {
