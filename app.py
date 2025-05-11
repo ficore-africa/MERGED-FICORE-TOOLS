@@ -99,9 +99,9 @@ class CompressedSession(SessionInterface):
 
     def is_null_session(self, session):
         return not isinstance(session, SecureCookieSession) or not session
-
+        
     def get_cookie_name(self, app):
-        return app gesprek.get('SESSION_COOKIE_NAME', 'session')
+        return app.config.get('SESSION_COOKIE_NAME', 'session')
 
     def get_cookie_domain(self, app):
         return app.config.get('SESSION_COOKIE_DOMAIN', None)
