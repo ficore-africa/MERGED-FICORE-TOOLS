@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations[language].get('Your Budget Report', translations['en']['Your Budget Report']) }}</title>
+    <title>{{ trans.get('Your Budget Report', 'Your Budget Report') }}</title>
     <style>
         body { font-family: 'Poppins', Arial, sans-serif; background: #F5F7FA; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
@@ -42,68 +42,68 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>{{ translations[language].get('Your Budget Report', translations['en']['Your Budget Report']) }}</h2>
-            <p>{{ translations[language].get('Financial growth passport for Africa', translations['en']['Financial growth passport for Africa']) }}</p>
+            <h2>{{ trans.get('Your Budget Report', 'Your Budget Report') }}</h2>
+            <p>{{ trans.get('Financial growth passport for Africa', 'Financial growth passport for Africa') }}</p>
         </div>
         <div class="content">
-            <p>{{ translations[language].get('Dear', translations['en']['Dear']) }} {{ user_name }},</p>
-            <p>{{ translations[language].get('Here is your monthly budget summary.', translations['en']['Here is your monthly budget summary.']) }}</p>
+            <p>{{ trans.get('Dear', 'Dear') }} {{ user_name }},</p>
+            <p>{{ trans.get('Here is your monthly budget summary.', 'Here is your monthly budget summary.') }}</p>
             <div class="summary-box" role="region" aria-labelledby="summary-header">
-                <h3 id="summary-header" class="section-header">{{ translations[language].get('Summary with Emoji', translations['en']['Summary with Emoji']) }}</h3>
+                <h3 id="summary-header" class="section-header">{{ trans.get('Summary with Emoji', 'Summary with Emoji') }}</h3>
                 <ul>
-                    <li><strong>{{ translations[language].get('Monthly Income', translations['en']['Monthly Income']) }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Housing', translations['en']['Housing']) }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Food', translations['en']['Food']) }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Transport', translations['en']['Transport']) }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Other', translations['en']['Other']) }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Total Expenses', translations['en']['Total Expenses']) }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Savings Goal', translations['en']['Savings Goal']) }}:</strong> {{ savings | format_currency('NGN') }}</li>
-                    <li><strong>{{ translations[language].get('Surplus/Deficit', translations['en']['Surplus/Deficit']) }}:</strong> <span {% if surplus_deficit < 0 %}class="deficit"{% endif %}>{{ surplus_deficit | format_currency('NGN') }}</span></li>
+                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Savings Goal', 'Savings Goal') }}:</strong> {{ savings | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Surplus/Deficit', 'Surplus/Deficit') }}:</strong> <span {% if surplus_deficit < 0 %}class="deficit"{% endif %}>{{ surplus_deficit | format_currency('NGN') }}</span></li>
                 </ul>
             </div>
             <div class="chart-box" role="region" aria-labelledby="chart-header">
-                <h3 id="chart-header" class="section-header">{{ translations[language].get('Budget Breakdown', translations['en']['Budget Breakdown']) }}</h3>
+                <h3 id="chart-header" class="section-header">{{ trans.get('Budget Breakdown', 'Budget Breakdown') }}</h3>
                 {% if chart_data %}
                     <div>{{ chart_data | safe }}</div>
                 {% else %}
-                    <p>{{ translations[language].get('Chart Unavailable', translations['en']['Chart Unavailable']) }}</p>
+                    <p>{{ trans.get('Chart Unavailable', 'Chart Unavailable') }}</p>
                 {% endif %}
             </div>
             <div class="badges-box" role="region" aria-labelledby="badges-header">
-                <h3 id="badges-header" class="section-header">{{ translations[language].get('Badges with Emoji', translations['en']['Badges with Emoji']) }}</h3>
+                <h3 id="badges-header" class="section-header">{{ trans.get('Badges with Emoji', 'Badges with Emoji') }}</h3>
                 {% if badges %}
                     <ul>
                         {% for badge in badges %}
-                            <li aria-label="{{ translations[language].get(badge, translations['en'][badge]) }}">{{ translations[language].get(badge, translations['en'][badge]) }}</li>
+                            <li aria-label="{{ trans.get(badge, badge) }}">{{ trans.get(badge, badge) }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{{ translations[language].get('No Badges Yet', translations['en']['No Badges Yet']) }}</p>
+                    <p>{{ trans.get('No Badges Yet', 'No Badges Yet') }}</p>
                 {% endif %}
             </div>
             <div class="tips-box" role="region" aria-labelledby="tips-header">
-                <h3 id="tips-header" class="section-header">{{ translations[language].get('Tips with Emoji', translations['en']['Tips with Emoji']) }}</h3>
+                <h3 id="tips-header" class="section-header">{{ trans.get('Tips with Emoji', 'Tips with Emoji') }}</h3>
                 {% if advice %}
                     <ul>
                         {% for tip in advice %}
-                            <li aria-describedby="tip-{{ loop.index }}">{{ translations[language].get(tip, translations['en'][tip]) }}</li>
+                            <li aria-describedby="tip-{{ loop.index }}">{{ trans.get(tip, tip) }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{{ translations[language].get('No tips available.', translations['en']['No tips available.']) }}</p>
+                    <p>{{ trans.get('No tips available.', 'No tips available.') }}</p>
                 {% endif %}
             </div>
             <div style="text-align: center;">
-                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ translations[language].get('Join Financial Course', translations['en']['Join Financial Course']) }}">{{ translations[language].get('Join Course', translations['en']['Join Course']) }}</a>
+                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">{{ trans.get('Join Course', 'Join Course') }}</a>
             </div>
-            <p>{{ translations[language].get('Thank you for choosing Ficore Africa!', translations['en']['Thank you for choosing Ficore Africa!']) }}</p>
+            <p>{{ trans.get('Thank you for choosing Ficore Africa!', 'Thank you for choosing Ficore Africa!') }}</p>
         </div>
         <div class="footer">
-            <p>{{ translations[language].get('About Ficore Africa: Empowering financial growth across Africa since 2023', translations['en']['About Ficore Africa: Empowering financial growth across Africa since 2023']) }}</p>
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations[language].get('Provide Feedback', translations['en']['Provide Feedback']) }}">{{ translations[language].get('Feedback', translations['en']['Feedback']) }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}">{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations[language].get('Book Consultancy', translations['en']['Book Consultancy']) }}">{{ translations[language].get('Consultancy', translations['en']['Consultancy']) }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
             </div>
             <div class="social-icons">
                 <a href="{{ linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
@@ -111,5 +111,5 @@
             </div>
         </div>
     </div>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4c8cfe8e4e590',t:'MTc0Njk5OTA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
