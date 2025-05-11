@@ -68,7 +68,7 @@
         {% endwith %}
         <div class="form-card slide-in">
             <h3>{{ translations[language].get('Step 3', translations['en']['Step 3']) }}: {{ translations[language].get('Expenses', translations['en']['Expenses']) }}</h3>
-            <form method="POST" id="step3-form" action="{{ url_for('step3') }}">
+            <form method="POST" id="step3-form" action="{{ url_for('budget_step3') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     <label for="housing" class="form-label"><span class="visual-icon">🏠</span> {{ translations[language].get('Housing Expenses', translations['en']['Housing Expenses']) }}</label>
@@ -107,7 +107,7 @@
                     <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('step2') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Income', translations['en']['Back to Income']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
+                    <a href="{{ url_for('budget_step2') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Income', translations['en']['Back to Income']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
                     {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Savings & Review', translations['en']['Continue to Savings & Review']) + ' →', **{'aria-label': translations[language].get('Continue to Savings & Review', translations['en']['Continue to Savings & Review'])}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations[language].get('Please enter valid amounts for all expenses', translations['en']['Please enter valid amounts for all expenses']) }}</div>
