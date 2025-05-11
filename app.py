@@ -121,7 +121,7 @@ app.jinja_env.filters['format_currency'] = format_currency
 
 # Google Sheets setup
 SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = os.getenv('12N6srDoN0NjN56uGWPv07NjK_WNNNQGKeUB9BxYhtYw')
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 sheets = None
 sheets_lock = threading.Lock()
 
@@ -628,6 +628,9 @@ def sanitize_input(text):
 
 def initialize_sheets(max_retries=5, backoff_factor=2):
     global sheets
+    if not SPREADSHEET_ID or SPREADSHEET_ID == "None":
+        logger.critical("SPREADSHEET_ID is not set or invalid.")
+        return False
     for attempt in range(max_retries):
         try:
             creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
@@ -653,7 +656,7 @@ def initialize_sheets(max_retries=5, backoff_factor=2):
                 time.sleep(backoff_factor ** attempt)
     logger.critical("Max retries exceeded for Google Sheets initialization.")
     return False
-
+    
 # Initialize Google Sheets at startup
 if not initialize_sheets():
     raise RuntimeError("Failed to initialize Google Sheets at startup.")
