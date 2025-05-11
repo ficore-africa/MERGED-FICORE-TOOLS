@@ -1,0 +1,973 @@
+import os
+import logging
+import threading
+import json
+import time
+import re
+import traceback
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, session
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, SelectField, FloatField, IntegerField
+from wtforms.validators import DataRequired, Email, ValidationError
+from flask_caching import Cache
+from flask_session import Session
+import pandas as pd
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+import plotly.express as px
+import gspread
+from google.oauth2.service_account import Credentials
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app
+app = Flask(__name__, template_folder='templates', static_folder='static')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+if not app.secret_key:
+    logger.critical("FLASK_SECRET_KEY not set. Application will not start.")
+    raise RuntimeError("FLASK_SECRET_KEY environment variable not set.")
+
+# Configure CSRF, caching, and session
+app.config['WTF_CSRF_TIME_LIMIT'] = 86400
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = os.path.join(app.root_path, 'flask_session')
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_COOKIE_NAME'] = 'session_id'
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+Session(app)
+
+# Load environment variables
+load_dotenv()
+
+# Define constants
+SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
+BUDGET_SPREADSHEET_ID = '1nE9sY5O3Zw1Z2z2Z3Zw1Z2z2Z3Zw1Z2z2Z3Zw1Z2z2'
+HEALTH_SPREADSHEET_ID = '1zL-darNUUmJWfonzotcKmcfnS7FsDU4oyHDTsejgO-A'
+BUDGET_HEADERS = [
+    'Timestamp', 'first_name', 'last_name', 'email', 'phone_number', 'language',
+    'monthly_income', 'housing', 'transportation', 'food', 'healthcare', 'education',
+    'entertainment', 'miscellaneous', 'savings_percentage', 'debt_repayment_percentage'
+]
+HEALTH_HEADERS = [
+    'Timestamp', 'business_name', 'income_revenue', 'expenses_costs', 'debt_loan',
+    'debt_interest_rate', 'auto_email', 'phone_number', 'first_name', 'last_name',
+    'user_type', 'email', 'badges', 'language'
+]
+FEEDBACK_FORM_URL = 'https://forms.gle/1g1FVulyf7ZvvXr7G0q7hAKwbGJMxV4blpjBuqrSjKzQ'
+WAITLIST_FORM_URL = 'https://forms.gle/17e0XYcp-z3hCl0I-j2JkHoKKJrp4PfgujsK8D7uqNxo'
+CONSULTANCY_FORM_URL = 'https://forms.gle/1TKvlT7OTvNS70YNd8DaPpswvqd9y7hKydxKr07gpK9A'
+INVESTING_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+SAVINGS_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+DEBT_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+RECOVERY_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+LINKEDIN_URL = 'https://www.linkedin.com/in/ficore-africa-58913a363/'
+TWITTER_URL = 'https://x.com/HassanAhm4d?t=lbiyFqRHoINfJxl9c30xBA&s=09'
+
+# Combined translations
+translations = {
+    'English': {
+        'Welcome': 'Welcome',
+        'Email': 'Email',
+        'Language': 'Language',
+        'Select Language': 'Select Language',
+        'Change Language': 'Change Language',
+        'Go': 'Go',
+        'Unlock Your Financial Freedom': 'Unlock Your Financial Freedom',
+        'Access essential tools and insights to understand, manage, and grow your finances across Africa': 'Access essential tools and insights to understand, manage, and grow your finances across Africa',
+        'Discover Your Financial Tools Below': 'Discover Your Financial Tools Below',
+        'Why Ficore Africa?': 'Why Ficore Africa?',
+        'Localized for Africa with support for Naira and regional financial contexts': 'Localized for Africa with support for Naira and regional financial contexts',
+        'Empowers financial literacy with easy-to-use tools': 'Empowers financial literacy with easy-to-use tools',
+        'Provides actionable insights for better financial decisions': 'Provides actionable insights for better financial decisions',
+        'New here? Start with your Financial Health Score to get personalized recommendations.': 'New here? Start with your Financial Health Score to get personalized recommendations.',
+        'Begin Now': 'Begin Now',
+        'Begin Financial Health Score Assessment': 'Begin Financial Health Score Assessment',
+        'Track Your Finances': 'Track Your Finances',
+        'Financial Health Score': 'Financial Health Score',
+        'This tool evaluates your income, expenses, and debt to provide a health score': 'This tool evaluates your income, expenses, and debt to provide a health score',
+        'Evaluates income, expenses, and debt for a health score': 'Evaluates income, expenses, and debt for a health score',
+        'Start Now': 'Start Now',
+        'Start Financial Health Score Assessment': 'Start Financial Health Score Assessment',
+        'Start Here': 'Start Here',
+        'Net Worth Calculator': 'Net Worth Calculator',
+        'Calculate your net worth from assets and liabilities': 'Calculate your net worth from assets and liabilities',
+        'Net worth is assets minus liabilities': 'Net worth is assets minus liabilities',
+        'Start Net Worth Calculator': 'Start Net Worth Calculator',
+        'Emergency Fund Calculator': 'Emergency Fund Calculator',
+        'Aims to cover 3-6 months of expenses for financial security': 'Aims to cover 3-6 months of expenses for financial security',
+        'Start Emergency Fund Calculator': 'Start Emergency Fund Calculator',
+        'Plan & Budget': 'Plan & Budget',
+        'Monthly Budget Planner': 'Monthly Budget Planner',
+        'Manage income and expenses with budget': 'Manage income and expenses with budget',
+        'Allocate income across expense categories': 'Allocate income across expense categories',
+        'Start Monthly Budget Planner': 'Start Monthly Budget Planner',
+        'Expense Tracker': 'Expense Tracker',
+        'Track expenses by category and date': 'Track expenses by category and date',
+        'Log and edit expenses for spending insights': 'Log and edit expenses for spending insights',
+        'Start Expense Tracker': 'Start Expense Tracker',
+        'Bill Planner': 'Bill Planner',
+        'Organize bills by amount and due date': 'Organize bills by amount and due date',
+        'Manage and mark bills as paid': 'Manage and mark bills as paid',
+        'Start Bill Planner': 'Start Bill Planner',
+        'Know Yourself': 'Know Yourself',
+        'Financial Personality Quiz': 'Financial Personality Quiz',
+        'Test your financial knowledge with a quiz': 'Test your financial knowledge with a quiz',
+        'Answer questions to assess financial literacy': 'Answer questions to assess financial literacy',
+        'Start Financial Personality Quiz': 'Start Financial Personality Quiz',
+        'Coming Soon': 'Coming Soon',
+        'Daily Tip: Pay yourself first before expenses': 'Daily Tip: Pay yourself first before expenses',
+        'Feature Spotlight: Try our Net Worth Calculator!': 'Feature Spotlight: Try our Net Worth Calculator!',
+        'Contact Us': 'Contact Us',
+        'Click to Email': 'Click to Email',
+        'for support': 'for support',
+        'Email Ficore Africa Support': 'Email Ficore Africa Support',
+        'Provide Feedback': 'Provide Feedback',
+        'Back': 'Back',
+        'Go Back': 'Go Back',
+        'Home': 'Home',
+        'Return to Home': 'Return to Home',
+        'About Ficore Africa: Empowering financial growth across Africa since 2023': 'About Ficore Africa: Empowering financial growth across Africa since 2023',
+        # Budget Planner translations
+        'Personal Information': 'Personal Information',
+        'Enter your first name': 'Enter your first name',
+        'First Name Required': 'First name is required.',
+        'Enter your last name (optional)': 'Enter your last name (optional)',
+        'Enter your email': 'Enter your email',
+        'Invalid Email': 'Please enter a valid email address.',
+        'Confirm your email': 'Confirm your email',
+        'Enter phone number (optional)': 'Enter phone number (optional)',
+        'Financial Information': 'Financial Information',
+        'Enter your monthly income': 'Enter your monthly income',
+        'Enter housing expenses': 'Enter housing expenses',
+        'Enter transportation expenses': 'Enter transportation expenses',
+        'Enter food expenses': 'Enter food expenses',
+        'Enter healthcare expenses': 'Enter healthcare expenses',
+        'Enter education expenses': 'Enter education expenses',
+        'Enter entertainment expenses': 'Enter entertainment expenses',
+        'Enter miscellaneous expenses': 'Enter miscellaneous expenses',
+        'Enter savings percentage': 'Enter savings percentage',
+        'Enter debt repayment percentage': 'Enter debt repayment percentage',
+        'Invalid Number': 'Please enter a valid number.',
+        'Invalid Percentage': 'Please enter a percentage between 0 and 100.',
+        'Submit': 'Submit',
+        'Budget Planner': 'Budget Planner',
+        'Your Budget Plan': 'Your Budget Plan',
+        'Back to Home': 'Back to Home',
+        'Book Consultancy': 'Book Consultancy',
+        'Join Waitlist': 'Join Premium Waitlist',
+        'Budget Submission Success': 'Your budget information is submitted successfully! Check your plan below 👇',
+        'Check Inbox': 'Please check your inbox or junk folders if email doesn’t arrive in a few minutes.',
+        'Error saving data. Please try again.': 'Error saving data. Please try again.',
+        'Error retrieving data. Please try again.': 'Error retrieving data. Please try again.',
+        'An unexpected error occurred. Please try again.': 'An unexpected error occurred. Please try again.',
+        'Session Expired': 'Your session has expired. Please refresh the page and try again.',
+        'Budget Report Subject': '📊 Your Ficore Budget Plan is Ready, {user_name}!',
+        'Budget Email Body': '''
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #FFFFFF; margin: 0;">Ficore Africa Budget Planner</h2>
+                    <p style="font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0;">
+                        Financial growth passport for Africa
+                    </p>
+                </div>
+                <p>Dear {user_name},</p>
+                <p>Your budget plan has been successfully created based on your recent submission. Below is a summary:</p>
+                <ul>
+                    <li><strong>Monthly Income</strong>: ₦{monthly_income}</li>
+                    <li><strong>Total Expenses</strong>: ₦{total_expenses}</li>
+                    <li><strong>Savings</strong>: ₦{savings}</li>
+                    <li><strong>Debt Repayment</strong>: ₦{debt_repayment}</li>
+                </ul>
+                <p>Follow this plan to manage your finances effectively. We're here to support you in achieving your financial goals!</p>
+                <p style="margin-bottom: 10px;">
+                    Please provide feedback on your experience: 
+                    <a href="{FEEDBACK_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #2E7D32; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Feedback Form</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Want Smart Insights? Join the waitlist for Ficore Premium: 
+                    <a href="{WAITLIST_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #1976D2; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Join Waitlist</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Need personalized advice? 
+                    <a href="{CONSULTANCY_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #388E3C; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Book Consultancy</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Have a Nice Day!
+                </p>
+                <p>Best regards,<br>The Ficore Africa Team</p>
+                <p>
+                    Follow us on 
+                    <a href="{linkedin_url}" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> and 
+                    <a href="{twitter_url}" style="text-decoration: none; color: #1DA1F2;">Twitter</a> for updates.
+                </p>
+            </body>
+            </html>
+        ''',
+        # Financial Health Score translations
+        'Your Financial Health Summary': 'Your Financial Health Summary:',
+        'Your Financial Health Score': 'Your Financial Health Score',
+        'Ranked': 'Ranked',
+        'out of': 'out of',
+        'users': 'users',
+        'Strong Financial Health': 'Your score indicates strong financial health. Focus on investing the surplus funds to grow your wealth.',
+        'Stable Finances': 'Your finances are stable but could improve. Consider saving more or reducing your expenses.',
+        'Financial Strain': 'Your score suggests financial strain. Prioritize paying off debt and managing your expenses.',
+        'Urgent Attention Needed': 'Your finances need urgent attention. Seek professional advice and explore recovery strategies.',
+        'Score Breakdown': 'Score Breakdown',
+        'Chart Unavailable': 'Chart unavailable at this time.',
+        'Score Composition': 'Your score is composed of three components',
+        'Cash Flow': 'Cash Flow',
+        'Cash Flow Description': 'Reflects how much income remains after expenses. Higher values indicate better financial flexibility.',
+        'Debt-to-Income Ratio': 'Debt-to-Income Ratio',
+        'Debt-to-Income Description': 'Measures debt relative to income. Lower ratios suggest manageable debt levels.',
+        'Debt Interest Burden': 'Debt Interest Burden',
+        'Debt Interest Description': 'Indicates the impact of interest rates on your finances. Lower burdens mean less strain from debt.',
+        'Balanced Components': 'Your components show balanced financial health. Maintain strong cash flow and low debt.',
+        'Components Need Attention': 'One or more components may need attention. Focus on improving cash flow or reducing debt.',
+        'Components Indicate Challenges': 'Your components indicate challenges. Work on increasing income, cutting expenses, or lowering debt interest.',
+        'Your Badges': 'Your Badges',
+        'No Badges Yet': 'No badges earned yet. Keep submitting to earn more!',
+        'Recommended Learning': 'Recommended Learning',
+        'Recommended Course': 'Recommended Course',
+        'Enroll in': 'Enroll in',
+        'Enroll Now': 'Enroll Now',
+        'Quick Financial Tips': 'Quick Financial Tips',
+        'Invest': 'Invest',
+        'Invest Wisely': 'Allocate surplus cash to low-risk investments like treasury bills or treasury bonds to grow your wealth.',
+        'Scale': 'Scale',
+        'Scale Smart': 'Reinvest profits into your business to expand operations sustainably.',
+        'Build': 'Build',
+        'Build Savings': 'Save 10% of your income monthly to create an emergency fund.',
+        'Cut': 'Cut',
+        'Cut Costs': 'Review needs and wants - check expenses and reduce non-essential spending to boost cash flow.',
+        'Reduce': 'Reduce',
+        'Reduce Debt': 'Prioritize paying off high-interest loans to ease financial strain.',
+        'Boost': 'Boost',
+        'Boost Income': 'Explore side hustles or new income streams to improve cash flow.',
+        'How You Compare': 'How You Compare to Others',
+        'Your Rank': 'Your rank of',
+        'places you': 'places you',
+        'Top 10%': 'in the top 10% of users, indicating exceptional financial health compared to peers.',
+        'Top 30%': 'in the top 30%, showing above-average financial stability.',
+        'Middle Range': 'in the middle range, suggesting room for improvement to climb the ranks.',
+        'Lower Range': 'in the lower range, highlighting the need for strategic financial planning.',
+        'Regular Submissions': 'Regular submissions can help track your progress and improve your standing.',
+        'Whats Next': 'What’s Next? Unlock Further Insights',
+        'Ficore Africa Financial Health Score': 'Ficore Africa Financial Health Score',
+        'Get Your Score': 'Get your financial health score and personalized insights instantly!',
+        'User Information': 'User Information',
+        'Enter your business name': 'Enter your business name',
+        'Business Name Required': 'Business name is required.',
+        'User Type': 'User Type',
+        'Enter monthly income/revenue': 'Enter monthly income/revenue',
+        'Enter monthly expenses/costs': 'Enter monthly expenses/costs',
+        'Enter total debt/loan amount': 'Enter total debt/loan amount',
+        'Enter debt interest rate (%)': 'Enter debt interest rate (%)',
+        'Session data missing. Please submit again.': 'Session data is missing. Please submit the form again.',
+        'Error generating plots. Dashboard will display without plots.': 'Error generating plots. The dashboard will display without them.',
+        'Top 10% Subject': '🔥 You\'re Top 10%! Your Ficore Score Report Awaits!',
+        'Score Report Subject': '📊 Your Ficore Score Report is Ready, {user_name}!',
+        'Email Body': '''
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #FFFFFF; margin: 0;">Ficore Africa Financial Health Score</h2>
+                    <p style="font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0;">
+                        Financial growth passport for Africa
+                    </p>
+                </div>
+                <p>Dear {user_name},</p>
+                <p>We have calculated your Ficore Africa Financial Health Score based on your recent submission.</p>
+                <ul>
+                    <li><strong>Score</strong>: {health_score}/100</li>
+                    <li><strong>Advice</strong>: {score_description}</li>
+                    <li><strong>Rank</strong>: #{rank} out of {total_users} users</li>
+                </ul>
+                <p>Follow the advice above to improve your financial health. We’re here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!</p>
+                <p style="margin-bottom: 10px;">
+                    Want to learn more? Check out this course: 
+                    <a href="{course_url}" style="display: inline-block; padding: 10px 20px; background-color: #FBC02D; color: #333; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">{course_title}</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Please provide feedback on your experience: 
+                    <a href="{FEEDBACK_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #2E7D32; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Feedback Form</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Want Smart Insights? Join the waitlist for Ficore Premium: 
+                    <a href="{WAITLIST_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #1976D2; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Join Waitlist</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Need personalized advice? 
+                    <a href="{CONSULTANCY_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #388E3C; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Book Consultancy</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Have a Nice Day!.
+                </p>
+                <p>Best regards,<br>The Ficore Africa Team</p>
+                <p>
+                    Follow us on 
+                    <a href="{linkedin_url}" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> and 
+                    <a href="{twitter_url}" style="text-decoration: none; color: #1DA1F2;">Twitter</a> for updates.
+                </p>
+            </body>
+            </html>
+        ''',
+        'First Health Score Completed!': 'First Health Score Completed!',
+        'Financial Stability Achieved!': 'Financial Stability Achieved!',
+        'Debt Slayer!': 'Debt Slayer!',
+        'Submission Success': 'Your information is submitted successfully! Check your dashboard below 👇',
+        'Your Financial Health Dashboard': 'Your Financial Health Dashboard'
+    },
+    'Hausa': {
+        'Welcome': 'Barka da zuwa',
+        'Email': 'Email',
+        'Language': 'Zabi Yare',
+        'Select Language': 'Zaɓi Yare',
+        'Change Language': 'Canza Yare',
+        'Go': 'Tafi',
+        'Unlock Your Financial Freedom': 'Buɗe Yancin Kuɗin Ku',
+        'Access essential tools and insights to understand, manage, and grow your finances across Africa': 'Sami kayan aiki masu mahimmanci da fahimta don fahimta, sarrafawa, da haɓaka kuɗin ku a duk faɗin Afirka',
+        'Discover Your Financial Tools Below': 'Gano Kayan Aikin Kuɗin Ku a Ƙasa',
+        'Why Ficore Africa?': 'Me yasa Ficore Africa?',
+        'Localized for Africa with support for Naira and regional financial contexts': 'An keɓance shi don Afirka tare da tallafi ga Naira da yanayin kuɗi na yanki',
+        'Empowers financial literacy with easy-to-use tools': 'Yana ƙarfafa ilimin kuɗi tare da kayan aiki masu sauƙin amfani',
+        'Provides actionable insights for better financial decisions': 'Yana ba da fahimta mai amfani don mafi kyawun yanke shawara na kuɗi',
+        'New here? Start with your Financial Health Score to get personalized recommendations.': 'Sabon shiga ne a nan? Fara da Makin Lafiyar Kuɗin Ku don samun shawarwari na keɓaɓɓu.',
+        'Begin Now': 'Fara Yanzu',
+        'Begin Financial Health Score Assessment': 'Fara Ƙididdigar Makin Lafiyar Kuɗi',
+        'Track Your Finances': 'Bin Kuɗin Ku',
+        'Financial Health Score': 'Makin Lafiyar Kuɗi',
+        'This tool evaluates your income, expenses, and debt to provide a health score': 'Wannan kayan aiki yana kimanta kuɗin shigarku, kashe kuɗinku, da bashi don ba da makin lafiya',
+        'Evaluates income, expenses, and debt for a health score': 'Yana kimanta kuɗin shiga, kashe kuɗi, da bashi don makin lafiya',
+        'Start Now': 'Fara Yanzu',
+        'Start Financial Health Score Assessment': 'Fara Ƙididdigar Makin Lafiyar Kuɗi',
+        'Start Here': 'Fara Nan',
+        'Net Worth Calculator': 'Ƙididdigar Dukiyar Ku',
+        'Calculate your net worth from assets and liabilities': 'Ƙididdige dukiyarku daga kadarori da nauyi',
+        'Net worth is assets minus liabilities': 'Dukiyar shine kadarori ban da nauyi',
+        'Start Net Worth Calculator': 'Fara Ƙididdigar Dukiyar Ku',
+        'Emergency Fund Calculator': 'Ƙididdigar Asusun Gaggawa',
+        'Aims to cover 3-6 months of expenses for financial security': 'Yana da nufin rufe kashe kuɗin watanni 3-6 don tsaron kuɗi',
+        'Start Emergency Fund Calculator': 'Fara Ƙididdigar Asusun Gaggawa',
+        'Plan & Budget': 'Tsara & Kasafin Kuɗi',
+        'Monthly Budget Planner': 'Tsarin Kasafin Kuɗi na Wata',
+        'Manage income and expenses with budget': 'Sarrafa kuɗin shiga da kashe kuɗi tare da kasafin kuɗi',
+        'Allocate income across expense categories': 'Raba kuɗin shiga a cikin nau’ikan kashe kuɗi',
+        'Start Monthly Budget Planner': 'Fara Tsarin Kasafin Kuɗi na Wata',
+        'Expense Tracker': 'Mai Bin Kashe Kuɗi',
+        'Track expenses by category and date': 'Bin kashe kuɗin da nau’i da kwanan wata',
+        'Log and edit expenses for spending insights': 'Shigar da gyara kashe kuɗin don fahimtar kashe kuɗi',
+        'Start Expense Tracker': 'Fara Mai Bin Kashe Kuɗi',
+        'Bill Planner': 'Tsarin Biyan Kuɗi',
+        'Organize bills by amount and due date': 'Tsara kuɗin biyan kuɗi da adadi da ranar karewa',
+        'Manage and mark bills as paid': 'Sarrafa kuma sanya alama kan kuɗin da aka biya',
+        'Start Bill Planner': 'Fara Tsarin Biyan Kuɗi',
+        'Know Yourself': 'Sanin Kanka',
+        'Financial Personality Quiz': 'Tambayoyin Halin Kuɗi',
+        'Test your financial knowledge with a quiz': 'Gwada ilimin kuɗin ku tare da tambayoyi',
+        'Answer questions to assess financial literacy': 'Amsa tambayoyin don tantance ilimin kuɗi',
+        'Start Financial Personality Quiz': 'Fara Tambayoyin Halin Kuɗi',
+        'Coming Soon': 'Zai Zo Nan Ba Da Jimawa Ba',
+        'Daily Tip: Pay yourself first before expenses': 'Shawarar Yau: Biya kanka da farko kafin kashe kuɗi',
+        'Feature Spotlight: Try our Net Worth Calculator!': 'Fiyace: Gwada Ƙididdigar Dukiyar Mu!',
+        'Contact Us': 'Tuntube Mu',
+        'Click to Email': 'Danna Don Tura Sako',
+        'for support': 'Don Tura Sako',
+        'Email Ficore Africa Support': 'Tura Sako zuwa Tallafin Ficore Africa',
+        'Provide Feedback': 'Danna Idan Kana da Shawara',
+        'Back': 'Koma Baya',
+        'Go Back': 'Koma Baya',
+        'Home': 'Gida',
+        'Return to Home': 'Koma Gida',
+        'About Ficore Africa: Empowering financial growth across Africa since 2023': 'Game da Ficore Africa: Ƙarfafa ci gaban kuɗi a duk faɗin Afirka tun 2023',
+        # Budget Planner translations
+        'Personal Information': 'Bayanan Kai',
+        'Enter your first name': 'Shigar da sunanka na farko',
+        'First Name Required': 'Ana buƙatar sunan farko.',
+        'Enter your last name (optional)': 'Shigar da sunanka na ƙarshe (na zaɓi)',
+        'Enter your email': 'Shigar da email ɗinka',
+        'Invalid Email': 'Da fatan za a shigar da adireshin email mai inganci.',
+        'Confirm your email': 'Sake Tabbatar da email ɗinka',
+        'Enter phone number (optional)': 'Shigar da lambar waya (na zaɓi)',
+        'Financial Information': 'Bayanan Kuɗi',
+        'Enter your monthly income': 'Shigar da kuɗin shigarka na wata',
+        'Enter housing expenses': 'Shigar da kashe kuɗin gidaje',
+        'Enter transportation expenses': 'Shigar da kashe kuɗin sufuri',
+        'Enter food expenses': 'Shigar da kashe kuɗin abinci',
+        'Enter healthcare expenses': 'Shigar da kashe kuɗin kiwon lafiya',
+        'Enter education expenses': 'Shigar da kashe kuɗin ilimi',
+        'Enter entertainment expenses': 'Shigar da kashe kuɗin nishaɗi',
+        'Enter miscellaneous expenses': 'Shigar da kashe kuɗin sauran abubuwa',
+        'Enter savings percentage': 'Shigar da kashi na ajiya',
+        'Enter debt repayment percentage': 'Shigar da kashi na biyan bashi',
+        'Invalid Number': 'Da fatan za a shigar da lamba mai inganci.',
+        'Invalid Percentage': 'Da fatan za a shigar da kashi tsakanin 0 da 100.',
+        'Submit': 'Mika Sako',
+        'Budget Planner': 'Tsarin Kasafin Kuɗi',
+        'Your Budget Plan': 'Tsarin Kasafin Kuɗin Ku',
+        'Back to Home': 'Koma Sahfin Farko',
+        'Book Consultancy': 'Jerin Masu Neman Shawara',
+        'Join Waitlist': 'Masu Jiran Ficore Premium',
+        'Budget Submission Success': 'An shigar da bayanan kasafin kuɗin ku cikin nasara! Duba tsarinku a ƙasa 👇',
+        'Check Inbox': 'Da fatan za a duba akwatin saƙonku ko foldar spam idan email ɗin bai zo ba cikin ƴan mintuna.',
+        'Error saving data. Please try again.': 'Anyi Kuskure wajen adana bayanai. Da fatan za a sake gwadawa.',
+        'Error retrieving data. Please try again.': 'Anyi Kuskure wajen dawo da bayanai. Da fatan za a sake gwadawa.',
+        'An unexpected error occurred. Please try again.': 'Wani kuskure wanda ba a zata ba ya faru. Da fatan za a sake gwadawa.',
+        'Session Expired': 'Lokacin aikin ku ya ƙare. Da fatan za a sake shigar da shafin kuma a gwada sake.',
+        'Budget Report Subject': '📊 Tsarin Kasafin Kuɗin Ku na Ficore Ya Shirya, {user_name}!',
+        'Budget Email Body': '''
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #FFFFFF; margin: 0;">Tsarin Kasafin Kuɗin Ficore Africa</h2>
+                    <p style="font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0;">
+                        Tikitin ci gaban kuɗi na Afirka
+                    </p>
+                </div>
+                <p>Barka da warhaka {user_name},</p>
+                <p>An ƙirƙiri tsarin kasafin kuɗin ku cikin nasara bisa bayanan da kuka bayar. Ga taƙaitaccen bayani:</p>
+                <ul>
+                    <li><strong>Kuɗin Shiga na Wata</strong>: ₦{monthly_income}</li>
+                    <li><strong>Jimlar Kashe Kuɗi</strong>: ₦{total_expenses}</li>
+                    <li><strong>Ajiya</strong>: ₦{savings}</li>
+                    <li><strong>Biyan Bashi</strong>: ₦{debt_repayment}</li>
+                </ul>
+                <p>Bi wannan tsari don sarrafa kuɗin ku yadda ya kamata. Muna nan don tallafa muku wajen cimma burin kuɗin ku!</p>
+                <p style="margin-bottom: 10px;">
+                    Da fatan za a ba da shawara ko ra’ayi akan Ficore: 
+                    <a href="{FEEDBACK_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #2E7D32; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Fom ɗin Shawara</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Kuna son shawarwari na kwararru? Shiga jerin jiran Ficore Premium: 
+                    <a href="{WAITLIST_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #1976D2; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Shiga Jerin Jira</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Kuna buƙatar shawarwari keɓaɓɓu? 
+                    <a href="{CONSULTANCY_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #388E3C; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Shiga Jerin Masu So</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    A huta lafiya!
+                </p>
+                <p>Gaisuwa,<br>Ƙungiyar Ficore Africa</p>
+                <p>
+                    Bi mu a kan 
+                    <a href="{linkedin_url}" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> da 
+                    <a href="{twitter_url}" style="text-decoration: none; color: #1DA1F2;">Twitter</a> don sabuntawa.
+                </p>
+            </body>
+            </html>
+        ''',
+        # Financial Health Score translations
+        'Your Financial Health Summary': 'Takaitaccen Bayanai Akan Lafiyar Kuɗin Ku!',
+        'Your Financial Health Score': 'Maki Da Lafiyar Kuɗin Ku Ta Samu:',
+        'Ranked': 'Darajar Lafiyar Kuɗin Ku',
+        'out of': 'Daga Cikin',
+        'users': 'Dukkan Masu Amfani Da Ficore Zuwa Yanzu.',
+        'Strong Financial Health': 'Makin ku yana nuna ƙarfin lafiyar kuɗinku. Ku Mai da hankali kan zuba hannun jari daga cikin kuɗin da ya rage muku don haɓaka dukiyarku.',
+        'Stable Finances': 'Makin Kuɗin ku suna Nuni da kwanciyar hankali, amma zaku iya ingantashi duk da haka. Yi la’akari da adanawa ko rage wani bangare na kuɗin ta hanyar ajiya don gaba.',
+        'Financial Strain': 'Makin ku yana nuna Akwai damuwar kuɗi. Ku Fifita biyan bashi sannan ku sarrafa kashe kuɗinku dakyau.',
+        'Urgent Attention Needed': 'Makin Kuɗin ku suna Nuna buƙatar kulawa cikin gaggawa. Ku Nemi shawarar ƙwararru kuma Ku bincika dabarun farfadowa daga wannan yanayi.',
+        'Score Breakdown': 'Rarraban Makin ku',
+        'Chart Unavailable': 'Zanen Lissafi ba ya samuwa a wannan lokacin saboda Netowrk.',
+        'Score Composition': 'Makin ku ya ƙunshi abubuwa uku',
+        'Cash Flow': 'Kuɗin da Kuke Samu',
+        'Cash Flow Description': 'Yana nuna adadin kuɗin da ya rage muku a hannu bayan Kun kashe kuɗi wajen biyan Bukatu. Maki mai ƙima yana nuna mafi kyawun alamar rike kuɗi.',
+        'Debt-to-Income Ratio': 'Rabiyar Bashi zuwa Kuɗin shiga',
+        'Debt-to-Income Description': 'Yana auna bashi dangane da kuɗin shiga. Ƙananan Makin rabiya yana nuna matakan bashi mai sauƙi.',
+        'Debt Interest Burden': 'Nauyin Interest akan Bashi',
+        'Debt Interest Description': 'Yana nuna tasirin ƙimar Interest a kan kuɗin ku. Ƙananan nauyi yana nufin ƙarancin damuwa daga Interest akan bashi.',
+        'Balanced Components': 'Abubuwan da ke ciki suna nuna daidaitaccen lafiyar kuɗi. Ci gaba da kiyaye kuɗi ta hanya mai kyau kuma da ƙarancin bashi.',
+        'Components Need Attention': 'Ɗaya ko fiye da abubuwan da ke ciki na iya buƙatar kulawa. Mai da hankali kan inganta samun kuɗi ko rage bashi.',
+        'Components Indicate Challenges': 'Abubuwan da ke ciki suna nuna ƙalubale. Yi aiki kan ƙara kuɗin shiga, rage kashe kuɗin, ko rage Interest da kake biya akan bashi.',
+        'Your Badges': 'Lambar Yabo',
+        'No Badges Yet': 'Ba a sami Lambar Yabo ba tukuna. Ci gaba da Aiki da Ficore don samun Sabbin Lambobin Yabo!',
+        'Recommended Learning': 'Shawari aka Koyon Inganta Neman Kudi da Ajiya.',
+        'Recommended Course': 'Darasi da Aka Shawarta Maka',
+        'Enroll in': 'Shiga ciki',
+        'Enroll Now': 'Shiga Yanzu',
+        'Quick Financial Tips': 'Shawarwari',
+        'Invest': 'Saka hannun jari',
+        'Invest Wisely': 'Sanya kuɗin da ya rage maka a cikin hannayen jari masu ƙarancin haɗari kamar takardun shaida daga Gwamnati ko Manyan Kamfanuwa don haɓaka dukiyarku.',
+        'Scale': 'Faɗaɗa',
+        'Scale Smart': 'Sake saka ribar kasuwancinku a cikin kasuwancin naku don faɗaɗa shi domin dorewa.',
+        'Build': 'Gina',
+        'Build Savings': 'Ajiye 10% na kuɗin shigarka a kowane wata don Samar da Asusun gaggawa domin rashin Lafiya ko jarabawa.',
+        'Cut': 'Yanke',
+        'Cut Costs': 'Kula da kashe kuɗinku kuma ku rage kashe kuɗin da ba dole ba don haɓaka arzikinku.',
+        'Reduce': 'Rage',
+        'Reduce Debt': 'Fifita biyan Bashi masu Interest don sauƙaƙe damuwar kuɗi.',
+        'Boost': 'Ƙarfafa',
+        'Boost Income': 'Bincika ayyukan a gefe ko ka nemi sabbin hanyoyin samun kuɗin don inganta Arzikinka.',
+        'How You Compare': 'Kwatanta ku da Sauran Masu Amfani da Ficore',
+        'Your Rank': 'Matsayin ku',
+        'places you': 'ya sanya ku',
+        'Top 10%': 'a cikin sama da kaso goma 10% na masu amfani da Ficore, yana nuna akwai kyawun lafiyar kuɗi idan aka kwatanta da Sauran Mutane.',
+        'Top 30%': 'a cikin sama da kaso talatin 30%, yana nuna akwai kwanciyar hankali na kuɗi sama da yawancin Mutane.',
+        'Middle Range': 'a cikin tsaka-tsaki, yana nuna akwai sarari don inganta samu domin hawa matsayi na gaba.',
+        'Lower Range': 'a cikin mataki na ƙasa, yana nuna akwai buƙatar ku tsara kuɗinku dakyau cikin dabara daga yanzu.',
+        'Regular Submissions': 'Amfani da Ficore akai-akai zai taimaka muku wajen bin diddigin ci gaban ku da kanku, don inganta matsayin Arzikinku.',
+        'Whats Next': 'Me ke Gaba? Ku Duba Wadannan:',
+        'Ficore Africa Financial Health Score': 'Makin Lafiyar KuɗinKu Daga Ficore Africa',
+        'Get Your Score': 'Sami makin lafiyar kuɗin ku don fahimtar keɓaɓɓun hanyoyin Ingantawa nan take!',
+        'User Information': 'Bayanan Ka',
+        'Enter your business name': 'Shigar da sunan kasuwancinka',
+        'Business Name Required': 'Ana buƙatar sunan kasuwanci.',
+        'User Type': 'Nau’in Mai Amfani da Ficore',
+        'Enter monthly income/revenue': 'Shigar da jimillar kuɗin shiga/kudin shigarku na wata-wata',
+        'Enter monthly expenses/costs': 'Shigar da jimillar kashe kuɗinku/kudin wata-wata',
+        'Enter total debt/loan amount': 'Shigar da jimillar bashi/lamuni',
+        'Enter debt interest rate (%)': 'Shigar da Interest na bashin (%)',
+        'Session data missing. Please submit again.': 'Bayanan zama sun ɓace. Da fatan za a sake yin aikace.',
+        'Error generating plots. Dashboard will display without plots.': 'An sami kuskure wajen ƙirƙirar zane. Allon zai nuna ba tare da su ba.',
+        'Top 10% Subject': '🔥 Kuna cikin Sama da kaso goma 10%! Rahoton Makin ku na Ficore Yana Jiran Ku!',
+        'Score Report Subject': '📊 Rahoton Makin ku na Ficore Yana Shirye, {user_name}!',
+        'Email Body': '''
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #FFFFFF; margin: 0;">Makin Lafiyar Kuɗinku na Ficore Africa</h2>
+                    <p style="font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0;">
+                        Tikitin ci gaban arciki na yan Afirka
+                    </p>
+                </div>
+                <p>Barka Da Warhaka {user_name},</p>
+                <p>Mun ƙididdige Makin Lafiyar Kuɗinku ta hanyar amfani da Ficore Africa bisa bayanan da kuka bayar.</p>
+                <ul>
+                    <li><strong>Maki</strong>: {health_score}/100</li>
+                    <li><strong>Shawara</strong>: {score_description}</li>
+                    <li><strong>Matsayi</strong>: #{rank} daga cikin {total_users} masu amfani</li>
+                </ul>
+                <p>Bi shawarar da ke sama don inganta arzikin ku. Muna nan don tallafa muku a kowane mataki— a fara aiki a yau don ƙarfafa arzikin ku domin kasuwancinku, burikanku, dakuma iyalanku!</p>
+                <p style="margin-bottom: 10px;">
+                    Kuna son ƙarin ilimi akan wannan? Duba wannan Darasi: 
+                    <a href="{course_url}" style="display: inline-block; padding: 10px 20px; background-color: #FBC02D; color: #333; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">{course_title}</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Da fatan za a ba da shawara ko ra,ayi akan Ficore: 
+                    <a href="{FEEDBACK_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #2E7D32; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Fom ɗin Shawara</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Kuna son Shawarar daga Kwararru? Shiga jerin jiran Ficore Premium: 
+                    <a href="{WAITLIST_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #1976D2; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Shiga Jerin Jira</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Kuna buƙatar shawarwari keɓaɓɓu? 
+                    <a href="{CONSULTANCY_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #388E3C; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Shiga Jerin Masu So</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    A huta Lafiya!
+                </p>
+                <p>Gaisuwa,<br>Daga Ƙungiyar Ficore Africa</p>
+                <p>
+                    Bi mu a kan 
+                    <a href="{linkedin_url}" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> da 
+                    <a href="{twitter_url}" style="text-decoration: none; color: #1DA1F2;">Twitter</a> don sabuntawa.
+                </p>
+            </body>
+            </html>
+        ''',
+        'First Health Score Completed!': 'Makin Lafiyar Arziki na Farko ya Kammala!',
+        'Financial Stability Achieved!': 'Akwai Wadata!',
+        'Debt Slayer!': 'Mai Ragargaza Bashi!',
+        'Submission Success': 'An shigar da bayananka cikin nasara! Duba allon bayananka a ƙasa 👇',
+        'Your Financial Health Dashboard': 'Allon Lafiyar Kuɗin Ku'
+    }
+}
+
+# Thread-safe Google Sheets clients
+budget_sheets = None
+health_sheets = None
+sheets_lock = threading.Lock()
+
+def initialize_sheets(spreadsheet_id, client_type='budget', max_retries=5, backoff_factor=2):
+    global budget_sheets, health_sheets
+    with sheets_lock:
+        if client_type == 'budget' and budget_sheets is not None:
+            logger.info("Budget Google Sheets already initialized.")
+            return True
+        if client_type == 'health' and health_sheets is not None:
+            logger.info("Health Google Sheets already initialized.")
+            return True
+        for attempt in range(max_retries):
+            try:
+                creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+                if not creds_json:
+                    logger.critical("GOOGLE_CREDENTIALS_JSON not set.")
+                    return False
+                try:
+                    creds_dict = json.loads(creds_json)
+                except json.JSONDecodeError as e:
+                    logger.error(f"Invalid GOOGLE_CREDENTIALS_JSON format: {e}")
+                    return False
+                creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
+                client = gspread.authorize(creds)
+                sheets = client.open_by_key(spreadsheet_id)
+                if client_type == 'budget':
+                    budget_sheets = sheets
+                else:
+                    health_sheets = sheets
+                logger.info(f"Successfully initialized {client_type} Google Sheets.")
+                return True
+            except gspread.exceptions.APIError as e:
+                logger.error(f"{client_type} Google Sheets API error on attempt {attempt + 1}: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(backoff_factor ** attempt)
+            except Exception as e:
+                logger.error(f"Attempt {attempt + 1} failed for {client_type}: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(backoff_factor ** attempt)
+        logger.critical(f"Max retries exceeded for {client_type} Google Sheets initialization.")
+        return False
+
+# Initialize sheets at startup
+if not initialize_sheets(BUDGET_SPREADSHEET_ID, 'budget'):
+    logger.critical("Failed to initialize Budget Google Sheets. App will not function correctly.")
+    raise RuntimeError("Budget Google Sheets initialization failed.")
+if not initialize_sheets(HEALTH_SPREADSHEET_ID, 'health'):
+    logger.critical("Failed to initialize Health Google Sheets. App will not function correctly.")
+    raise RuntimeError("Health Google Sheets initialization failed.")
+
+# Forms
+class BudgetForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name')
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    auto_email = StringField('Confirm Your Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    language = SelectField('Language', choices=[('English', 'English'), ('Hausa', 'Hausa')], validators=[DataRequired()])
+    monthly_income = FloatField('Monthly Income', validators=[DataRequired()])
+    housing = FloatField('Housing', validators=[DataRequired()])
+    transportation = FloatField('Transportation', validators=[DataRequired()])
+    food = FloatField('Food', validators=[DataRequired()])
+    healthcare = FloatField('Healthcare', validators=[DataRequired()])
+    education = FloatField('Education', validators=[DataRequired()])
+    entertainment = FloatField('Entertainment', validators=[DataRequired()])
+    miscellaneous = FloatField('Miscellaneous', validators=[DataRequired()])
+    savings_percentage = IntegerField('Savings Percentage', validators=[DataRequired()])
+    debt_repayment_percentage = IntegerField('Debt Repayment Percentage', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+    def validate_auto_email(self, auto_email):
+        if auto_email.data != self.email.data:
+            raise ValidationError('Email addresses must match.')
+
+    def validate_monthly_income(self, monthly_income):
+        if monthly_income.data < 0:
+            raise ValidationError('Monthly income must be a non-negative number.')
+
+    def validate_housing(self, housing):
+        if housing.data < 0:
+            raise ValidationError('Housing expenses must be a non-negative number.')
+
+    def validate_transportation(self, transportation):
+        if transportation.data < 0:
+            raise ValidationError('Transportation expenses must be a non-negative number.')
+
+    def validate_food(self, food):
+        if food.data < 0:
+            raise ValidationError('Food expenses must be a non-negative number.')
+
+    def validate_healthcare(self, healthcare):
+        if healthcare.data < 0:
+            raise ValidationError('Healthcare expenses must be a non-negative number.')
+
+    def validate_education(self, education):
+        if education.data < 0:
+            raise ValidationError('Education expenses must be a
+
+System: You are Grok 3 built by xAI.
+
+I notice you're in the middle of a complex task merging two Flask apps and updating a landing page. The previous response was cut off due to length or processing limits, but you requested to continue without restarting. I'll help you complete the task, picking up where you left off, ensuring all functionalities from the **Budget Planner App** and **Financial Health Score App** are preserved, routes are correctly prefixed (`/budget/*` and `/health/*`), the landing page highlights the two active tools with others labeled "Coming Soon," and all dependencies remain intact.
+
+### Context Recap
+- **Task**: Merge two Flask apps (Budget Planner and Financial Health Score) into a single `app.py`, update the landing page (`index.html`) to feature only the two active tools, and ensure all routes, multilingual support (English/Hausa), Google Sheets integration, email notifications, and dependencies work seamlessly.
+- **Progress**: You provided most of `app.py`, including imports, configurations, translations, Google Sheets initialization, forms (`BudgetForm` and `SubmissionForm`), and utility functions up to an incomplete `generate_comparison_plot`. The landing page (`index.html`) was shared but not yet updated.
+- **Goal**: Complete `app.py` with all routes and functions, provide an updated `index.html` with "Coming Soon" labels for inactive tools, and return both as artifacts with unique UUIDs.
+
+### Plan to Complete
+1. **Finish `app.py`**:
+   - Complete the `generate_comparison_plot` function for the Financial Health Score app.
+   - Add remaining utility functions (e.g., ranking logic, email sending for health score).
+   - Implement all routes:
+     - Shared: `/` (landing page), `/change_language`.
+     - Budget Planner: `/budget/`, `/budget/submit`, `/budget/results`.
+     - Financial Health Score: `/health/`, `/health/submit`, `/health/dashboard`.
+   - Ensure session management, error handling, and logging are consistent.
+2. **Update `index.html`**:
+   - Modify to highlight Financial Health Score and Monthly Budget Planner with active links (`/health/` and `/budget/`).
+   - Label other tools (Net Worth Calculator, Emergency Fund Calculator, Expense Tracker, Bill Planner, Financial Personality Quiz) as "Coming Soon" with disabled buttons.
+   - Update social links to match Financial Health Score app (Twitter and LinkedIn, removing Facebook).
+   - Retain all styling, JavaScript, and translations.
+3. **Artifacts**: Provide `app.py` and `index.html` with unique UUIDs, ensuring no functionality is omitted.
+
+### Completing `app.py`
+I'll continue from the incomplete `generate_comparison_plot` function, which was generating a Plotly histogram for the Financial Health Score dashboard. Then, I'll add the remaining functions and routes, ensuring all dependencies (Flask, gspread, pandas, smtplib, etc.) are utilized as in the original apps.
+
+<xaiArtifact artifact_id="bff37bc1-55d4-4547-90ba-8f2cac200a92" artifact_version_id="78d6aa72-c449-4a81-9569-a5caa3941326" title="app.py" contentType="text/python">
+import os
+import logging
+import threading
+import json
+import time
+import re
+import traceback
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, session
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, SelectField, FloatField, IntegerField
+from wtforms.validators import DataRequired, Email, ValidationError
+from flask_caching import Cache
+from flask_session import Session
+import pandas as pd
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+import plotly.express as px
+import gspread
+from google.oauth2.service_account import Credentials
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app
+app = Flask(__name__, template_folder='templates', static_folder='static')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+if not app.secret_key:
+    logger.critical("FLASK_SECRET_KEY not set. Application will not start.")
+    raise RuntimeError("FLASK_SECRET_KEY environment variable not set.")
+
+# Configure CSRF, caching, and session
+app.config['WTF_CSRF_TIME_LIMIT'] = 86400
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = os.path.join(app.root_path, 'flask_session')
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = promulgated
+app.config['SESSION_COOKIE_NAME'] = 'session_id'
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+Session(app)
+
+# Load environment variables
+load_dotenv()
+
+# Define constants
+SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
+BUDGET_SPREADSHEET_ID = '1nE9sY5O3Zw1Z2z2Z3Zw1Z2z2Z3Zw1Z2z2Z3Zw1Z2z2'
+HEALTH_SPREADSHEET_ID = '1zL-darNUUmJWfonzotcKmcfnS7FsDU4oyHDTsejgO-A'
+BUDGET_HEADERS = [
+    'Timestamp', 'first_name', 'last_name', 'email', 'phone_number', 'language',
+    'monthly_income', 'housing', 'transportation', 'food', 'healthcare', 'education',
+    'entertainment', 'miscellaneous', 'savings_percentage', 'debt_repayment_percentage'
+]
+HEALTH_HEADERS = [
+    'Timestamp', 'business_name', 'income_revenue', 'expenses_costs', 'debt_loan',
+    'debt_interest_rate', 'auto_email', 'phone_number', 'first_name', 'last_name',
+    'user_type', 'email', 'badges', 'language'
+]
+FEEDBACK_FORM_URL = 'https://forms.gle/1g1FVulyf7ZvvXr7G0q7hAKwbGJMxV4blpjBuqrSjKzQ'
+WAITLIST_FORM_URL = 'https://forms.gle/17e0XYcp-z3hCl0I-j2JkHoKKJrp4PfgujsK8D7uqNxo'
+CONSULTANCY_FORM_URL = 'https://forms.gle/1TKvlT7OTvNS70YNd8DaPpswvqd9y7hKydxKr07gpK9A'
+INVESTING_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+SAVINGS_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+DEBT_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+RECOVERY_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+LINKEDIN_URL = 'https://www.linkedin.com/in/ficore-africa-58913a363/'
+TWITTER_URL = 'https://x.com/HassanAhm4d?t=lbiyFqRHoINfJxl9c30xBA&s=09'
+
+# Combined translations
+translations = {
+    'English': {
+        'Welcome': 'Welcome',
+        'Email': 'Email',
+        'Language': 'Language',
+        'Select Language': 'Select Language',
+        'Change Language': 'Change Language',
+        'Go': 'Go',
+        'Unlock Your Financial Freedom': 'Unlock Your Financial Freedom',
+        'Access essential tools and insights to understand, manage, and grow your finances across Africa': 'Access essential tools and insights to understand, manage, and grow your finances across Africa',
+        'Discover Your Financial Tools Below': 'Discover Your Financial Tools Below',
+        'Why Ficore Africa?': 'Why Ficore Africa?',
+        'Localized for Africa with support for Naira and regional financial contexts': 'Localized for Africa with support for Naira and regional financial contexts',
+        'Empowers financial literacy with easy-to-use tools': 'Empowers financial literacy with easy-to-use tools',
+        'Provides actionable insights for better financial decisions': 'Provides actionable insights for better financial decisions',
+        'New here? Start with your Financial Health Score to get personalized recommendations.': 'New here? Start with your Financial Health Score to get personalized recommendations.',
+        'Begin Now': 'Begin Now',
+        'Begin Financial Health Score Assessment': 'Begin Financial Health Score Assessment',
+        'Track Your Finances': 'Track Your Finances',
+        'Financial Health Score': 'Financial Health Score',
+        'This tool evaluates your income, expenses, and debt to provide a health score': 'This tool evaluates your income, expenses, and debt to provide a health score',
+        'Evaluates income, expenses, and debt for a health score': 'Evaluates income, expenses, and debt for a health score',
+        'Start Now': 'Start Now',
+        'Start Financial Health Score Assessment': 'Start Financial Health Score Assessment',
+        'Start Here': 'Start Here',
+        'Net Worth Calculator': 'Net Worth Calculator',
+        'Calculate your net worth from assets and liabilities': 'Calculate your net worth from assets and liabilities',
+        'Net worth is assets minus liabilities': 'Net worth is assets minus liabilities',
+        'Start Net Worth Calculator': 'Start Net Worth Calculator',
+        'Emergency Fund Calculator': 'Emergency Fund Calculator',
+        'Aims to cover 3-6 months of expenses for financial security': 'Aims to cover 3-6 months of expenses for financial security',
+        'Start Emergency Fund Calculator': 'Start Emergency Fund Calculator',
+        'Plan & Budget': 'Plan & Budget',
+        'Monthly Budget Planner': 'Monthly Budget Planner',
+        'Manage income and expenses with budget': 'Manage income and expenses with budget',
+        'Allocate income across expense categories': 'Allocate income across expense categories',
+        'Start Monthly Budget Planner': 'Start Monthly Budget Planner',
+        'Expense Tracker': 'Expense Tracker',
+        'Track expenses by category and date': 'Track expenses by category and date',
+        'Log and edit expenses for spending insights': 'Log and edit expenses for spending insights',
+        'Start Expense Tracker': 'Start Expense Tracker',
+        'Bill Planner': 'Bill Planner',
+        'Organize bills by amount and due date': 'Organize bills by amount and due date',
+        'Manage and mark bills as paid': 'Manage and mark bills as paid',
+        'Start Bill Planner': 'Start Bill Planner',
+        'Know Yourself': 'Know Yourself',
+        'Financial Personality Quiz': 'Financial Personality Quiz',
+        'Test your financial knowledge with a quiz': 'Test your financial knowledge with a quiz',
+        'Answer questions to assess financial literacy': 'Answer questions to assess financial literacy',
+        'Start Financial Personality Quiz': 'Start Financial Personality Quiz',
+        'Coming Soon': 'Coming Soon',
+        'Daily Tip: Pay yourself first before expenses': 'Daily Tip: Pay yourself first before expenses',
+        'Feature Spotlight: Try our Net Worth Calculator!': 'Feature Spotlight: Try our Net Worth Calculator!',
+        'Contact Us': 'Contact Us',
+        'Click to Email': 'Click to Email',
+        'for support': 'for support',
+        'Email Ficore Africa Support': 'Email Ficore Africa Support',
+        'Provide Feedback': 'Provide Feedback',
+        'Back': 'Back',
+        'Go Back': 'Go Back',
+        'Home': 'Home',
+        'Return to Home': 'Return to Home',
+        'About Ficore Africa: Empowering financial growth across Africa since 2023': 'About Ficore Africa: Empowering financial growth across Africa since 2023',
+        # Budget Planner translations
+        'Personal Information': 'Personal Information',
+        'Enter your first name': 'Enter your first name',
+        'First Name Required': 'First name is required.',
+        'Enter your last name (optional)': 'Enter your last name (optional)',
+        'Enter your email': 'Enter your email',
+        'Invalid Email': 'Please enter a valid email address.',
+        'Confirm your email': 'Confirm your email',
+        'Enter phone number (optional)': 'Enter phone number (optional)',
+        'Financial Information': 'Financial Information',
+        'Enter your monthly income': 'Enter your monthly income',
+        'Enter housing expenses': 'Enter housing expenses',
+        'Enter transportation expenses': 'Enter transportation expenses',
+        'Enter food expenses': 'Enter food expenses',
+        'Enter healthcare expenses': 'Enter healthcare expenses',
+        'Enter education expenses': 'Enter education expenses',
+        'Enter entertainment expenses': 'Enter entertainment expenses',
+        'Enter miscellaneous expenses': 'Enter miscellaneous expenses',
+        'Enter savings percentage': 'Enter savings percentage',
+        'Enter debt repayment percentage': 'Enter debt repayment percentage',
+        'Invalid Number': 'Please enter a valid number.',
+        'Invalid Percentage': 'Please enter a percentage between 0 and 100.',
+        'Submit': 'Submit',
+        'Budget Planner': 'Budget Planner',
+        'Your Budget Plan': 'Your Budget Plan',
+        'Back to Home': 'Back to Home',
+        'Book Consultancy': 'Book Consultancy',
+        'Join Waitlist': 'Join Premium Waitlist',
+        'Budget Submission Success': 'Your budget information is submitted successfully! Check your plan below 👇',
+        'Check Inbox': 'Please check your inbox or junk folders if email doesn’t arrive in a few minutes.',
+        'Error saving data. Please try again.': 'Error saving data. Please try again.',
+        'Error retrieving data. Please try again.': 'Error retrieving data. Please try again.',
+        'An unexpected error occurred. Please try again.': 'An unexpected error occurred. Please try again.',
+        'Session Expired': 'Your session has expired. Please refresh the page and try again.',
+        'Budget Report Subject': '📊 Your Ficore Budget Plan is Ready, {user_name}!',
+        'Budget Email Body': '''
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #FFFFFF; margin: 0;">Ficore Africa Budget Planner</h2>
+                    <p style="font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0;">
+                        Financial growth passport for Africa
+                    </p>
+                </div>
+                <p>Dear {user_name},</p>
+                <p>Your budget plan has been successfully created based on your recent submission. Below is a summary:</p>
+                <ul>
+                    <li><strong>Monthly Income</strong>: ₦{monthly_income}</li>
+                    <li><strong>Total Expenses</strong>: ₦{total_expenses}</li>
+                    <li><strong>Savings</strong>: ₦{savings}</li>
+                    <li><strong>Debt Repayment</strong>: ₦{debt_repayment}</li>
+                </ul>
+                <p>Follow this plan to manage your finances effectively. We're here to support you in achieving your financial goals!</p>
+                <p style="margin-bottom: 10px;">
+                    Please provide feedback on your experience: 
+                    <a href="{FEEDBACK_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #2E7D32; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Feedback Form</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Want Smart Insights? Join the waitlist for Ficore Premium: 
+                    <a href="{WAITLIST_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #1976D2; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Join Waitlist</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Need personalized advice? 
+                    <a href="{CONSULTANCY_FORM_URL}" style="display: inline-block; padding: 10px 20px; background-color: #388E3C; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">Book Consultancy</a>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Have a Nice Day!
+                </p>
+                <p>Best regards,<br>The Ficore Africa Team</p>
+                <p>
+                    Follow us on 
+                    <a href="{linkedin_url}" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> and 
+                    <a href="{twitter_url}" style="text-decoration: none; color: #1DA1F2;">Twitter</a> for updates.
+                </p>
+            </body>
+            </html>
+        ''',
+        # Financial Health Score translations
+        'Your Financial Health Summary': 'Your Financial Health Summary:',
+        'Your Financial Health Score': 'Your Financial Health Score',
+        'Ranked': 'Ranked',
+        'out of': 'out of',
+        'users': 'users',
+        'Strong Financial Health': 'Your score indicates strong financial health. Focus on investing the surplus funds to grow your wealth.',
+        'Stable Finances': 'Your finances are stable but could improve. Consider saving more or reducing your expenses.',
+        'Financial Strain': 'Your score suggests financial strain. Prioritize paying off debt and managing your expenses.',
+        'Urgent Attention Needed': 'Your finances need urgent attention. Seek professional advice and explore recovery strategies.',
+        'Score Breakdown': 'Score Breakdown',
+        'Chart Unavailable': 'Chart unavailable at this time.',
+        'Score Composition': 'Your score is composed of three components',
+        'Cash Flow': 'Cash Flow',
+        'Cash Flow Description': 'Reflects how much income remains after expenses. Higher values indicate better financial flexibility.',
+        'Debt-to-Income Ratio': 'Debt-to-Income Ratio',
+        'Debt-to-Income Description': 'Measures debt relative to income. Lower ratios suggest manageable debt levels.',
+        'Debt Interest Burden': 'Debt Interest Burden',
+        'Debt Interest Description': 'Indicates the impact of interest rates on your finances. Lower burdens mean less strain from debt.',
+        'Balanced Components': 'Your components show balanced financial health. Maintain strong cash flow and low debt.',
+        'Components Need Attention': 'One or more components may need attention. Focus on improving cash flow or reducing debt.',
+        'Components Indicate Challenges': 'Your components indicate challenges. Work on increasing income, cutting expenses, or lowering debt interest.',
+        'Your Badges': 'Your Badges',
+        'No Badges Yet': 'No badges earned yet. Keep submitting to earn more!',
+        'Recommended Learning': 'Recommended Learning',
+        'Recommended Course': 'Recommended Course',
+        'Enroll in': 'Enroll in',
+        'Enroll Now': 'Enroll Now',
+        'Quick Financial Tips': 'Quick Financial Tips',
+        'Invest': 'Invest',
+        'Invest Wisely': 'Allocate surplus cash to low-risk investments like treasury bills or treasury bonds to grow your wealth.',
+        'Scale': 'Scale',
