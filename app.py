@@ -1125,7 +1125,7 @@ def index():
     twitter_url=TWITTER_URL
 )
 
-@app.route('/budget/step1', methods=['GET', 'POST'])
+@app.route('/budget_step1', methods=['GET', 'POST'])
 def budget_step1():
     form = Step1Form()
     language = session.get('language', 'en')
@@ -1140,7 +1140,7 @@ def budget_step1():
             'language': form.language.data
         }
         logger.info(f"Step 1 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step2'))
+        return redirect(url_for('budget_step2.html'))
     
     return render_template(
         'budget_step1.html',
@@ -1149,7 +1149,7 @@ def budget_step1():
         step=1
     )
 
-@app.route('/budget/step2', methods=['GET', 'POST'])
+@app.route('/budget_step2', methods=['GET', 'POST'])
 def budget_step2():
     form = Step2Form()
     language = session.get('language', 'en')
@@ -1164,7 +1164,7 @@ def budget_step2():
     if form.validate_on_submit():
         session['budget_data']['monthly_income'] = form.income.data
         logger.info(f"Step 2 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step3'))
+        return redirect(url_for('budget_step3.html'))
     
     return render_template(
         'budget_step2.html',
@@ -1173,7 +1173,7 @@ def budget_step2():
         step=2
     )
 
-@app.route('/budget/step3', methods=['GET', 'POST'])
+@app.route('/budget_step3', methods=['GET', 'POST'])
 def budget_step3():
     form = Step3Form()
     language = session.get('language', 'en')
@@ -1193,7 +1193,7 @@ def budget_step3():
             'other_expenses': form.other.data
         })
         logger.info(f"Step 3 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step4'))
+        return redirect(url_for('budget_step4.html'))
     
     return render_template(
         'budget_step3.html',
@@ -1202,7 +1202,7 @@ def budget_step3():
         step=3
     )
 
-@app.route('/budget/step4', methods=['GET', 'POST'])
+@app.route('/budget_step4', methods=['GET', 'POST'])
 def budget_step4():
     form = Step4Form()
     language = session.get('language', 'en')
@@ -1311,7 +1311,7 @@ def budget_step4():
         step=4
     )
 
-@app.route('/budget/dashboard')
+@app.route('/budget_dashboard')
 def budget_dashboard():
     language = session.get('language', 'en')
     if language not in translations:
