@@ -876,25 +876,30 @@ def calculate_health_score(df):
         df['HealthScore'] = (df['NormCashFlow'] * 0.333 + df['NormDebtToIncome'] * 0.333 + df['NormDebtInterest'] * 0.333) * 100
         df['HealthScore'] = df['HealthScore'].round(2)
 
-        def score_description_and_course(row):
-            score = row['HealthScore']
-            cash_flow = row['CashFlowRatio']
-            debt_to_income = row['DebtToIncomeRatio']
-            debt_interest = row['DebtInterestBurden']
-            if score >= 75:
-                return ('Stable Income; invest excess now', 'Ficore Simplified Investing Course: How to Invest in 2025 for Better Gains', INVESTING_COURSE_URL)
-            elif score >= 50:
-                if cash_flow < 0.3 or debt_interest > 0.5:
-                    return ('At Risk; manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', DEBT_COURSE_URL)
-                return ('Moderate; save something monthly!', 'Ficore Savings Mastery: Building a Financial Safety Net in 2025', SAVINGS_COURSE_URL)
-            elif score >= 25:
-                if debt_to_income > 0.5 or debt_interest > 0.5:
-                    return ('At Risk; pay off debt, manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', DEBT_COURSE_URL)
-                return ('At Risk; manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', DEBT_COURSE_URL)
-            else:
-                if debt_to_income > 0.5 or cash_flow < 0.3:
-                    return ('Critical; add source of income! pay off debt! manage your expense!', 'Ficore Financial Recovery: First Steps to Stability in 2025', RECOVERY_COURSE_URL)
-                return ('Critical; seek financial help and advice!', 'Ficore Financial Recovery: First Steps to Stability in 2025', RECOVERY_COURSE_URL)
+def score_description_and_course(row):
+    score = row['HealthScore']
+    cash_flow = row['CashFlowRatio']
+    debt_to_income = row['DebtToIncomeRatio']
+    debt_interest = row['DebtInterestBurden']
+    # Sanitize URLs by removing query parameters
+    clean_investing_url = INVESTING_COURSE_URL.split('?')[0]
+    clean_debt_url = DEBT_COURSE_URL.split('?')[0]
+    clean_savings_url = SAVINGS_COURSE_URL.split('?')[0]
+    clean_recovery_url = RECOVERY_COURSE_URL.split('?')[0]
+    if score >= 75:
+        return ('Stable Income; invest excess now', 'Ficore Simplified Investing Course: How to Invest in 2025 for Better Gains', clean_investing_url)
+    elif score >= 50:
+        if cash_flow < 0.3 or debt_interest > 0.5:
+            return ('At Risk; manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', clean_debt_url)
+        return ('Moderate; save something monthly!', 'Ficore Savings Mastery: Building a Financial Safety Net in 2025', clean_savings_url)
+    elif score >= 25:
+        if debt_to_income > 0.5 or debt_interest > 0.5:
+            return ('At Risk; pay off debt, manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', clean_debt_url)
+        return ('At Risk; manage your expense!', 'Ficore Debt and Expense Management: Regain Control in 2025', clean_debt_url)
+    else:
+        if debt_to_income > 0.5 or cash_flow < 0.3:
+            return ('Critical; add source of income! pay off debt! manage your expense!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
+        return ('Critical; seek financial help and advice!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
 
         df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
         return df
@@ -1008,9 +1013,10 @@ def send_health_email(to_email, user_name, health_score, score_description, rank
 
 def send_health_email_async(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language):
     try:
-        send_health_email(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language)
+        with app.app_context():  # Ensure application context
+            send_health_email(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language)
     except Exception as e:
-        logger.error(f"Async email sending failed for {to_email}: {e}")
+        logger.error(f"Async email sending failed for {to_email}: {e}", exc_info=True)
 
 def generate_breakdown_plot(user_df):
     try:
@@ -1032,9 +1038,10 @@ def generate_breakdown_plot(user_df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
-        return fig.to_html(full_html=False, include_plotlyjs=False)
+        # Sanitize output to avoid JSON parsing issues
+        return fig.to_html(full_html=False, include_plotlyjs=False, default_format='div')
     except Exception as e:
-        logger.error(f"Error generating breakdown plot: {e}")
+        logger.error(f"Error generating breakdown plot: {e}", exc_info=True)
         return None
 
 def generate_comparison_plot(user_df, all_users_df):
@@ -1058,11 +1065,12 @@ def generate_comparison_plot(user_df, all_users_df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
-        return fig.to_html(full_html=False, include_plotlyjs=False)
+        # Sanitize output to avoid JSON parsing issues
+        return fig.to_html(full_html=False, include_plotlyjs=False, default_format='div')
     except Exception as e:
-        logger.error(f"Error generating comparison plot: {e}")
+        logger.error(f"Error generating comparison plot: {e}", exc_info=True)
         return None
-
+        
 # Form Definitions
 class Step1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -1205,15 +1213,16 @@ def budget_step3():
             'other_expenses': form.other.data
         })
         logger.info(f"Step 3 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step4.html'))
+        return redirect(url_for('budget_step4'))
     
     return render_template(
         'budget_step3.html',
         form=form,
-        translations=translations[language],
+        trans=translations[language],  # Pass language-specific translations
+        language=language,  # Pass language explicitly
         step=3
     )
-
+    
 @app.route('/budget_step4', methods=['GET', 'POST'])
 def budget_step4():
     form = Step4Form()
@@ -1366,7 +1375,7 @@ def budget_dashboard():
 
         return render_template(
             'budget_dashboard.html',
-            translations=translations[language],
+            trans=translations[language],
             results=results,
             chart_data=chart_data,
             bar_data=bar_data,
@@ -1380,7 +1389,7 @@ def budget_dashboard():
         )
     except Exception as e:
         logger.error(f"Error rendering budget dashboard: {e}")
-        flash(translations[language]['Error retrieving data. Please try again.'], 'error')
+        flash(trans[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
 
 @app.route('/health_score_form', methods=['GET', 'POST'])
@@ -1510,7 +1519,7 @@ def health_dashboard():
 
     if 'health_results' not in session:
         flash(translations[language]['Session data missing. Please submit again.'], 'error')
-        return redirect(url_for('health'))
+        return redirect(url_for('health_score_form'))
 
     results = session['health_results']
     user_df = fetch_data_from_sheet(results['email'], PREDETERMINED_HEADERS_HEALTH, 'Health')
@@ -1527,7 +1536,11 @@ def health_dashboard():
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
 
-        if not breakdown_plot or not comparison_plot:
+        if not breakdown_plot:
+            logger.warning("Breakdown plot generation failed")
+            flash(translations[language]['Error generating plots. Dashboard will display without plots.'], 'warning')
+        if not comparison_plot:
+            logger.warning("Comparison plot generation failed")
             flash(translations[language]['Error generating plots. Dashboard will display without plots.'], 'warning')
 
         results.update({
@@ -1549,10 +1562,10 @@ def health_dashboard():
             twitter_url=TWITTER_URL
         )
     except Exception as e:
-        logger.error(f"Error rendering health dashboard: {e}")
+        logger.error(f"Error rendering health dashboard: {e}", exc_info=True)
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health_score_form'))
-
+        
 @app.route('/change_language', methods=['POST'])
 def change_language():
     try:
