@@ -862,19 +862,26 @@ def calculate_health_score(df):
         if df.empty:
             logger.warning("Empty DataFrame in calculate_health_score.")
             return df
+        # Convert columns to numeric, handling strings and commas
         for col in ['income_revenue', 'expenses_costs', 'debt_loan', 'debt_interest_rate']:
             df[col] = df[col].apply(lambda x: float(re.sub(r'[,]', '', str(x))) if isinstance(x, str) and x else 0.0)
+        # Initialize HealthScore
         df['HealthScore'] = 0.0
+        # Avoid division by zero
         df['IncomeRevenueSafe'] = df['income_revenue'].replace(0, 1e-10)
+        # Calculate ratios
         df['CashFlowRatio'] = (df['income_revenue'] - df['expenses_costs']) / df['IncomeRevenueSafe']
         df['DebtToIncomeRatio'] = df['debt_loan'] / df['IncomeRevenueSafe']
         df['DebtInterestBurden'] = df['debt_interest_rate'].clip(lower=0) / 20
         df['DebtInterestBurden'] = df['DebtInterestBurden'].clip(upper=1)
+        # Normalize values
         df['NormCashFlow'] = df['CashFlowRatio'].clip(0, 1)
         df['NormDebtToIncome'] = 1 - df['DebtToIncomeRatio'].clip(0, 1)
         df['NormDebtInterest'] = 1 - df['DebtInterestBurden']
+        # Calculate final HealthScore
         df['HealthScore'] = (df['NormCashFlow'] * 0.333 + df['NormDebtToIncome'] * 0.333 + df['NormDebtInterest'] * 0.333) * 100
         df['HealthScore'] = df['HealthScore'].round(2)
+        # Apply score description and course recommendation
         df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
         return df
     except Exception as e:
