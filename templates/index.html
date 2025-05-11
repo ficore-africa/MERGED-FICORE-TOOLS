@@ -64,7 +64,7 @@
             background: linear-gradient(135deg, #1B5E20, #01579B);
         }
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/static/images/hero-bg.jpg');
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/images/hero-bg.jpg');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -92,19 +92,20 @@
         }
         .hero p {
             font-size: 1.2rem;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             max-width: 600px;
         }
-        .hero a {
+        .hero .cta-button {
             padding: 15px 35px;
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
+            display: inline-block;
         }
-        .hero a:hover {
+        .hero .cta-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
         }
         .tools-section {
@@ -175,6 +176,52 @@
         .tool-card .coming-soon:hover {
             background: #90A4AE;
         }
+        .tool-card .notify-me {
+            padding: 12px 25px;
+            background: #B0BEC5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .tool-card .notify-me:hover {
+            background: #90A4AE;
+        }
+        .testimonials-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(227, 242, 253, 0.8);
+            border: 2px solid #0288D1;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .testimonials-section strong {
+            font-size: 1.2rem;
+            color: #2E7D32;
+        }
+        .testimonials-section .testimonial {
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            display: inline-block;
+            max-width: 400px;
+        }
+        .testimonials-section .testimonial .initials {
+            width: 40px;
+            height: 40px;
+            background: #0288D1;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
         .recommended-learning {
             margin-top: 40px;
             padding: 20px;
@@ -221,6 +268,17 @@
         .why-list li i {
             color: #0288D1;
             margin-right: 10px;
+        }
+        .about-section {
+            padding: 30px 20px;
+            background: white;
+            text-align: center;
+        }
+        .about-section p {
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 1rem;
+            color: #666;
         }
         .footer {
             background: linear-gradient(45deg, #2E7D32, #0288D1);
@@ -283,7 +341,7 @@
             .navbar h1 {
                 font-size: 1.2rem;
             }
-            .tool-card a, .tool-card .coming-soon {
+            .tool-card a, .tool-card .coming-soon, .tool-card .notify-me {
                 font-size: 1.1rem;
                 padding: 15px 30px;
             }
@@ -291,6 +349,10 @@
                 display: block;
                 margin: 10px 0;
                 font-size: 1.1rem;
+            }
+            .hero .cta-button {
+                font-size: 1.1rem;
+                padding: 12px 25px;
             }
         }
     </style>
@@ -308,9 +370,9 @@
     </nav>
 
     <section class="hero">
-        <h2>{{ translations['Financial growth passport for Africa'] or 'Financial growth passport for Africa' }}</h2>
-        <p>{{ translations['Get Your Score'] or 'Get your financial health score and personalized insights instantly!' }}</p>
-        <a href="{{ url_for('home') }}">{{ translations['Home'] or 'Start' }}</a>
+        <h2>Your All-in-One Toolkit for Personal & SME Financial Health Across Africa</h2>
+        <p>Track income, calculate net worth, plan budgets, and grow with confidence.</p>
+        <a href="{{ url_for('health_score_form') }}" class="cta-button">Get Your Free Financial Health Score</a>
     </section>
 
     <section class="tools-section">
@@ -329,27 +391,36 @@
             <div class="tool-card">
                 <h3>{{ translations['Net Worth Calculator'] or 'Net Worth Calculator' }}</h3>
                 <p>{{ translations['Net worth is assets minus liabilities'] or 'Net worth is assets minus liabilities' }}</p>
-                <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Emergency Fund Calculator'] or 'Emergency Fund Calculator' }}</h3>
                 <p>{{ translations['Aims to cover 3-6 months of expenses for financial security'] or 'Aims to cover 3-6 months of expenses for financial security' }}</p>
-                <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Expense Tracker'] or 'Expense Tracker' }}</h3>
                 <p>{{ translations['Log and edit expenses for spending insights'] or 'Log and edit expenses for spending insights' }}</p>
-                <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Bill Planner'] or 'Bill Planner' }}</h3>
                 <p>{{ translations['Manage and mark bills as paid'] or 'Manage and mark bills as paid' }}</p>
-                <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Personality Quiz'] or 'Personality Quiz' }}</h3>
                 <p>{{ translations['Answer questions to assess financial literacy'] or 'Answer questions to assess financial literacy' }}</p>
-                <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+            </div>
+        </div>
+        <div class="testimonials-section">
+            <strong><i class="fas fa-quote-left"></i> {{ translations['Trusted by Our Early Users'] or 'Trusted by Our Early Users' }}</strong>
+            <div class="testimonial">
+                <span class="initials">MU</span> <span>“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — Maisarata Uqubatu</span>
+            </div>
+            <div class="testimonial">
+                <span class="initials">AA</span> <span>“🔥 Ficore 🔥🔥🔥🔥🔥” — Abubakar Abdulkadir, Software Engineer for Sustainable Solutions</span>
             </div>
         </div>
         <div class="recommended-learning">
@@ -367,8 +438,12 @@
         </ul>
     </section>
 
-    <footer class="footer">
+    <section class="about-section">
         <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] or 'About Ficore Africa: Empowering financial growth across Africa since 2023' }}</p>
+    </section>
+
+    <footer class="footer">
+        <p>{{ translations['Contact Us'] or 'Contact Us' }}: {{ translations['Click to Email'] or 'Click to Email' }} ficoreafrica@gmail.com {{ translations['for support'] or 'for support' }}</p>
         <div class="social-icons">
             <a href="https://www.linkedin.com/in/ficore-africa-58913a363/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
             <a href="https://x.com/Hassanahm4d" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
