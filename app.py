@@ -1084,24 +1084,40 @@ class Step1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
-    submit = SubmitField('Next')
+    submit = SubmitField()
 
+    def __init__(self, language='en', *args, **kwargs):
+        super(Step1Form, self).__init__(*args, **kwargs)
+        self.submit.label.text = translations.get(language, translations['en'])['Continue to Income']
+        
 class Step2Form(FlaskForm):
     income = FloatField('Monthly Income', validators=[DataRequired()])
-    submit = SubmitField('Continue to Expenses')
+    submit = SubmitField()
+
+    def __init__(self, language='en', *args, **kwargs):
+        super(Step2Form, self).__init__(*args, **kwargs)
+        self.submit.label.text = translations.get(language, translations['en'])['Continue to Expenses']
 
 class Step3Form(FlaskForm):
     housing = FloatField('Housing Expenses', validators=[DataRequired()])
     food = FloatField('Food Expenses', validators=[DataRequired()])
     transport = FloatField('Transport Expenses', validators=[DataRequired()])
     other = FloatField('Other Expenses', validators=[DataRequired()])
-    submit = SubmitField('Continue to Savings & Review')
+    submit = SubmitField()
 
+    def __init__(self, language='en', *args, **kwargs):
+        super(Step3Form, self).__init__(*args, **kwargs)
+        self.submit.label.text = translations.get(language, translations['en'])['Continue to Savings & Review']
+        
 class Step4Form(FlaskForm):
     savings_goal = FloatField('Savings Goal', validators=[Optional()])
     auto_email = BooleanField('Receive Email Report')
-    submit = SubmitField('Continue to Dashboard')
+    submit = SubmitField()
 
+    def __init__(self, language='en', *args, **kwargs):
+        super(Step4Form, self).__init__(*args, **kwargs)
+        self.submit.label.text = translations.get(language, translations['en'])['Continue to Dashboard']
+        
 class HealthForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
     income_revenue = FloatField('Income Revenue', validators=[DataRequired(), non_negative])
@@ -1151,13 +1167,13 @@ def index():
 
 @app.route('/budget_step1', methods=['GET', 'POST'])
 def budget_step1():
-    form = Step1Form()
     language = session.get('language', 'en')
     if language not in translations:
         language = 'en'
         session['language'] = language
-        session.modified = True  # Ensure session is saved
+        session.modified = True
 
+    form = Step1Form(language=language)
     if form.validate_on_submit():
         session['budget_data'] = {
             'first_name': sanitize_input(form.first_name.data),
@@ -1165,25 +1181,25 @@ def budget_step1():
             'language': form.language.data
         }
         logger.info(f"Step 1 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step2'))  # Fix endpoint reference
+        return redirect(url_for('budget_step2'))
     
     return render_template(
         'budget_step1.html',
         form=form,
-        trans=translations[language],  # Changed from translations=translations
-        language=language,  # Keep for consistency
+        trans=translations[language],
+        language=language,
         step=1
     )
     
 @app.route('/budget_step2', methods=['GET', 'POST'])
 def budget_step2():
-    form = Step2Form()
     language = session.get('language', 'en')
     if language not in translations:
         language = 'en'
         session['language'] = language
-        session.modified = True  # Ensure session is saved
+        session.modified = True
 
+    form = Step2Form(language=language)
     if 'budget_data' not in session:
         flash(translations[language]['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
@@ -1196,19 +1212,20 @@ def budget_step2():
     return render_template(
         'budget_step2.html',
         form=form,
-        trans=translations[language],  # Changed from translations=translations
-        language=language,  # Keep for consistency
+        trans=translations[language],
+        language=language,
         step=2
     )
     
 @app.route('/budget_step3', methods=['GET', 'POST'])
 def budget_step3():
-    form = Step3Form()
     language = session.get('language', 'en')
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True
 
+    form = Step3Form(language=language)
     if 'budget_data' not in session:
         flash(translations[language]['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
@@ -1226,19 +1243,20 @@ def budget_step3():
     return render_template(
         'budget_step3.html',
         form=form,
-        trans=translations[language],  # Already correct
-        language=language,  # Pass language explicitly
+        trans=translations[language],
+        language=language,
         step=3
     )
     
 @app.route('/budget_step4', methods=['GET', 'POST'])
 def budget_step4():
-    form = Step4Form()
     language = session.get('language', 'en')
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True
 
+    form = Step4Form(language=language)
     if 'budget_data' not in session:
         flash(translations[language]['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
@@ -1349,8 +1367,8 @@ def budget_step4():
     return render_template(
         'budget_step4.html',
         form=form,
-        trans=translations[language],  # Changed from translations=translations[language]
-        language=language,  # Keep for consistency
+        trans=translations[language],
+        language=language,
         step=4
     )
     
