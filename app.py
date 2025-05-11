@@ -1160,6 +1160,9 @@ def health_score_form():
         
 @app.route('/health_score_submit', methods=['GET'])
 def health_score_submit():
+    step = int(request.args.get('step', 1))
+    if step < 1 or step > 6:
+        step = 1
     try:
         # Check for session data
         if 'health_data' not in session:
@@ -1319,6 +1322,7 @@ def health_score_submit():
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
             LINKEDIN_URL=LINKEDIN_URL,
             TWITTER_URL=TWITTER_URL
+            step=step
         )
 
     except Exception as e:
