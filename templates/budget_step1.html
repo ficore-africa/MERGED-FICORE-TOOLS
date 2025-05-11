@@ -131,7 +131,7 @@
                     <div class="invalid-feedback">{{ translations['Language required'] }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Home'] }}">{{ translations['Back'] }}</a>
+                    <a href="{{ url_for('home') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Home'] }}">{{ translations['Back'] }}</a>
                     {{ form.submit(class="btn btn-primary", value=translations['Continue to Income'] + ' →', **{'aria-label': translations['Continue to Income']}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations['Please fill all required fields'] }}</div>
