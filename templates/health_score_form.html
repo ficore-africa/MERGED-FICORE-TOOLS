@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculate your financial health score with Ficore Africa and get personalized insights.">
+    <meta name="keywords" content="ficore africa, financial health, score calculator, Africa SME finance">
+    <meta name="author" content="Ficore Africa">
+    <title>Ficore Africa - Financial Health Score</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        header {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .logo-container {
+            margin-bottom: 1rem;
+        }
+        .logo-container img {
+            max-width: 200px;
+        }
+        .form-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .form-card:hover {
+            transform: translateY(-5px);
+        }
+        h3 {
+            color: #2E7D32;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            color: #0288D1;
+            font-weight: 500;
+        }
+        .form-control, .form-select {
+            border: 2px solid #0288D1;
+            border-radius: 8px;
+            padding: 10px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #2E7D32;
+            box-shadow: 0 0 8px rgba(46, 125, 50, 0.3);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2E7D32, #0288D1);
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #1B5E20, #01579B);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #1DA1F2, #0d47a1);
+            border: none;
+            padding: 10px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-email {
+            background: linear-gradient(135deg, #0288D1, #01579B);
+            border: none;
+            padding: 10px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: white;
+            display: inline-block;
+        }
+        .btn-email:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .alert {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .number-input::placeholder {
+            color: #6c757d;
+        }
+        .guide-section {
+            background: #F5F5F5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .guide-section ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .guide-section li {
+            margin-bottom: 0.5rem;
+        }
+        .field-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .info-icon {
+            margin-left: 8px;
+            font-size: 1rem;
+            color: #0288D1;
+            cursor: pointer;
+        }
+        .visual-icon {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        .note-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        /* Fallback Tooltip Styles */
+        .tooltip-fallback {
+            display: none;
+            background: #E3F2FD;
+            border: 1px solid #0288D1;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 4px;
+            font-size: 0.9rem;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .tooltip-fallback.active {
+            display: block;
+        }
+        /* Stylish Blue Book Styles */
+        .book-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            width: fit-content;
+        }
+        .book-icon {
+            position: relative;
+            width: 40px;
+            height: 30px;
+            background: #0288D1;
+            border-radius: 4px 8px 8px 4px;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        .book-icon::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: #E3F2FD;
+            border-radius: 2px 6px 6px 2px;
+        }
+        .book-icon::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #01579B;
+            border-radius: 4px 0 0 4px;
+        }
+        .book-icon.open {
+            transform: rotateY(-30deg);
+        }
+        .book-label {
+            font-weight: 500;
+            color: #0288D1;
+            font-size: 1rem;
+        }
+        /* Multi-Step Form Styles */
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .progress {
+            margin-bottom: 2rem;
+            height: 30px;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .step-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .btn-nav {
+            padding: 10px 20px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #2E7D32, #0288D1);
+            color: white;
+            border: none;
+        }
+        .btn-next:hover {
+            background: linear-gradient(135deg, #1B5E20, #01579B);
+            transform: translateY(-2px);
+        }
+        .btn-prev {
+            background: linear-gradient(135deg, #B0BEC5, #78909C);
+            color: white;
+            border: none;
+        }
+        .btn-prev:hover {
+            background: linear-gradient(135deg, #90A4AE, #607D8B);
+            transform: translateY(-2px);
+        }
+        @media (max-width: 600px) {
+            .form-card {
+                padding: 1.5rem;
+            }
+            h3 {
+                font-size: 1.5rem;
+            }
+            .info-icon {
+                font-size: 0.9rem;
+            }
+            .book-label {
+                font-size: 0.9rem;
+            }
+            .book-icon {
+                width: 30px;
+                height: 22px;
+            }
+            .progress {
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="my-4">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" class="img-fluid">
+            </div>
+            <h1>{{ translations[language]['Ficore Africa Financial Health Score'] }}</h1>
+            <p class="lead">{{ translations[language]['Get Your Score'] }}</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container my-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="form-card">
+                    <!-- New to Finances Toggle with Stylish Blue Book -->
+                    <div class="book-toggle" id="guide-toggle">
+                        <div class="book-icon" id="book-icon"></div>
+                        <span class="book-label">{{ translations[language]['New to finances? Click here to get guided tips on how to fill this form.'] }}</span>
+                    </div>
+                    <div class="guide-section" id="guide-content">
+                        <h4>{{ translations[language]['Getting Started with Ficore Africa'] }}</h4>
+                        <ul>
+                            <li><strong>{{ translations[language]['Personal Information'] }}</strong>: Fill in your name, email, and phone number. Choose your language—English or Hausa.</li>
+                            <li><strong>{{ translations[language]['User Information'] }}</strong>: Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.</li>
+                            <li><strong>{{ translations[language]['Financial Information'] }}</strong>: Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.</li>
+                            <li><strong>{{ translations[language]['Submit'] }}</strong>: Double-check your details, then click Submit to get your financial health score!</li>
+                        </ul>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100">Step 1 of 3</div>
+                    </div>
+
+                    <form id="submission-form" method="POST" action="{{ url_for('submit') }}">
+                        {{ form.hidden_tag() }} <!-- Ensure CSRF token is included -->
+
+                        <!-- Step 1: Personal Information -->
+                        <div class="form-step active" id="step-1">
+                            <h3>{{ translations[language]['Personal Information'] }}</h3>
+                            <div class="mb-3">
+                                {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
+                                {{ form.first_name(class="form-control", placeholder=translations[language]['Enter your first name'], required=True, **{'data-error': translations[language]['First Name Required']}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.last_name.label(class="form-label", **{'for': 'last_name'}) }}
+                                {{ form.last_name(class="form-control", placeholder=translations[language]['Enter your last name (optional)']) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label", **{'for': 'email'}) }}
+                                {{ form.email(class="form-control", placeholder=translations[language]['Enter your email'], type="email", required=True, pattern="[^@]+@[^@]+\.[^@]+", **{'data-error': translations[language]['Invalid Email']}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
+                                {{ form.auto_email(class="form-control", placeholder=translations[language]['Confirm your email'], type="email", required=True, pattern="[^@]+@[^@]+\.[^@]+", **{'data-error': translations[language]['Invalid Email']}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
+                                {{ form.phone_number(class="form-control", placeholder=translations[language]['Enter phone number (optional)'], type="tel") }}
+                            </div>
+                            <div class="mb-3">
+                                <p class="note-text">{{ translations[language]['Language'] }}: English or Hausa</p>
+                                {{ form.language.label(class="form-label", **{'for': 'language'}) }}
+                                {{ form.language(class="form-select", required=True) }}
+                            </div>
+                            <div class="step-navigation">
+                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(2)">Next</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: User Information -->
+                        <div class="form-step" id="step-2">
+                            <h3>{{ translations[language]['User Information'] }}</h3>
+                            <div class="mb-3">
+                                {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
+                                {{ form.business_name(class="form-control", placeholder="Type personal name if no business", required=True, **{'data-error': translations[language]['Business Name Required']}) }}
+                            </div>
+                            <div class="mb-3">
+                                <p class="note-text">{{ translations[language]['User Type'] }}: Business or Individual</p>
+                                {{ form.user_type.label(class="form-label", **{'for': 'user_type'}) }}
+                                {{ form.user_type(class="form-select", required=True) }}
+                            </div>
+                            <div class="step-navigation">
+                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(1)">Previous</button>
+                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(3)">Next</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Financial Information -->
+                        <div class="form-step" id="step-3">
+                            <h3>{{ translations[language]['Financial Information'] }}</h3>
+                            <div class="mb-3">
+                                <div class="field-container">
+                                    <span class="visual-icon">💰</span>
+                                    {{ form.income_revenue.label(class="form-label", **{'for': 'income_revenue'}) }}
+                                    <span class="info-icon" data-tooltip-target="income-tooltip" title="{{ translations[language]['Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.'] }}">ℹ️</span>
+                                </div>
+                                {{ form.income_revenue(class="form-control number-input", placeholder="e.g. 150,000", type="text", required=True, pattern="^[0-9,]+(\.[0-9]{1,2})?$", **{'data-error': translations[language]['Invalid Number']}) }}
+                                <div class="tooltip-fallback" id="income-tooltip"></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="field-container">
+                                    <span class="visual-icon">💸</span>
+                                    {{ form.expenses_costs.label(class="form-label", **{'for': 'expenses_costs'}) }}
+                                    <span class="info-icon" data-tooltip-target="expenses-tooltip" title="{{ translations[language]['All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.'] }}">ℹ️</span>
+                                </div>
+                                {{ form.expenses_costs(class="form-control number-input", placeholder="e.g. 60,000", type="text", required=True, pattern="^[0-9,]+(\.[0-9]{1,2})?$", **{'data-error': translations[language]['Invalid Number']}) }}
+                                <div class="tooltip-fallback" id="expenses-tooltip"></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="field-container">
+                                    <span class="visual-icon">🏦</span>
+                                    {{ form.debt_loan.label(class="form-label", **{'for': 'debt_loan'}) }}
+                                    <span class="info-icon" data-tooltip-target="debt-tooltip" title="{{ translations[language]['Money you owe, like loans, IOUs, borrowings, or funds lent to you.'] }}">ℹ️</span>
+                                </div>
+                                {{ form.debt_loan(class="form-control number-input", placeholder="e.g. 25,000", type="text", required=True, pattern="^[0-9,]+(\.[0-9]{1,2})?$", **{'data-error': translations[language]['Invalid Number']}) }}
+                                <div class="tooltip-fallback" id="debt-tooltip"></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="field-container">
+                                    <span class="visual-icon">📈</span>
+                                    {{ form.debt_interest_rate.label(class="form-label", **{'for': 'debt_interest_rate'}) }}
+                                    <span class="info-icon" data-tooltip-target="interest-tooltip" title="{{ translations[language]['Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.'] }}">ℹ️</span>
+                                </div>
+                                {{ form.debt_interest_rate(class="form-control number-input", placeholder="e.g. 10%", type="text", required=True, pattern="^[0-9,]+(\.[0-9]{1,2})?$", **{'data-error': translations[language]['Invalid Number']}) }}
+                                <div class="tooltip-fallback" id="interest-tooltip"></div>
+                            </div>
+                            <div class="step-navigation">
+                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(2)">Previous</button>
+                                {{ form.submit(class="btn btn-primary btn-lg", value=translations[language]['Submit']) }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="text-center my-4">
+            <p>
+                {{ translations[language]['Contact Us'] }} 
+                <a href="mailto:ficore.ai.africa@gmail.com" class="btn-email">Email Us</a> 
+                {{ translations[language]['for support'] }} | 
+                Follow us on 
+                <a href="{{ LINKEDIN_URL }}" target="_blank" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> and 
+                <a href="{{ TWITTER_URL }}" target="_blank" style="text-decoration: none; color: #1DA1F2;">Twitter</a>
+            </p>
+        </div>
+
+        <!-- Feedback Link -->
+        <div class="text-center my-4">
+            <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary">{{ translations[language]['Provide Feedback'] }}</a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" onerror="console.error('Failed to load bootstrap.bundle.min.js. Please ensure the file exists in static/js/ and Flask is serving static files correctly.');"></script>
+    <script>
+        // Multi-Step Form Navigation
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(stepEl => {
+                stepEl.classList.remove('active');
+            });
+            document.getElementById(`step-${step}`).classList.add('active');
+            
+            // Update progress bar
+            const progressPercent = (step / totalSteps) * 100;
+            const progressBar = document.querySelector('.progress-bar');
+            progressBar.style.width = `${progressPercent}%`;
+            progressBar.setAttribute('aria-valuenow', progressPercent);
+            progressBar.textContent = `Step ${step} of ${totalSteps}`;
+            
+            currentStep = step;
+        }
+
+        function nextStep(step) {
+            if (validateStep(currentStep)) {
+                showStep(step);
+            }
+        }
+
+        function prevStep(step) {
+            showStep(step);
+        }
+
+        function validateStep(step) {
+            const stepElement = document.getElementById(`step-${step}`);
+            const inputs = stepElement.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    isValid = false;
+                }
+            });
+
+            // Special validation for email confirmation
+            if (step === 1) {
+                const email = document.getElementById('email').value;
+                const autoEmail = document.getElementById('auto_email').value;
+                if (email !== autoEmail) {
+                    document.getElementById('auto_email').setCustomValidity("{{ translations[language]['Email addresses must match.'] }}");
+                    document.getElementById('auto_email').reportValidity();
+                    isValid = false;
+                } else {
+                    document.getElementById('auto_email').setCustomValidity('');
+                }
+            }
+
+            return isValid;
+        }
+
+        // Initialize Bootstrap tooltips
+        function initializeTooltips() {
+            try {
+                if (typeof bootstrap === 'undefined') {
+                    console.error('Bootstrap is not loaded. Please ensure bootstrap.bundle.min.js is correctly included.');
+                    return false;
+                }
+
+                const existingTooltips = document.querySelectorAll('.tooltip');
+                existingTooltips.forEach(tooltip => tooltip.remove());
+
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    try {
+                        return new bootstrap.Tooltip(tooltipTriggerEl, {
+                            trigger: 'hover focus',
+                            placement: 'top',
+                            customClass: 'custom-tooltip'
+                        });
+                    } catch (error) {
+                        console.error('Failed to initialize tooltip for element:', tooltipTriggerEl, error);
+                        return null;
+                    }
+                }).filter(tooltip => tooltip !== null);
+
+                console.log('Tooltips initialized successfully:', tooltipList.length, 'tooltips active.');
+                return true;
+            } catch (error) {
+                console.error('Error initializing tooltips:', error);
+                return false;
+            }
+        }
+
+        // DOM Content Loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize tooltips
+            initializeTooltips();
+
+            // Fallback for tooltips
+            document.querySelectorAll('.info-icon').forEach(icon => {
+                icon.addEventListener('click', function () {
+                    const targetId = icon.getAttribute('data-tooltip-target');
+                    const targetDiv = document.getElementById(targetId);
+                    if (targetDiv) {
+                        targetDiv.textContent = icon.getAttribute('title');
+                        targetDiv.classList.toggle('active');
+                    }
+                });
+            });
+
+            // Toggle guide section
+            const guideToggle = document.getElementById('guide-toggle');
+            const bookIcon = document.getElementById('book-icon');
+            const guideContent = document.getElementById('guide-content');
+            if (guideToggle && bookIcon && guideContent) {
+                guideToggle.addEventListener('click', function () {
+                    const isOpen = guideContent.style.display === 'block';
+                    guideContent.style.display = isOpen ? 'none' : 'block';
+                    bookIcon.classList.toggle('open', !isOpen);
+                });
+            }
+
+            // Format number inputs
+            document.querySelectorAll('.number-input').forEach(input => {
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/[^0-9.]/g, '');
+                    if (value === '') {
+                        e.target.value = '';
+                        return;
+                    }
+                    let parts = value.split('.');
+                    let integerPart = parts[0];
+                    let decimalPart = parts[1] ? '.' + parts[1].slice(0, 2) : '';
+                    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    e.target.value = integerPart + decimalPart;
+                });
+                input.addEventListener('blur', function(e) {
+                    let cleanValue = e.target.value.replace(/,/g, '');
+                    if (cleanValue === '' || isNaN(parseFloat(cleanValue))) {
+                        e.target.value = '';
+                    } else {
+                        e.target.value = parseFloat(cleanValue).toLocaleString('en-US', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                });
+                input.addEventListener('focus', function(e) {
+                    let value = e.target.value.replace(/,/g, '');
+                    e.target.value = value;
+                });
+            });
+
+            // Custom validation with translated error messages
+            document.querySelectorAll('.form-control, .form-select').forEach(input => {
+                input.addEventListener('invalid', function(e) {
+                    e.target.setCustomValidity(e.target.dataset.error);
+                });
+                input.addEventListener('input', function(e) {
+                    e.target.setCustomValidity('');
+                });
+            });
+
+            // Clean number inputs before submission
+            document.getElementById('submission-form').addEventListener('submit', function(e) {
+                document.querySelectorAll('.number-input').forEach(input => {
+                    let cleanValue = input.value.replace(/,/g, '');
+                    if (cleanValue === '' || isNaN(parseFloat(cleanValue))) {
+                        input.value = '';
+                    } else {
+                        input.value = parseFloat(cleanValue).toString();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

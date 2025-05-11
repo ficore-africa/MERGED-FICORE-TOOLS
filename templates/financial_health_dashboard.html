@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Track your financial health with Ficore AI. See your score, earn badges, and get smart insights.">
+    <meta name="keywords" content="ficore ai, financial health, dashboard, Africa SME finance, smart insights">
+    <meta name="author" content="Ficore AI">
+    <title>Ficore Africa - {{ translations[language]['Your Financial Health Dashboard'] }}</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        .progress-tracker {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .step {
+            width: 35px;
+            height: 35px;
+            background: #E0E0E0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .step.active {
+            background: #28A745;
+            color: white;
+        }
+        .step.completed {
+            background: #1E88E5;
+            color: white;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border: 1px solid #E0E0E0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-header {
+            background: linear-gradient(135deg, #28A745, #1E88E5);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: rotate 10s infinite linear;
+            border-radius: 50%;
+        }
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        .card-body {
+            padding: 1.2rem;
+        }
+        .card-body.light-blue {
+            background: #E3F2FD; /* Light blue background for Steps 1, 2, and 5 */
+            border: 2px solid #1E88E5;
+            border-radius: 8px;
+        }
+        .info-box {
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .light-blue .info-box {
+            background: transparent; /* Remove individual shading in light blue sections */
+            border: none;
+        }
+        .score-box {
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .light-blue .score-box {
+            background: transparent; /* Remove individual shading in light blue sections */
+            border: none;
+            color: #2E7D32; /* Retain green text color for consistency */
+        }
+        .badge-box {
+            background: #E1F5FE;
+            border: 2px solid #0288D1;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .learning-box {
+            background: #FFF3E0;
+            border: 2px solid #F57C00;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tips-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .email-btn {
+            background: #0288D1;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .email-btn:hover {
+            transform: translateY(-2px);
+            background: #0277BD;
+        }
+        .badge {
+            background: #42A5F5;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.95rem;
+            transition: transform 0.3s ease;
+            border: 1px solid #1565C0;
+            cursor: pointer;
+        }
+        .badge:hover {
+            transform: scale(1.1);
+        }
+        .btn-primary, .btn-secondary {
+            padding: 12px 25px;
+            font-weight: 600;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+            touch-action: manipulation;
+        }
+        .btn-primary {
+            background: #28A745;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2E7D32;
+            transform: translateY(-2px);
+        }
+        .btn-primary:not(.no-arrow)::after {
+            content: '→'; /* Right arrow for Next buttons */
+            margin-left: 8px;
+        }
+        .btn-secondary {
+            background: #F57C00;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: #EF6C00;
+            transform: translateY(-2px);
+        }
+        .btn-secondary::after {
+            content: '←'; /* Left arrow for Back buttons */
+            margin-right: 8px;
+        }
+        .course-link, .enroll-button {
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #FFC107;
+            color: black;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .course-link:hover, .enroll-button:hover {
+            transform: translateY(-2px);
+            background: #FFB300;
+        }
+        .try-it-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: transform 0.3s ease;
+        }
+        .try-it-btn:hover {
+            transform: translateY(-2px);
+        }
+        .chart-container {
+            min-height: 300px;
+            max-width: 100%;
+        }
+        #score-breakdown-chart, #compare-others-chart {
+            width: 100%;
+            height: 300px;
+        }
+        .voice-btn {
+            background: #9C27B0;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: transform 0.3s ease;
+        }
+        .voice-btn:hover {
+            transform: translateY(-2px);
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card-header { font-size: 1.4rem; padding: 0.8rem; }
+            .card-body { padding: 0.8rem; }
+            .info-box, .score-box, .badge-box, .learning-box { font-size: 0.9rem; padding: 8px; }
+            .tips-list li { font-size: 0.9rem; padding: 8px; }
+            .btn-primary, .btn-secondary { padding: 10px 20px; font-size: 0.9rem; }
+            .badge { font-size: 0.8rem; padding: 6px 10px; }
+            #score-breakdown-chart, #compare-others-chart { height: 220px; }
+            .progress-tracker { gap: 10px; }
+            .step { width: 30px; height: 30px; font-size: 1rem; }
+            .email-btn { font-size: 0.85rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Progress Tracker -->
+        <div class="progress-tracker">
+            <div class="step {% if step >= 1 %}completed{% elif step == 1 %}active{% endif %}">1</div>
+            <div class="step {% if step >= 2 %}completed{% elif step == 2 %}active{% endif %}">2</div>
+            <div class="step {% if step >= 3 %}completed{% elif step == 3 %}active{% endif %}">3</div>
+            <div class="step {% if step >= 4 %}completed{% elif step == 4 %}active{% endif %}">4</div>
+            <div class="step {% if step >= 5 %}completed{% elif step == 5 %}active{% endif %}">5</div>
+            <div class="step {% if step >= 6 %}completed{% elif step == 6 %}active{% endif %}">6</div>
+        </div>
+
+        <!-- Step 1: Welcome and Financial Health Score -->
+        {% if step == 1 %}
+            <div class="card">
+                <div class="card-header">🎉 {{ translations[language]['Welcome'] }}, {{ first_name }}!</div>
+                <div class="card-body light-blue">
+                    <div class="info-box">{{ translations[language]['Submission Success'] }}</div>
+                    <div class="info-box">{{ translations[language]['Email'] }}: {{ email }}</div>
+                    <div class="score-box">
+                        <h3>⭐ {{ translations[language]['Your Financial Health Score'] }}</h3>
+                        <p>{{ health_score }}/100</p>
+                    </div>
+                    <div class="info-box">{{ translations[language]['Ranked'] }} #{{ rank }} {{ translations[language]['out of'] }} {{ total_users }} {{ translations[language]['users'] }}</div>
+                    <div class="info-box">
+                        {% if health_score >= 75 %}{{ translations[language]['Strong Financial Health'] }}
+                        {% elif health_score >= 50 %}{{ translations[language]['Stable Finances'] }}
+                        {% elif health_score >= 25 %}{{ translations[language]['Financial Strain'] }}
+                        {% else %}{{ translations[language]['Urgent Attention Needed'] }}{% endif %}
+                    </div>
+                    <div class="info-box">{{ translations[language]['Check Inbox'] }}</div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard', step=2, language=language) }}" class="btn btn-primary">Next</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 2: Score Breakdown -->
+        {% if step == 2 %}
+            <div class="card">
+                <div class="card-header">📊 {{ translations[language]['Score Breakdown'] }}</div>
+                <div class="card-body light-blue">
+                    <div class="chart-container">
+                        <div id="score-breakdown-chart"></div>
+                    </div>
+                    <div class="score-box">
+                        <h4>{{ translations[language]['Score Composition'] }}:</h4>
+                        <ul>
+                            <li><strong>{{ translations[language]['Cash Flow'] }}</strong>: {{ user_data.income - user_data.expenses }} ₦</li>
+                            <li><strong>{{ translations[language]['Debt-to-Income Ratio'] }}</strong>: {{ (user_data.debt / user_data.income * 100)|round(1) }}%</li>
+                            <li><strong>{{ translations[language]['Debt Interest Burden'] }}</strong>: {{ translations[language]['Debt Interest Description'] }}</li>
+                        </ul>
+                        <p>
+                            {% if health_score >= 75 %}{{ translations[language]['Balanced Components'] }}
+                            {% elif health_score >= 50 %}{{ translations[language]['Components Need Attention'] }}
+                            {% else %}{{ translations[language]['Components Indicate Challenges'] }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard', step=3, language=language) }}" class="btn btn-primary">Next</a>
+                        <a href="{{ url_for('dashboard', step=1, language=language) }}" class="btn btn-secondary">Back</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 3: Badges and Recommended Learning -->
+        {% if step == 3 %}
+            <div class="card">
+                <div class="card-header">🏅 {{ translations[language]['Your Badges'] }}</div>
+                <div class="card-body">
+                    <div class="badge-box">
+                        {% if badges %}
+                            {% for badge in badges %}
+                                <span class="badge" onclick="alert('Congrats on {{ translations[language].get(badge, badge) }}!')">{{ translations[language].get(badge, badge) }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <p>{{ translations[language]['No Badges Yet'] }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="learning-box">
+                        <h3>📚 {{ translations[language]['Recommended Learning'] }}</h3>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="{{ course_url }}" target="_blank" class="course-link">{{ course_title }}</a>
+                            <a href="{{ course_url }}" target="_blank" class="enroll-button">{{ translations[language]['Enroll Now'] }}</a>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard', step=4, language=language) }}" class="btn btn-primary">Next</a>
+                        <a href="{{ url_for('dashboard', step=2, language=language) }}" class="btn btn-secondary">Back</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 4: Quick Financial Tips -->
+        {% if step == 4 %}
+            <div class="card">
+                <div class="card-header">💡 {{ translations[language]['Quick Financial Tips'] }}</div>
+                <div class="card-body">
+                    <ul class="tips-list learning-box">
+                        {% if health_score >= 75 %}
+                            <li>
+                                <span><strong>{{ translations[language]['Invest'] }}</strong>: {{ translations[language]['Invest Wisely'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ translations[language]['Scale'] }}</strong>: {{ translations[language]['Scale Smart'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                        {% elif health_score >= 50 %}
+                            <li>
+                                <span><strong>{{ translations[language]['Build'] }}</strong>: {{ translations[language]['Build Savings'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ translations[language]['Cut'] }}</strong>: {{ translations[language]['Cut Costs'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                        {% else %}
+                            <li>
+                                <span><strong>{{ translations[language]['Reduce'] }}</strong>: {{ translations[language]['Reduce Debt'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ translations[language]['Boost'] }}</strong>: {{ translations[language]['Boost Income'] }}</span>
+                                <button class="try-it-btn">Try It</button>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard', step=5, language=language) }}" class="btn btn-primary">Next</a>
+                        <a href="{{ url_for('dashboard', step=3, language=language) }}" class="btn btn-secondary">Back</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 5: How You Compare to Others -->
+        {% if step == 5 %}
+            <div class="card">
+                <div class="card-header">⚖️ {{ translations[language]['How You Compare'] }}</div>
+                <div class="card-body light-blue">
+                    <div class="chart-container">
+                        <div id="compare-others-chart"></div>
+                    </div>
+                    <div class="info-box">
+                        {{ translations[language]['Your Rank'] }} #{{ rank }} {{ translations[language]['out of'] }} {{ total_users }} {{ translations[language]['users'] }} {{ translations[language]['places you'] }}:
+                        {% if rank <= total_users * 0.1 %}{{ translations[language]['Top 10%'] }}
+                        {% elif rank <= total_users * 0.3 %}{{ translations[language]['Top 30%'] }}
+                        {% elif rank <= total_users * 0.7 %}{{ translations[language]['Middle Range'] }}
+                        {% else %}{{ translations[language]['Lower Range'] }}{% endif %}
+                        {{ translations[language]['Regular Submissions'] }}
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard', step=6, language=language) }}" class="btn btn-primary">Next</a>
+                        <a href="{{ url_for('dashboard', step=4, language=language) }}" class="btn btn-secondary">Back</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 6: What’s Next? -->
+        {% if step == 6 %}
+            <div class="card">
+                <div class="card-header">🔓 {{ translations[language]['Whats Next'] }}</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                        <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary">{{ translations[language]['Provide Feedback'] }}</a>
+                        <a href="{{ WAITLIST_FORM_URL }}" class="btn btn-secondary">{{ translations[language]['Join Waitlist'] }}</a>
+                        <a href="{{ CONSULTANCY_FORM_URL }}" class="btn btn-secondary">{{ translations[language]['Book Consultancy'] }}</a>
+                    </div>
+                    <div class="info-box">
+                        {{ translations[language]['Contact Us'] }} 
+                        <a href="mailto:Ficoreai@outlook.com" class="email-btn">Email Us</a> 
+                        {{ translations[language]['for support'] }} | 
+                        Follow us on 
+                        <a href="{{ LINKEDIN_URL }}" target="_blank" style="color: #0A66C2;">LinkedIn</a> and 
+                        <a href="{{ TWITTER_URL }}" target="_blank" style="color: #1DA1F2;">Twitter</a>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('home') }}" class="btn btn-primary no-arrow">{{ translations[language]['Back to Home'] }}</a>
+                        <button class="voice-btn" onclick="alert('Voice guidance coming soon!')">🎙️ Listen</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Chart Data Setup
+        const chartDataElement = document.getElementById('chart-data') || { dataset: {} };
+        let user_data = JSON.parse(chartDataElement.dataset.user || '{}');
+        let healthScore = JSON.parse(chartDataElement.dataset.healthScore || '0');
+        let peerData = JSON.parse(chartDataElement.dataset.peer || '{}');
+        let language = chartDataElement.dataset.language || 'English';
+
+        user_data = { income: user_data.income || 0, expenses: user_data.expenses || 0, debt: user_data.debt || 0 };
+        healthScore = typeof healthScore === 'number' ? healthScore : 0;
+        peerData = { averageScore: peerData.averageScore || 50 };
+
+        const chartTranslations = {
+            'English': { 'Income': 'Income', 'Expenses': 'Expenses', 'Debt': 'Debt', 'Amount': 'Amount (₦)', 'Your Score': 'Your Score', 'Average Peer Score': 'Average Peer Score', 'Financial Health Score': 'Financial Health Score' },
+            'Hausa': { 'Income': 'Kuɗin Shiga', 'Expenses': 'Kashe Kuɗi', 'Debt': 'Bashi', 'Amount': 'Adadin (₦)', 'Your Score': 'Makin Ku', 'Average Peer Score': 'Matsakaicin Makin Sauran Mutane', 'Financial Health Score': 'Makin Lafiyar Kuɗi' }
+        };
+        const labels = chartTranslations[language] || chartTranslations['English'];
+
+        // Score Breakdown Chart
+        const scoreBreakdownData = [{
+            x: [user_data.income, user_data.expenses, user_data.debt],
+            y: [labels['Income'], labels['Expenses'], labels['Debt']],
+            type: 'bar',
+            orientation: 'h',
+            marker: { color: ['#28A745', '#F57C00', '#DC3545'] },
+            text: [user_data.income, user_data.expenses, user_data.debt].map(v => `₦${v.toLocaleString()}`),
+            textposition: 'auto',
+            hoverinfo: 'text+x'
+        }];
+        Plotly.newPlot('score-breakdown-chart', scoreBreakdownData, {
+            xaxis: { title: labels['Amount'] }, yaxis: { title: '' }, height: 300, margin: { l: 80, r: 20, t: 20, b: 50 }, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
+        }, { responsive: true });
+
+        // Compare Others Chart
+        const compareOthersData = [{
+            x: [labels['Your Score'], labels['Average Peer Score']],
+            y: [healthScore, peerData.averageScore],
+            type: 'bar',
+            marker: { color: ['#28A745', '#6C757D'] },
+            text: [healthScore, peerData.averageScore].map(v => `${v.toFixed(1)}/100`),
+            textposition: 'auto',
+            hoverinfo: 'text+y'
+        }];
+        Plotly.newPlot('compare-others-chart', compareOthersData, {
+            xaxis: { title: '' }, yaxis: { title: labels['Financial Health Score'], range: [0, 100] }, height: 300, margin: { l: 50, r: 20, t: 20, b: 50 }, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
+        }, { responsive: true });
+
+        // Dynamic Background
+        const backgrounds = ['#E3F2FD', '#F5F7FA', '#E8F5E9', '#FFF3E0', '#ECEFF1', '#E0F7FA'];
+        document.body.style.background = `linear-gradient(135deg, ${backgrounds[{{ step - 1 }}]}, #F5F7FA)`;
+    </script>
+</body>
+</html>
