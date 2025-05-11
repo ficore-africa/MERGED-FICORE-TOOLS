@@ -1499,7 +1499,7 @@ def health_score_form():
         language=language,  # Explicitly pass language
     )
 
-@app.route('/health/dashboard')
+@app.route('/health_dashboard')
 def health_dashboard():
     language = session.get('language', 'en')
     if language not in translations:
@@ -1549,7 +1549,7 @@ def health_dashboard():
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}")
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-        return redirect(url_for('health'))
+        return redirect(url_for('health_score_form'))
 
 @app.route('/change_language', methods=['POST'])
 def change_language():
