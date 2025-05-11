@@ -132,7 +132,7 @@
                 </div>
                 <div class="text-center">
                     <a href="{{ url_for('home') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Home'] }}">{{ translations['Back'] }}</a>
-                    {{ form.submit(class="btn btn-primary", value=translations['Continue to Income'] + ' →', **{'aria-label': translations['Continue to Income']}) }}
+                    {{ form.submit(class="btn btn-primary", value=translations[language]['Continue to Income'] + ' →', **{'aria-label': translations[language]['Continue to Income']}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ translations['Please fill all required fields'] }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
