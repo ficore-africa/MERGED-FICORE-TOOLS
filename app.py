@@ -238,7 +238,7 @@ translations = {
         'Recommended Learning with Emoji': 'Recommended Learning 📚',
 
         # Financial Health Score translations
-        'Your Financial Health Summary': 'Your Financial Health Summary:',
+        'Your Financial Health Summary': 'Your Financial Health Summary',
         'Your Financial Health Score': 'Your Financial Health Score',
         'Ranked': 'Ranked',
         'Strong Financial Health': 'Your score indicates strong financial health. Focus on investing the surplus funds to grow your wealth.',
