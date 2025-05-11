@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</title>
+    <title>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,8 +53,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</h2>
-            <p>{{ translations[language].get('Financial growth passport for Africa', translations['en']['Financial growth passport for Africa']) }}</p>
+            <h2>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</h2>
+            <p>{{ trans.get('Financial growth passport for Africa', 'Financial growth passport for Africa') }}</p>
         </div>
         <div class="progress">
             <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
@@ -67,47 +67,47 @@
             {% endif %}
         {% endwith %}
         <div class="form-card">
-            <h3>{{ translations[language].get('Step 1', translations['en']['Step 1']) }}: {{ translations[language].get('Personal Information', translations['en']['Personal Information']) }}</h3>
+            <h3>{{ trans.get('Step 1', 'Step 1') }}: {{ trans.get('Personal Information', 'Personal Information') }}</h3>
             <form method="POST" id="step1-form" action="{{ url_for('budget_step1') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="first_name" class="form-label"><span class="visual-icon">👤</span> {{ translations[language].get('First Name', translations['en']['First Name']) }}</label>
-                    {{ form.first_name(class="form-control", placeholder=translations[language].get('Enter your first name', translations['en']['Enter your first name']), **{'aria-required': 'true', 'aria-label': translations[language].get('First Name', translations['en']['First Name'])}) }}
-                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Enter your first name for your report.', translations['en']['Enter your first name for your report.']) }}</span></span>
-                    <div class="valid-feedback">{{ translations[language].get('Looks good!', translations['en']['Looks good!']) }}</div>
-                    <div class="invalid-feedback">{{ translations[language].get('First Name Required', translations['en']['First Name Required']) }}</div>
+                    <label for="first_name" class="form-label"><span class="visual-icon">👤</span> {{ trans.get('First Name', 'First Name') }}</label>
+                    {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), **{'aria-required': 'true', 'aria-label': trans.get('First Name', 'First Name')}) }}
+                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Enter your first name for your report.', 'Enter your first name for your report.') }}</span></span>
+                    <div class="valid-feedback">{{ trans.get('Looks good!', 'Looks good!') }}</div>
+                    <div class="invalid-feedback">{{ trans.get('First Name Required', 'First Name Required') }}</div>
                 </div>
                 <div class="form-group">
-                    <label for="email" class="form-label"><span class="visual-icon">📧</span> {{ translations[language].get('Email', translations['en']['Email']) }}</label>
-                    {{ form.email(class="form-control", placeholder=translations[language].get('Enter your email', translations['en']['Enter your email']), **{'aria-required': 'true', 'aria-label': translations[language].get('Email', translations['en']['Email'])}) }}
-                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Get your budget report by email.', translations['en']['Get your budget report by email.']) }}</span></span>
-                    <div class="valid-feedback">{{ translations[language].get('Looks good!', translations['en']['Looks good!']) }}</div>
-                    <div class="invalid-feedback">{{ translations[language].get('Invalid Email', translations['en']['Invalid Email']) }}</div>
+                    <label for="email" class="form-label"><span class="visual-icon">📧</span> {{ trans.get('Email', 'Email') }}</label>
+                    {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), **{'aria-required': 'true', 'aria-label': trans.get('Email', 'Email')}) }}
+                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Get your budget report by email.', 'Get your budget report by email.') }}</span></span>
+                    <div class="valid-feedback">{{ trans.get('Looks good!', 'Looks good!') }}</div>
+                    <div class="invalid-feedback">{{ trans.get('Invalid Email', 'Invalid Email') }}</···
                 </div>
                 <div class="form-group">
-                    <label for="language" class="form-label"><span class="visual-icon">🌐</span> {{ translations[language].get('Language', translations['en']['Language']) }}</label>
-                    {{ form.language(class="form-select", **{'aria-required': 'true', 'aria-label': translations[language].get('Language', translations['en']['Language'])}) }}
-                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Choose your language.', translations['en']['Choose your language.']) }}</span></span>
-                    <div class="valid-feedback">{{ translations[language].get('Language selected!', translations['en']['Language selected!']) }}</div>
-                    <div class="invalid-feedback">{{ translations[language].get('Language required', translations['en']['Language required']) }}</div>
+                    <label for="language" class="form-label"><span class="visual-icon">🌐</span> {{ trans.get('Language', 'Language') }}</label>
+                    {{ form.language(class="form-select", **{'aria-required': 'true', 'aria-label': trans.get('Language', 'Language')}) }}
+                    <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Choose your language.', 'Choose your language.') }}</span></span>
+                    <div class="valid-feedback">{{ trans.get('Language selected!', 'Language selected!') }}</div>
+                    <div class="invalid-feedback">{{ trans.get('Language required', 'Language required') }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Home', translations['en']['Back to Home']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
-                    {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Income', translations['en']['Continue to Income']) + ' →', **{'aria-label': translations[language].get('Continue to Income', translations['en']['Continue to Income'])}) }}
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
+                    {{ form.submit(class="btn btn-primary", value=trans.get('Continue to Income', 'Continue to Income') + ' →', **{'aria-label': trans.get('Continue to Income', 'Continue to Income')}) }}
                 </div>
-                <div class="error-message" id="form-error">{{ translations[language].get('Please fill all required fields', translations['en']['Please fill all required fields']) }}</div>
+                <div class="error-message" id="form-error">{{ trans.get('Please fill all required fields', 'Please fill all required fields') }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
                     <div class="spinner"></div>
-                    <div class="spinner-text">{{ translations[language].get('Processing your information', translations['en']['Processing your information']) }}</div>
+                    <div class="spinner-text">{{ trans.get('Processing your information', 'Processing your information') }}</div>
                 </div>
             </form>
         </div>
         <footer class="footer">
-            <p>{{ translations[language].get('About Ficore Africa: Empowering financial growth across Africa since 2023', translations['en']['About Ficore Africa: Empowering financial growth across Africa since 2023']) }}</p>
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations[language].get('Provide Feedback', translations['en']['Provide Feedback']) }}">{{ translations[language].get('Feedback', translations['en']['Feedback']) }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}">{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations[language].get('Book Consultancy', translations['en']['Book Consultancy']) }}">{{ translations[language].get('Consultancy', translations['en']['Consultancy']) }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
             </div>
             <div class="social-icons">
                 <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
@@ -189,5 +189,5 @@
             });
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4b9bc393d12d2',t:'MTc0Njk5ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
