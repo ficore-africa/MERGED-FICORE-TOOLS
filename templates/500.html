@@ -78,7 +78,7 @@
         {% if error_message %}
             <p class="text-gray-700 mb-4"><strong>{{ fallback_translations[language | default('en')].get('Error Details', 'Error Details') }}:</strong> {{ error_message }}</p>
         {% endif %}
-        <a href="{{ url_for('home') }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition duration-300">
+        <a href="{{ url_for('index.html') }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition duration-300">
             {{ fallback_translations[language | default('en')].get('Return to Home', 'Return to Home') }}
         </a>
     </div>
