@@ -879,21 +879,24 @@ def send_health_email(to_email, user_name, health_score, score_description, rank
         msg['To'] = to_email
         subject = translations[language]['Top 10% Subject'] if rank <= total_users * 0.1 else translations[language]['Score Report Subject'].format(user_name=user_name)
         msg['Subject'] = subject
-        body = translations[language]['Email Body'].format(
-            user_name=user_name,
+        html = render_template(
+            'health_score_email.html',
+            translations=translations[language],
+            user_name=sanitize_input(user_name),
             health_score=health_score,
             score_description=score_description,
             rank=rank,
             total_users=total_users,
-            course_url=course_url,
             course_title=course_title,
+            course_url=course_url,
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
             linkedin_url=LINKEDIN_URL,
-            twitter_url=TWITTER_URL
+            twitter_url=TWITTER_URL,
+            language=language
         )
-        msg.attach(MIMEText(body, 'html'))
+        msg.attach(MIMEText(html, 'html'))
         with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as server:
             server.starttls()
             server.login(os.getenv('SMTP_USER'), os.getenv('SMTP_PASSWORD'))
@@ -903,7 +906,7 @@ def send_health_email(to_email, user_name, health_score, score_description, rank
     except Exception as e:
         logger.error(f"Error sending health email to {to_email}: {e}")
         return False
-
+        
 def generate_breakdown_plot(user_df):
     try:
         if user_df.empty:
