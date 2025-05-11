@@ -1016,6 +1016,14 @@ class HealthForm(FlaskForm):
         except ValueError:
             raise ValidationError('Debt Interest Rate must be a valid number.')
 
+@app.route('/change_language', methods=['POST'])
+def change_language():
+    language = request.form.get('language', 'en')
+    if language not in ['en', 'ha']:
+        language = 'en'
+    session['language'] = language
+    return redirect(url_for('home', language=language))
+
 # Routes
 @app.route('/favicon.ico')
 def favicon():
@@ -1025,19 +1033,19 @@ def favicon():
 @app.route('/', methods=['GET', 'POST'])
 def home():
     logger.info("Accessing root route")
-    language = request.args.get('language', 'en')
+    language = request.args.get('language', session.get('language', 'en'))
     if language not in translations:
         language = 'en'
-
+    session['language'] = language
     return render_template(
         'index.html',
-        translations=translations,
+        translations=translations[language],
         language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL
     )
-
+    
 @app.route('/health', methods=['GET', 'POST'])
 def health():
     logger.info("Accessing health route")
