@@ -1222,27 +1222,38 @@ def budget_step2():
     
 @app.route('/budget_step3', methods=['GET', 'POST'])
 def budget_step3():
-    language = session.get('language', 'en')
+    language = session.get('language', session.get('budget_data', {}).get('language', 'en'))
     if language not in translations:
         language = 'en'
         session['language'] = language
         session.modified = True
 
     form = Step3Form(language=language)
+    logger.debug(f"Step 3: Rendering form with language={language}, submit label={form.submit.label.text}")
+
     if 'budget_data' not in session:
-        flash(translations[language]['Session Expired'], 'error')
+        logger.warning("Step 3: Session data missing.")
+        flash(translations[language]['Session Expired'], 'danger')
         return redirect(url_for('budget_step1'))
 
-    if form.validate_on_submit():
-        session['budget_data'].update({
-            'housing_expenses': form.housing.data,
-            'food_expenses': form.food.data,
-            'transport_expenses': form.transport.data,
-            'other_expenses': form.other.data
-        })
-        logger.info(f"Step 3 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step4'))
-    
+    if request.method == 'POST':
+        logger.debug(f"Step 3: Form submitted with data: {form.data}")
+        if form.validate_on_submit():
+            session['budget_data'].update({
+                'housing_expenses': float(form.housing.data) if form.housing.data else 0.0,
+                'food_expenses': float(form.food.data) if form.food.data else 0.0,
+                'transport_expenses': float(form.transport.data) if form.transport.data else 0.0,
+                'other_expenses': float(form.other.data) if form.other.data else 0.0
+            })
+            session.modified = True
+            logger.info(f"Step 3 completed for {session['budget_data']['email']}")
+            return redirect(url_for('budget_step4'))
+        else:
+            logger.warning(f"Step 3: Form validation failed. Errors: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"{field.capitalize()}: {error}", 'danger')
+
     return render_template(
         'budget_step3.html',
         form=form,
@@ -1253,126 +1264,91 @@ def budget_step3():
     
 @app.route('/budget_step4', methods=['GET', 'POST'])
 def budget_step4():
-    language = session.get('language', 'en')
+    language = session.get('language', session.get('budget_data', {}).get('language', 'en'))
     if language not in translations:
         language = 'en'
         session['language'] = language
         session.modified = True
 
     form = Step4Form(language=language)
+    logger.debug(f"Step 4: Rendering form with language={language}, submit label={form.submit.label.text}")
+
     if 'budget_data' not in session:
-        flash(translations[language]['Session Expired'], 'error')
+        logger.warning("Step 4: Session data missing.")
+        flash(translations[language]['Session Expired'], 'danger')
         return redirect(url_for('budget_step1'))
 
-    if form.validate_on_submit():
-        budget_data = session['budget_data']
-        budget_data.update({
-            'savings_goal': form.savings_goal.data or 0,
-            'auto_email': form.auto_email.data
-        })
-        total_expenses = (
-            budget_data['housing_expenses'] +
-            budget_data['food_expenses'] +
-            budget_data['transport_expenses'] +
-            budget_data['other_expenses']
-        )
-        savings = budget_data['savings_goal'] or max(0, budget_data['monthly_income'] * 0.1)
-        surplus_deficit = budget_data['monthly_income'] - total_expenses - savings
+    # Ensure all required data is present
+    required_keys = ['first_name', 'email', 'language', 'housing_expenses', 'food_expenses', 'transport_expenses', 'other_expenses']
+    for key in required_keys:
+        if key not in session['budget_data']:
+            logger.error(f"Step 4: Missing key '{key}' in budget_data: {session['budget_data']}")
+            flash(translations[language]['Incomplete Data'], 'danger')
+            return redirect(url_for('budget_step3'))
 
-        try:
-            data_row = [
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                budget_data['first_name'],
-                budget_data['email'],
-                budget_data['language'],
-                budget_data['monthly_income'],
-                budget_data['housing_expenses'],
-                budget_data['food_expenses'],
-                budget_data['transport_expenses'],
-                budget_data['other_expenses'],
-                budget_data['savings_goal'],
-                str(budget_data['auto_email']).lower(),
-                total_expenses,
-                savings,
-                surplus_deficit,
-                '',  # badges
-                1,   # rank (placeholder)
-                1    # total_users (placeholder)
-            ]
-            if append_to_sheet(data_row, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
-                logger.info(f"Data saved for {budget_data['email']}")
-                flash(translations[language]['Submission Success'], 'success')
-            else:
-                logger.error(f"Failed to save data for {budget_data['email']}")
-                flash(translations[language]['Error saving data. Please try again.'], 'error')
-                return redirect(url_for('budget_step4'))
+    total_expenses = (
+        session['budget_data'].get('housing_expenses', 0.0) +
+        session['budget_data'].get('food_expenses', 0.0) +
+        session['budget_data'].get('transport_expenses', 0.0) +
+        session['budget_data'].get('other_expenses', 0.0)
+    )
 
-            user_df = fetch_data_from_sheet(budget_data['email'], PREDETERMINED_HEADERS_BUDGET, 'Budget')
-            user_df = calculate_budget_metrics(user_df)
-            badges = assign_badges_budget(user_df)
+    if request.method == 'POST':
+        logger.debug(f"Step 4: Form submitted with data: {form.data}")
+        if form.validate_on_submit():
+            session['budget_data'].update({
+                'savings_goal': float(form.savings_goal.data) if form.savings_goal.data else 0.0,
+                'auto_email': form.auto_email.data
+            })
+            session.modified = True
 
-            if budget_data['auto_email']:
-                chart_data = {
-                    'labels': ['Housing', 'Food', 'Transport', 'Other'],
-                    'values': [
-                        budget_data['housing_expenses'],
-                        budget_data['food_expenses'],
-                        budget_data['transport_expenses'],
-                        budget_data['other_expenses']
-                    ]
-                }
-                bar_data = {
-                    'labels': ['Income', 'Expenses', 'Savings'],
-                    'values': [budget_data['monthly_income'], total_expenses, savings]
-                }
-                advice = []
-                if surplus_deficit >= 0:
-                    advice.append(translations[language]['Great job! Save or invest your surplus to grow your wealth.'])
-                else:
-                    advice.append(translations[language]['Reduce non-essential spending to balance your budget.'])
-                if budget_data['housing_expenses'] > budget_data['monthly_income'] * 0.4:
-                    advice.append(translations[language]['Housing costs are high. Look for cheaper rent or utilities.'])
-                if budget_data['food_expenses'] > budget_data['monthly_income'] * 0.3:
-                    advice.append(translations[language]['Food spending is high. Try cooking at home more.'])
-                if budget_data['other_expenses'] > budget_data['monthly_income'] * 0.2:
-                    advice.append(translations[language]['Other spending is high. Cut back on non-essentials like clothes or entertainment.'])
-                budget_data['advice'] = advice
-                budget_data['badges'] = badges
-                send_budget_email(
-                    budget_data,
-                    total_expenses,
-                    savings,
-                    surplus_deficit,
-                    chart_data,
-                    bar_data
+            # Prepare email data
+            user_name = f"{session['budget_data']['first_name']} {session['budget_data'].get('last_name', '')}".strip()
+            health_score = session.get('health_results', {}).get('health_score', 0.0)
+            score_description = session.get('health_results', {}).get('score_description', 'No advice available')
+            rank = session.get('health_results', {}).get('rank', 0)
+            total_users = session.get('health_results', {}).get('total_users', 0)
+            course_title = session.get('health_results', {}).get('course_title', '')
+            course_url = session.get('health_results', {}).get('course_url', '')
+
+            # Send email (implement your email sending logic here)
+            msg = Message(
+                subject=translations[language]['Your Financial Health Score'],
+                recipients=[session['budget_data']['email']],
+                html=render_template(
+                    'email_template.html',
+                    user_name=user_name,
+                    health_score=f"{health_score:.2f}/100",
+                    score_description=score_description,
+                    rank=rank,
+                    total_users=total_users,
+                    course_title=course_title,
+                    course_url=course_url,
+                    FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+                    WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+                    CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+                    linkedin_url=linkedin_url,
+                    twitter_url=twitter_url,
+                    translations=translations[language]
                 )
+            )
+            mail.send(msg)
+            logger.info(f"Email sent to {session['budget_data']['email']}")
 
-            session['budget_results'] = {
-                'monthly_income': budget_data['monthly_income'],
-                'housing_expenses': budget_data['housing_expenses'],
-                'food_expenses': budget_data['food_expenses'],
-                'transport_expenses': budget_data['transport_expenses'],
-                'other_expenses': budget_data['other_expenses'],
-                'total_expenses': total_expenses,
-                'savings': savings,
-                'surplus_deficit': surplus_deficit,
-                'badges': badges,
-                'email': budget_data['email']
-            }
-            logger.info(f"Step 4 completed for {budget_data['email']}")
-            return redirect(url_for('budget_dashboard'))
-
-        except Exception as e:
-            logger.error(f"Error processing step 4 for {budget_data['email']}: {e}")
-            flash(translations[language]['Error saving data. Please try again.'], 'error')
-            return redirect(url_for('budget_step4'))
+            return redirect(url_for('dashboard'))
+        else:
+            logger.warning(f"Step 4: Form validation failed. Errors: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"{field.capitalize()}: {error}", 'danger')
 
     return render_template(
         'budget_step4.html',
         form=form,
         trans=translations[language],
         language=language,
-        step=4
+        step=4,
+        total_expenses=total_expenses
     )
     
 @app.route('/budget_dashboard')
