@@ -1170,11 +1170,11 @@ def budget_step1():
     return render_template(
         'budget_step1.html',
         form=form,
-        translations=translations,
-        language=language,  # Explicitly pass language
+        trans=translations[language],  # Changed from translations=translations
+        language=language,  # Keep for consistency
         step=1
     )
-
+    
 @app.route('/budget_step2', methods=['GET', 'POST'])
 def budget_step2():
     form = Step2Form()
@@ -1196,11 +1196,11 @@ def budget_step2():
     return render_template(
         'budget_step2.html',
         form=form,
-        translations=translations,
-        language=language,  # Explicitly pass language
+        trans=translations[language],  # Changed from translations=translations
+        language=language,  # Keep for consistency
         step=2
     )
-
+    
 @app.route('/budget_step3', methods=['GET', 'POST'])
 def budget_step3():
     form = Step3Form()
@@ -1226,7 +1226,7 @@ def budget_step3():
     return render_template(
         'budget_step3.html',
         form=form,
-        trans=translations[language],  # Pass language-specific translations
+        trans=translations[language],  # Already correct
         language=language,  # Pass language explicitly
         step=3
     )
@@ -1304,7 +1304,6 @@ def budget_step4():
                     'labels': ['Income', 'Expenses', 'Savings'],
                     'values': [budget_data['monthly_income'], total_expenses, savings]
                 }
-                # Calculate advice
                 advice = []
                 if surplus_deficit >= 0:
                     advice.append(translations[language]['Great job! Save or invest your surplus to grow your wealth.'])
@@ -1350,7 +1349,8 @@ def budget_step4():
     return render_template(
         'budget_step4.html',
         form=form,
-        translations=translations[language],
+        trans=translations[language],  # Changed from translations=translations[language]
+        language=language,  # Keep for consistency
         step=4
     )
     
@@ -1397,7 +1397,7 @@ def budget_dashboard():
 
         return render_template(
             'budget_dashboard.html',
-            trans=translations[language],
+            trans=translations[language],  # Already correct
             language=language,  # Added
             results=results,
             chart_data=chart_data,
