@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Calculate your financial health score with Ficore Africa and get personalized insights.">
-    <meta name="keywords" content="ficore africa, financial health, score calculator, Africa SME finance">
+    <meta name="description" content="Complete the health score form with Ficore Africa to calculate your personalized financial health score.">
+    <meta name="keywords" content="ficore africa, health score form, financial health, Africa SME finance">
     <meta name="author" content="Ficore Africa">
-    <title>Ficore Africa - Financial Health Score</title>
+    <title>Ficore Africa - Health Score Form</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
@@ -153,7 +153,6 @@
             color: #666;
             margin-bottom: 0.5rem;
         }
-        /* Fallback Tooltip Styles */
         .tooltip-fallback {
             display: none;
             background: #E3F2FD;
@@ -168,7 +167,6 @@
         .tooltip-fallback.active {
             display: block;
         }
-        /* Stylish Blue Book Styles */
         .book-toggle {
             display: flex;
             align-items: center;
@@ -213,7 +211,6 @@
             color: #0288D1;
             font-size: 1rem;
         }
-        /* Multi-Step Form Styles */
         .form-step {
             display: none;
         }
@@ -327,7 +324,7 @@
                         <div class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100">Step 1 of 3</div>
                     </div>
 
-                    <form id="submission-form" method="POST" action="{{ url_for('submit') }}">
+                    <form id="submission-form" method="POST" action="{{ url_for('health_score_submit') }}">
                         {{ form.hidden_tag() }} <!-- Ensure CSRF token is included -->
 
                         <!-- Step 1: Personal Information -->
@@ -434,7 +431,7 @@
         <div class="text-center my-4">
             <p>
                 {{ translations[language]['Contact Us'] }} 
-                <a href="mailto:ficore.ai.africa@gmail.com" class="btn-email">Email Us</a> 
+                <a href="/cdn-cgi/l/email-protection#f09699939f8295de9199de919682999391b0979d91999cde939f9d" class="btn-email">Email Us</a> 
                 {{ translations[language]['for support'] }} | 
                 Follow us on 
                 <a href="{{ LINKEDIN_URL }}" target="_blank" style="text-decoration: none; color: #0A66C2;">LinkedIn</a> and 
@@ -448,7 +445,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" onerror="console.error('Failed to load bootstrap.bundle.min.js. Please ensure the file exists in static/js/ and Flask is serving static files correctly.');"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" onerror="console.error('Failed to load bootstrap.bundle.min.js. Please ensure the file exists in static/js/ and Flask is serving static files correctly.');"></script>
     <script>
         // Multi-Step Form Navigation
         let currentStep = 1;
@@ -624,5 +621,6 @@
             });
         });
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e08a750ed4bf9c',t:'MTc0Njk1NDYwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
