@@ -45,12 +45,14 @@
         .navbar form {
             display: flex;
             align-items: center;
+            margin-right: 20px; /* Added padding from edge */
         }
         .navbar select {
             padding: 8px;
             border-radius: 5px;
             border: 2px solid #0288D1;
             margin-right: 10px;
+            min-width: 100px; /* Ensure minimum width for visibility */
         }
         .navbar button {
             padding: 8px 15px;
@@ -59,6 +61,7 @@
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             cursor: pointer;
+            white-space: nowrap; /* Prevent text wrapping */
         }
         .navbar button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -222,6 +225,10 @@
             margin-right: 10px;
             vertical-align: middle;
         }
+        .testimonials-section .testimonial span.name {
+            color: #2E7D32; /* Added color to names */
+            font-weight: bold;
+        }
         .recommended-learning {
             margin-top: 40px;
             padding: 20px;
@@ -341,6 +348,13 @@
             .navbar h1 {
                 font-size: 1.2rem;
             }
+            .navbar form {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .navbar select {
+                margin-bottom: 10px;
+            }
             .tool-card a, .tool-card .coming-soon, .tool-card .notify-me {
                 font-size: 1.1rem;
                 padding: 15px 30px;
@@ -391,39 +405,39 @@
             <div class="tool-card">
                 <h3>{{ translations['Net Worth Calculator'] or 'Net Worth Calculator' }}</h3>
                 <p>{{ translations['Net worth is assets minus liabilities'] or 'Net worth is assets minus liabilities' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Emergency Fund Calculator'] or 'Emergency Fund Calculator' }}</h3>
                 <p>{{ translations['Aims to cover 3-6 months of expenses for financial security'] or 'Aims to cover 3-6 months of expenses for financial security' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Expense Tracker'] or 'Expense Tracker' }}</h3>
                 <p>{{ translations['Log and edit expenses for spending insights'] or 'Log and edit expenses for spending insights' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Bill Planner'] or 'Bill Planner' }}</h3>
                 <p>{{ translations['Manage and mark bills as paid'] or 'Manage and mark bills as paid' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
             </div>
             <div class="tool-card">
                 <h3>{{ translations['Personality Quiz'] or 'Personality Quiz' }}</h3>
                 <p>{{ translations['Answer questions to assess financial literacy'] or 'Answer questions to assess financial literacy' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Notify Me</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
             </div>
         </div>
         <div class="testimonials-section">
-            <strong><i class="fas fa-quote-left"></i> {{ translations['Community Voices'] or 'Community Voices' }}</strong>
+            <strong><i class="fas fa-quote-left"></i> {{ translations['What people are saying about Us'] or 'What people are saying about Us' }}</strong>
             <div class="testimonial">
-                <span class="initials">MU</span> <span>“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — Maisarata Uqubatu</span>
+                <span class="initials">MU</span> <span>“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — <span class="name">Maisarata Uqubatu</span></span>
             </div>
             <div class="testimonial">
-                <span class="initials">AA</span> <span>“🔥 Ficore 🔥🔥🔥🔥🔥” — Abubakar Abdulkadir, Software Engineer for Sustainable Solutions</span>
+                <span class="initials">AA</span> <span>“🔥 Ficore 🔥🔥🔥🔥🔥” — <span class="name">Abubakar Abdulkadir</span>, Software Engineer for Sustainable Solutions</span>
             </div>
             <div class="testimonial">
-                <span class="initials">ASU</span> <span>“I’ve been following the Ficore project and I’m impressed. It’s clear there's potential, and I’m curious to know more—especially if there's a customer support channel included. I'd love to contribute if needed!” — Aminu Sani Usman</span>
+                <span class="initials">ASU</span> <span>“I’ve been following the Ficore project and I’m impressed. It’s clear there's potential, and I’m curious to know more—especially if there's a customer support channel included. I'd love to contribute if needed!” — <span class="name">Aminu Sani Usman</span></span>
             </div>
         </div>
         <div class="recommended-learning">
@@ -476,5 +490,3 @@
             document.querySelector('.tools-section').appendChild(tipElement);
         });
     </script>
-</body>
-</html>
