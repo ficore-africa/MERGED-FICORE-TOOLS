@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ translations['Monthly Budget Planner'] }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .header { background: #1E7F71; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header h2 { color: #FFFFFF; margin: 0; }
+        .header p { font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0; }
+        .dashboard-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0; transform: translateY(20px); }
+        .dashboard-card.slide-in { opacity: 1; transform: translateY(0); }
+        .progress { height: 10px; margin-bottom: 20px; background: #e9ecef; border-radius: 5px; }
+        .progress-bar { background: #2E7D32; transition: width 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; }
+        .btn-primary:hover { transform: scale(1.05); background: linear-gradient(135deg, #1B5E20, #01579B); }
+        .btn-secondary { background: #6c757d; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; margin-right: 10px; }
+        .btn-secondary:hover { transform: scale(1.05); background: #5a6268; }
+        .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
+        .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
+        .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
+        .summary-box:hover, .badges-box:hover, .tips-box:hover { transform: scale(1.02); }
+        .section-header { color: #1E7F71; font-weight: 600; margin-bottom: 15px; }
+        .badge-item, .tip-item { margin-bottom: 10px; }
+        .badge-item strong, .tip-item strong { color: #0288D1; }
+        .text-center { margin-top: 20px; }
+        @media (max-width: 576px) { 
+            .container { padding: 10px; } 
+            .dashboard-card { padding: 1rem; } 
+            .summary-box, .badges-box, .tips-box { padding: 15px; } 
+            .btn-primary, .btn-secondary { font-size: 1rem; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>{{ translations['Monthly Budget Planner'] }}</h2>
+            <p>{{ translations['Financial growth passport for Africa'] }}</p>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="dashboard-card slide-in">
+            <div class="summary-box" aria-labelledby="summary-header">
+                <h3 id="summary-header" class="section-header">{{ translations['Summary with Emoji'] }}</h3>
+                <ul>
+                    <li><strong>{{ translations['Monthly Income'] }}:</strong> {{ monthly_income | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Housing'] }}:</strong> {{ housing_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Food'] }}:</strong> {{ food_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Transport'] }}:</strong> {{ transport_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Other'] }}:</strong> {{ other_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Total Expenses'] }}:</strong> {{ total_expenses | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Savings'] }}:</strong> {{ savings | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Surplus/Deficit'] }}:</strong> {{ surplus_deficit | format_currency('NGN') }}</li>
+                    <li><strong>{{ translations['Your ranking'] }}:</strong> {{ translations['Rank'] }} {{ rank }} {{ translations['out of'] }} {{ total_users }} {{ translations['users'] }}</li>
+                </ul>
+            </div>
+            <div class="badges-box" aria-labelledby="badges-header">
+                <h3 id="badges-header" class="section-header">{{ translations['Badges with Emoji'] }}</h3>
+                {% if badges %}
+                    {% for badge in badges %}
+                        <div class="badge-item">
+                            <strong>{{ badge }}</strong>: {{ translations[badge] }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>{{ translations['No Badges Yet'] }}</p>
+                {% endif %}
+            </div>
+            <div class="tips-box" aria-labelledby="tips-header">
+                <h3 id="tips-header" class="section-header">{{ translations['Tips with Emoji'] }}</h3>
+                {% set tips = [] %}
+                {% if surplus_deficit >= 0 %}
+                    {% set _ = tips.append({'title': translations['Great job! Save or invest your surplus.'], 'description': translations['Great job! Save or invest your surplus to grow your wealth.']}) %}
+                {% else %}
+                    {% set _ = tips.append({'title': translations['Spend less on non-essentials to balance your budget.'], 'description': translations['Reduce non-essential spending to balance your budget.']}) %}
+                {% endif %}
+                {% if housing_expenses / monthly_income > 0.3 %}
+                    {% set _ = tips.append({'title': translations['Housing costs are high.'], 'description': translations['Housing costs are high. Look for cheaper rent or utilities.']}) %}
+                {% endif %}
+                {% if food_expenses / monthly_income > 0.3 %}
+                    {% set _ = tips.append({'title': translations['Food spending is high.'], 'description': translations['Food spending is high. Try cooking at home more.']}) %}
+                {% endif %}
+                {% set _ = tips.append({'title': translations['Keep tracking your expenses every month.'], 'description': translations['Keep tracking your expenses every month.']}) %}
+                {% for tip in tips %}
+                    <div class="tip-item">
+                        <strong>{{ tip.title }}</strong>: {{ tip.description }}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="text-center">
+                <a href="{{ url_for('step1') }}" class="btn btn-secondary">{{ translations['Start Over'] }}</a>
+            </div>
+        </div>
+        <footer class="mt-4 text-center">
+            <p>© 2025 Ficore Africa. All rights reserved.</p>
+        </footer>
+    </div>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dashboardCard = document.querySelector('.dashboard-card');
+            setTimeout(() => dashboardCard.classList.add('slide-in'), 100);
+        });
+    </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93daad45bdedc0ac',t:'MTc0Njg5MzExMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>
