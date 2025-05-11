@@ -1031,7 +1031,7 @@ def home():
     )
 
 @app.route('/budget', methods=['GET', 'POST'])
-def budget_budget():
+def budget():
     logger.info("Accessing budget route")
     language = request.args.get('language', 'en')
     if language not in translations:
