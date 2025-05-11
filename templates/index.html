@@ -16,7 +16,7 @@
             color: #333;
         }
         .navbar {
-            background: linear-gradient(45deg, #2E7D32, #0288D1);
+            background: linear-gradient(45deg, rgba(46, 125, 50, 0.8), rgba(2, 136, 209, 0.8));
             background-size: 200% 200%;
             padding: 15px 30px;
             display: flex;
@@ -64,7 +64,7 @@
             background: linear-gradient(135deg, #1B5E20, #01579B);
         }
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/images/hero-bg.jpg');
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/static/images/hero-bg.jpg');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -83,6 +83,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: textShine 3s ease infinite;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes textShine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .hero p {
             font-size: 1.2rem;
@@ -90,24 +96,26 @@
             max-width: 600px;
         }
         .hero a {
-            padding: 12px 30px;
+            padding: 15px 35px;
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-weight: 600;
+            font-size: 1.1rem;
         }
         .hero a:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
         }
         .tools-section {
-            padding: 50px 20px;
+            padding: 60px 20px;
             background-color: white;
             text-align: center;
         }
         .tools-section h2 {
             font-size: 2rem;
             margin-bottom: 40px;
+            font-weight: bold;
             background: linear-gradient(45deg, #2E7D32, #0288D1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -115,14 +123,14 @@
         }
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
             max-width: 1200px;
             margin: 0 auto;
         }
         .tool-card {
             background-color: #E3F2FD;
-            padding: 20px;
+            padding: 25px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             text-align: left;
@@ -131,6 +139,7 @@
         .tool-card h3 {
             font-size: 1.3rem;
             margin-bottom: 10px;
+            font-weight: bold;
             background: linear-gradient(45deg, #2E7D32, #0288D1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -141,24 +150,46 @@
             color: #666;
             margin-bottom: 20px;
         }
-        .tool-card a, .tool-card span {
-            display: inline-block;
-            padding: 10px 20px;
+        .tool-card a {
+            padding: 12px 25px;
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            display: inline-block;
         }
         .tool-card a:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
         }
         .tool-card .coming-soon {
-            background-color: #ccc;
+            padding: 12px 25px;
+            background: #B0BEC5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            display: inline-block;
             cursor: not-allowed;
         }
         .tool-card .coming-soon:hover {
-            background-color: #B0BEC5;
+            background: #90A4AE;
+        }
+        .recommended-learning {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(227, 242, 253, 0.8);
+            border: 2px solid #0288D1;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .recommended-learning strong {
+            font-size: 1.2rem;
+            color: #2E7D32;
+        }
+        .recommended-learning p {
+            margin: 10px 0;
+            color: #666;
         }
         .why-section {
             padding: 50px 20px;
@@ -168,6 +199,7 @@
         .why-section h2 {
             font-size: 2rem;
             margin-bottom: 30px;
+            font-weight: bold;
             background: linear-gradient(45deg, #2E7D32, #0288D1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -192,37 +224,51 @@
         }
         .footer {
             background: linear-gradient(45deg, #2E7D32, #0288D1);
+            background-size: 200% 200%;
             color: white;
             padding: 30px 20px;
             text-align: center;
+            animation: gradientShift 5s ease infinite;
         }
         .footer p {
-            margin: 0;
+            margin: 0 0 20px 0;
             font-size: 0.9rem;
         }
         .footer a {
             color: #E0F7FA;
             text-decoration: none;
-            margin: 0 10px;
+            margin: 0 15px;
+            display: inline-block;
         }
         .footer a:hover {
             text-decoration: underline;
+        }
+        .footer .footer-buttons {
+            margin-top: 20px;
+        }
+        .footer .footer-buttons a {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2E7D32, #0288D1);
+            border-radius: 5px;
+            font-size: 1rem;
+            margin: 0 10px;
+        }
+        .footer .footer-buttons a:hover {
+            background: linear-gradient(135deg, #1B5E20, #01579B);
+        }
+        .footer .footer-buttons a i {
+            margin-right: 5px;
         }
         .social-icons {
             margin-top: 15px;
         }
         .social-icons a {
-            font-size: 1.2rem;
-            margin: 0 10px;
+            font-size: 1.5rem;
+            margin: 0 15px;
             color: white;
         }
         .social-icons a:hover {
             color: #E0F7FA;
-        }
-        @keyframes textShine {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         @media (max-width: 768px) {
             .hero h2 {
@@ -237,6 +283,15 @@
             .navbar h1 {
                 font-size: 1.2rem;
             }
+            .tool-card a, .tool-card .coming-soon {
+                font-size: 1.1rem;
+                padding: 15px 30px;
+            }
+            .footer .footer-buttons a {
+                display: block;
+                margin: 10px 0;
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
@@ -245,7 +300,6 @@
         <h1>Ficore Africa</h1>
         <form action="{{ url_for('change_language') }}" method="POST">
             <select name="language" onchange="this.form.submit()" aria-label="{{ translations['Choose your language'] or 'Choose your language' }}">
-                <option value="en" {% if language == 'en' %}selected{% endif %}>{{ translations['Language'] or 'English' }}</option>
                 <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
                 <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
             </select>
@@ -293,10 +347,14 @@
                 <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
             </div>
             <div class="tool-card">
-                <h3>{{ translations['Financial Personality Quiz'] or 'Financial Personality Quiz' }}</h3>
+                <h3>{{ translations['Personality Quiz'] or 'Personality Quiz' }}</h3>
                 <p>{{ translations['Answer questions to assess financial literacy'] or 'Answer questions to assess financial literacy' }}</p>
                 <span class="coming-soon" aria-label="{{ translations['Coming Soon'] or 'Coming Soon' }}">{{ translations['Coming Soon'] or 'Coming Soon' }}</span>
             </div>
+        </div>
+        <div class="recommended-learning">
+            <strong><i class="fas fa-book"></i> {{ translations['Recommended Learning'] or 'Recommended Learning' }}</strong>
+            <p>{{ translations['Learn more about budgeting!'] or 'Learn more about budgeting!' }}</p>
         </div>
     </section>
 
@@ -312,13 +370,16 @@
     <footer class="footer">
         <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] or 'About Ficore Africa: Empowering financial growth across Africa since 2023' }}</p>
         <div class="social-icons">
-            <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.linkedin.com/in/ficore-africa-58913a363/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="https://x.com/Hassanahm4d" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=61575627944628&mibextid=ZbWKwL" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
         </div>
-        <p>
-            <a href="mailto:ficoreafrica@gmail.com">{{ translations['Click to Email'] or 'Click to Email' }} {{ translations['for support'] or 'for support' }}</a> |
-            <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ translations['Provide Feedback'] or 'Provide Feedback' }}</a>
-        </p>
+        <div class="footer-buttons">
+            <a href="mailto:ficoreafrica@gmail.com"><i class="fas fa-envelope"></i> {{ translations['Click to Email'] or 'Click to Email' }}</a>
+            <a href="https://forms.gle/1g1FVulyf7ZvvXr7G0q7hAKwbGJMxV4blpjBuqrSjKzQ" target="_blank"><i class="fas fa-comment"></i> {{ translations['Provide Feedback'] or 'Provide Feedback' }}</a>
+            <a href="https://forms.gle/17e0XYcp-z3hCl0I-j2JkHoKKJrp4PfgujsK8D7uqNxo" target="_blank"><i class="fas fa-users"></i> {{ translations['Join Waitlist'] or 'Join Waitlist' }}</a>
+            <a href="https://forms.gle/1TKvlT7OTvNS70YNd8DaPpswvqd9y7hKydxKr07gpK9A" target="_blank"><i class="fas fa-briefcase"></i> {{ translations['Book Consultancy'] or 'Book Consultancy' }}</a>
+        </div>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.8.3/plotly.min.js"></script>
