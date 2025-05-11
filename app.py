@@ -298,7 +298,10 @@ translations = {
         'Debt Slayer!': 'Debt Slayer!',
         'Submission Success': 'Your information is submitted successfully! Check your dashboard below 👇',
         'Check Inbox': 'Please check your inbox or junk folders if email doesn’t arrive in a few minutes.',
-        'Your Financial Health Dashboard': 'Your Financial Health Dashboard'
+        'Your Financial Health Dashboard': 'Your Financial Health Dashboard',
+        'Choose a Tool': 'Choose a Tool',
+        'Select an option': 'Select an option',
+        'Start': 'Start'
     },
     'ha': {
         # Budget Planner translations (from budget_planner_app)
@@ -436,7 +439,7 @@ translations = {
         'Strong Financial Health': 'Makin ku yana nuna ƙarfin lafiyar kuɗinku. Ku Mai da hankali kan zuba hannun jari daga cikin kuɗin da ya rage muku don haɓaka dukiyarku.',
         'Stable Finances': 'Makin Kuɗin ku suna Nuni da kwanciyar hankali, amma zaku iya ingantashi duk da haka. Yi la’akari da adanawa ko rage wani bangare na kuɗin ta hanyar ajiya don gaba.',
         'Financial Strain': 'Makin ku yana nuna Akwai damuwar kuɗi. Ku Fifita biyan bashi sannan ku sarrafa kashe kuɗinku dakyau.',
-        'Urgent Attention Needed': 'Makin Kuɗin ku suna Nuna buƙatar kulawa cikin gaggawa. Ku Nemi shawarar ƙwararru kuma Ku bincika dabarun farfadowa daga wannan yanayi.',
+        'Urgent Attention Needed': 'Makin Kuɗin ku suna Nuna buƙatar kulawa cikin gaggaga. Ku Nemi shawarar ƙwararru kuma Ku bincika dabarun farfadowa daga wannan yanayi.',
         'Score Breakdown': 'Rarraban Makin ku',
         'Chart Unavailable': 'Zanen Lissafi ba ya samuwa a wannan lokacin saboda Netowrk.',
         'Score Composition': 'Makin ku ya ƙunshi abubuwa uku',
@@ -559,7 +562,10 @@ translations = {
         'Error generating plots. Dashboard will display without plots.': 'An sami kuskure wajen ƙirƙirar zane. Allon zai nuna ba tare da su ba.',
         'Submission Success': 'An shigar da bayananka cikin nasara! Duba allon bayananka a ƙasa 👇',
         'Check Inbox': 'Da fatan za a duba akwatin saƙonku Inbox ko foldar na Spam ko Junk idan email ɗin bai zo ba cikin ƴan mintuna.',
-        'Your Financial Health Dashboard': 'Allon Lafiyar Kuɗin Ku'
+        'Your Financial Health Dashboard': 'Allon Lafiyar Kuɗin Ku',
+        'Choose a Tool': 'Zaɓi Kayan Aiki',
+        'Select an option': 'Zaɓi wani zaɓi',
+        'Start': 'Fara'
     }
 }
 
@@ -1019,68 +1025,115 @@ def favicon():
 @app.route('/', methods=['GET', 'POST'])
 def home():
     logger.info("Accessing root route")
-    budget_form = Step1Form()
-    health_form = HealthForm()
     language = request.args.get('language', 'en')
     if language not in translations:
         language = 'en'
-    if request.form.get('submit') == 'Next' and budget_form.validate_on_submit():
-        first_name = sanitize_input(budget_form.first_name.data)
-        email = sanitize_input(budget_form.email.data)
-        if not first_name or not email:
-            logger.error(f"Invalid sanitized input: first_name={first_name}, email={email}")
-            flash(translations[language]['Invalid Email'], 'error')
-            return render_template('budget_step1.html', form=budget_form, translations=translations.get(language, translations['en']))
-        session['budget_data'] = {
-            'first_name': first_name,
-            'email': email,
-            'language': budget_form.language.data
-        }
-        logger.info(f"Step 1 completed for {email}. Session data: {session['budget_data']}")
-        return redirect(url_for('step2'))
-    elif request.form.get('submit') == 'Submit' and health_form.validate_on_submit():
+
+    # Create a simple form for tool selection
+    if request.method == 'POST':
+        tool = request.form.get('tool')
+        if tool == 'budget':
+            form = Step1Form()
+            if form.validate_on_submit():
+                first_name = sanitize_input(form.first_name.data)
+                email = sanitize_input(form.email.data)
+                if not first_name or not email:
+                    logger.error(f"Invalid sanitized input: first_name={first_name}, email={email}")
+                    flash(translations[language]['Invalid Email'], 'error')
+                    return render_template('index.html', translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
+                session['budget_data'] = {
+                    'first_name': first_name,
+                    'email': email,
+                    'language': form.language.data
+                }
+                logger.info(f"Step 1 completed for {email}. Session data: {session['budget_data']}")
+                return redirect(url_for('step2'))
+        elif tool == 'health_score':
+            return redirect(url_for('health_score_form', language=language))
+
+    return render_template(
+        'index.html',
+        translations=translations,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
+    )
+
+@app.route('/health_score_form', methods=['GET'])
+def health_score_form():
+    language = request.args.get('language', 'English')
+    if language not in translations:
+        language = 'English'
+    form = HealthForm()
+    # Prepopulate the language field if passed in the query
+    form.language.data = language
+    return render_template(
+        'health_score_form.html',
+        form=form,
+        translations=translations,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
+    )
+
+@app.route('/health_score_submit', methods=['POST'])
+def health_score_submit():
+    form = HealthForm()
+    language = form.language.data or 'English'
+    if language not in translations:
+        language = 'English'
+
+    if form.validate_on_submit():
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         data = [
             timestamp,
-            health_form.business_name.data or '',
-            health_form.income_revenue.data or '0',
-            health_form.expenses_costs.data or '0',
-            health_form.debt_loan.data or '0',
-            health_form.debt_interest_rate.data or '0',
-            health_form.auto_email.data or '',
-            health_form.phone_number.data or '',
-            health_form.first_name.data or '',
-            health_form.last_name.data or '',
-            health_form.user_type.data or '',
-            health_form.email.data or '',
+            form.business_name.data or '',
+            form.income_revenue.data or '0',
+            form.expenses_costs.data or '0',
+            form.debt_loan.data or '0',
+            form.debt_interest_rate.data or '0',
+            form.auto_email.data or '',
+            form.phone_number.data or '',
+            form.first_name.data or '',
+            form.last_name.data or '',
+            form.user_type.data or '',
+            form.email.data or '',
             '',
-            health_form.language.data or 'English'
+            form.language.data or 'English'
         ]
+
         if not append_to_sheet(data, PREDETERMINED_HEADERS_HEALTH):
             flash(translations[language]['Error saving data. Please try again.'], 'error')
-            return render_template('index.html', budget_form=budget_form, health_form=health_form, translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
+            return redirect(url_for('health_score_form', language=language))
+
         all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH)
         if all_users_df is None:
             flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-            return render_template('index.html', budget_form=budget_form, health_form=health_form, translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
-        user_df = fetch_data_from_sheet(email=health_form.email.data, headers=PREDETERMINED_HEADERS_HEALTH)
+            return redirect(url_for('health_score_form', language=language))
+
+        user_df = fetch_data_from_sheet(email=form.email.data, headers=PREDETERMINED_HEADERS_HEALTH)
         if user_df is None or user_df.empty:
             flash(translations[language]['Error retrieving user data. Please try again.'], 'error')
-            return render_template('index.html', budget_form=budget_form, health_form=health_form, translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
+            return redirect(url_for('health_score_form', language=language))
+
         try:
             all_users_df = calculate_health_score(all_users_df)
             user_df = calculate_health_score(user_df)
         except Exception as e:
             logger.error(f"Error calculating health scores: {e}")
             flash(translations[language]['An unexpected error occurred. Please try again.'], 'error')
-            return render_template('index.html', budget_form=budget_form, health_form=health_form, translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
+            return redirect(url_for('health_score_form', language=language))
+
         badges = assign_badges_health(user_df, all_users_df)
         user_df['badges'] = ','.join(badges) if badges else ''
+
         if sheets:
             with sheets_lock:
                 try:
                     worksheet = sheets.worksheet('Sheet1')
-                    user_rows = all_users_df[all_users_df['email'] == health_form.email.data]
+                    user_rows = all_users_df[all_users_df['email'] == form.email.data]
                     if not user_rows.empty:
                         most_recent_idx = user_rows['Timestamp'].idxmax()
                         row_index = most_recent_idx + 2
@@ -1090,54 +1143,155 @@ def home():
                 except Exception as e:
                     logger.error(f"Failed to update badges: {e}")
                     flash("Error updating badges. Dashboard will still display.", 'warning')
+
         all_users_df = all_users_df.sort_values('HealthScore', ascending=False).reset_index(drop=True)
-        user_index = all_users_df.index[all_users_df['email'] == health_form.email.data].tolist()[0]
+        user_index = all_users_df.index[all_users_df['email'] == form.email.data].tolist()[0]
         rank = user_index + 1
         total_users = len(all_users_df.drop_duplicates(subset=['email']))
+
         user_data = {
-            'income': float(re.sub(r'[,]', '', health_form.income_revenue.data)) if health_form.income_revenue.data else 0.0,
-            'expenses': float(re.sub(r'[,]', '', health_form.expenses_costs.data)) if health_form.expenses_costs.data else 0.0,
-            'debt': float(re.sub(r'[,]', '', health_form.debt_loan.data)) if health_form.debt_loan.data else 0.0
+            'income': float(re.sub(r'[,]', '', form.income_revenue.data)) if form.income_revenue.data else 0.0,
+            'expenses': float(re.sub(r'[,]', '', form.expenses_costs.data)) if form.expenses_costs.data else 0.0,
+            'debt': float(re.sub(r'[,]', '', form.debt_loan.data)) if form.debt_loan.data else 0.0
         }
         health_score = user_df.iloc[0]['HealthScore']
         average_score = all_users_df['HealthScore'].mean() if not all_users_df.empty else 50.0
         peer_data = {'averageScore': round(average_score, 2)}
+
         email_sent = send_health_email(
-            to_email=health_form.email.data,
-            user_name=health_form.first_name.data,
+            to_email=form.email.data,
+            user_name=form.first_name.data,
             health_score=health_score,
             score_description=user_df.iloc[0].get('ScoreDescription', 'N/A'),
             rank=rank,
             total_users=total_users,
             course_title=user_df.iloc[0].get('CourseTitle', ''),
             course_url=user_df.iloc[0].get('CourseURL', ''),
-            language=health_form.language.data
+            language=form.language.data
         )
         if not email_sent:
-            logger.warning(f"Failed to send email to {health_form.email.data}.")
+            logger.warning(f"Failed to send email to {form.email.data}.")
+
         flash(translations[language]['Submission Success'], 'success')
         session['dashboard_data'] = {
             'step': 1,
             'language': language,
-            'first_name': health_form.first_name.data or '',
-            'email': health_form.email.data or '',
+            'first_name': form.first_name.data or '',
+            'email': form.email.data or '',
             'user_data': user_data,
             'health_score': health_score,
             'peer_data': peer_data,
-            'rank': rank,
-            'total_users': total_users,
-            'badges': badges,
-            'course_title': user_df.iloc[0].get('CourseTitle', ''),
-            'course_url': user_df.iloc[0].get('CourseURL', ''),
-            'personalized_message': user_df.iloc[0].get('ScoreDescription', 'N/A'),
-            'user_df': user_df.to_dict(),
-            'all_users_df': all_users_df.to_dict()
+            'rank': rank, 'total_users': total_users, 'badges': badges, 'score_description': user_df.iloc[0].get('ScoreDescription', 'N/A'), 'course_title': user_df.iloc[0].get('CourseTitle', ''), 'course_url': user_df.iloc[0].get('CourseURL', '')
         }
-        return redirect(url_for('dashboard'))
+        breakdown_plot = generate_breakdown_plot(user_df)
+        comparison_plot = generate_comparison_plot(user_df, all_users_df)
+        session['dashboard_data']['breakdown_plot'] = breakdown_plot
+        session['dashboard_data']['comparison_plot'] = comparison_plot
+        logger.info(f"Redirecting to health_dashboard for {form.email.data}")
+        return redirect(url_for('health_dashboard'))
+    else:
+        logger.error(f"Form validation failed: {form.errors}")
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{translations[language][error] if error in translations[language] else error}", 'error')
+        return render_template('health_score_form.html', form=form, translations=translations, language=language, FEEDBACK_FORM_URL=FEEDBACK_FORM_URL, LINKEDIN_URL=LINKEDIN_URL, TWITTER_URL=TWITTER_URL)
+
+@app.route('/health_dashboard', methods=['GET'])
+def health_dashboard():
+    if 'dashboard_data' not in session:
+        logger.warning("No session data found for health dashboard.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        return redirect(url_for('home'))
+    
+    dashboard_data = session['dashboard_data']
+    language = dashboard_data.get('language', 'en')
+    if language not in translations:
+        language = 'en'
+    
+    user_data = dashboard_data.get('user_data', {})
+    health_score = dashboard_data.get('health_score', 0.0)
+    peer_data = dashboard_data.get('peer_data', {})
+    rank = dashboard_data.get('rank', 0)
+    total_users = dashboard_data.get('total_users', 0)
+    badges = dashboard_data.get('badges', [])
+    score_description = dashboard_data.get('score_description', 'N/A')
+    course_title = dashboard_data.get('course_title', '')
+    course_url = dashboard_data.get('course_url', '')
+    breakdown_plot = dashboard_data.get('breakdown_plot')
+    comparison_plot = dashboard_data.get('comparison_plot')
+
+    # Determine score category
+    score_category = ''
+    if health_score >= 75:
+        score_category = translations[language]['Strong Financial Health']
+    elif health_score >= 50:
+        score_category = translations[language]['Stable Finances']
+    elif health_score >= 25:
+        score_category = translations[language]['Financial Strain']
+    else:
+        score_category = translations[language]['Urgent Attention Needed']
+
+    rank_description = ''
+    if rank <= total_users * 0.1:
+        rank_description = translations[language]['Top 10%']
+    elif rank <= total_users * 0.3:
+        rank_description = translations[language]['Top 30%']
+    elif rank <= total_users * 0.5:
+        rank_description = translations[language]['Middle Range']
+    else:
+        rank_description = translations[language]['Lower Range']
+
     return render_template(
-        'index.html',
-        budget_form=budget_form,
-        health_form=health_form,
+        'health_dashboard.html',
+        translations=translations,
+        language=language,
+        first_name=dashboard_data.get('first_name', ''),
+        email=dashboard_data.get('email', ''),
+        user_data=user_data,
+        health_score=health_score,
+        peer_data=peer_data,
+        rank=rank,
+        total_users=total_users,
+        badges=badges,
+        score_category=score_category,
+        score_description=score_description,
+        course_title=course_title,
+        course_url=course_url,
+        breakdown_plot=breakdown_plot,
+        comparison_plot=comparison_plot,
+        rank_description=rank_description,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
+    )
+
+@app.route('/step2', methods=['GET', 'POST'])
+def step2():
+    if 'budget_data' not in session:
+        logger.warning("No session data found for step2.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        return redirect(url_for('home'))
+    
+    form = Step2Form()
+    language = session['budget_data'].get('language', 'en')
+    if language not in translations:
+        language = 'en'
+    
+    if form.validate_on_submit():
+        session['budget_data'].update({
+            'monthly_income': form.income.data
+        })
+        logger.info(f"Step 2 completed with income: {form.income.data}")
+        return redirect(url_for('step3'))
+    elif request.method == 'POST':
+        logger.error(f"Step 2 form validation failed: {form.errors}")
+        flash(translations[language]['Invalid Number'], 'error')
+    
+    return render_template(
+        'step2.html',
+        form=form,
         translations=translations,
         language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
@@ -1145,316 +1299,201 @@ def home():
         TWITTER_URL=TWITTER_URL
     )
 
-@app.route('/step2', methods=['GET', 'POST'])
-def step2():
-    form = Step2Form()
-    if 'budget_data' not in session:
-        logger.warning("Session data missing in step2.")
-        flash(translations['en']['Session Expired'], 'error')
-        return redirect(url_for('home'))
-    language = session['budget_data'].get('language', 'en')
-    if language not in translations:
-        logger.warning(f"Invalid language '{language}' in session. Defaulting to English.")
-        language = 'en'
-
-    if form.validate_on_submit():
-        income = form.income.data
-        if income <= 0:
-            logger.error(f"Invalid income value: {income}")
-            flash(translations[language]['Please enter a valid income amount'], 'error')
-            return render_template('budget_step2.html', form=form, translations=translations.get(language, translations['en']))
-        
-        session['budget_data']['monthly_income'] = income
-        logger.info(f"Step 2 completed for {session['budget_data']['email']}. Income: {income}")
-        return redirect(url_for('step3'))
-
-    return render_template(
-        'budget_step2.html',
-        form=form,
-        translations=translations.get(language, translations['en'])
-    )
-
 @app.route('/step3', methods=['GET', 'POST'])
 def step3():
-    form = Step3Form()
     if 'budget_data' not in session:
-        logger.warning("Session data missing in step3.")
-        flash(translations['en']['Session Expired'], 'error')
+        logger.warning("No session data found for step3.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
         return redirect(url_for('home'))
+    
+    form = Step3Form()
     language = session['budget_data'].get('language', 'en')
     if language not in translations:
-        logger.warning(f"Invalid language '{language}' in session. Defaulting to English.")
         language = 'en'
-
+    
     if form.validate_on_submit():
-        housing = form.housing.data
-        food = form.food.data
-        transport = form.transport.data
-        other = form.other.data
-
-        if any(x < 0 for x in [housing, food, transport, other]):
-            logger.error(f"Negative expense values: housing={housing}, food={food}, transport={transport}, other={other}")
-            flash(translations[language]['Please enter valid amounts for all expenses'], 'error')
-            return render_template('budget_step3.html', form=form, translations=translations.get(language, translations['en']))
-
         session['budget_data'].update({
-            'housing_expenses': housing,
-            'food_expenses': food,
-            'transport_expenses': transport,
-            'other_expenses': other
+            'housing_expenses': form.housing.data,
+            'food_expenses': form.food.data,
+            'transport_expenses': form.transport.data,
+            'other_expenses': form.other.data
         })
-        logger.info(f"Step 3 completed for {session['budget_data']['email']}. Expenses recorded.")
+        logger.info(f"Step 3 completed with expenses: {form.housing.data}, {form.food.data}, {form.transport.data}, {form.other.data}")
         return redirect(url_for('step4'))
-
+    elif request.method == 'POST':
+        logger.error(f"Step 3 form validation failed: {form.errors}")
+        flash(translations[language]['Please enter valid amounts for all expenses'], 'error')
+    
     return render_template(
-        'budget_step3.html',
+        'step3.html',
         form=form,
-        translations=translations.get(language, translations['en'])
+        translations=translations,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
     )
 
 @app.route('/step4', methods=['GET', 'POST'])
 def step4():
-    form = Step4Form()
     if 'budget_data' not in session:
-        logger.warning("Session data missing in step4.")
-        flash(translations['en']['Session Expired'], 'error')
+        logger.warning("No session data found for step4.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
+        return redirect(url_for('home'))
+    
+    form = Step4Form()
+    language = session['budget_data'].get('language', 'en')
+    if language not in translations:
+        language = 'en'
+    
+    if form.validate_on_submit():
+        session['budget_data'].update({
+            'savings_goal': form.savings_goal.data if form.savings_goal.data else 0.0,
+            'auto_email': form.auto_email.data
+        })
+        logger.info(f"Step 4 completed with savings_goal: {form.savings_goal.data}, auto_email: {form.auto_email.data}")
+        return redirect(url_for('dashboard'))
+    elif request.method == 'POST':
+        logger.error(f"Step 4 form validation failed: {form.errors}")
+        flash(translations[language]['Please enter a valid savings goal amount'], 'error')
+    
+    return render_template(
+        'step4.html',
+        form=form,
+        translations=translations,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
+    )
+
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    if 'budget_data' not in session:
+        logger.warning("No session data found for dashboard.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
         return redirect(url_for('home'))
     
     language = session['budget_data'].get('language', 'en')
     if language not in translations:
-        logger.warning(f"Invalid language '{language}' in session. Defaulting to English.")
         language = 'en'
-
-    if form.validate_on_submit():
-        savings_goal = form.savings_goal.data or 0.0
-        auto_email = form.auto_email.data
-
-        if savings_goal < 0:
-            logger.error(f"Negative savings goal: {savings_goal}")
-            flash(translations[language]['Please enter a valid savings goal amount'], 'error')
-            return render_template('budget_step4.html', form=form, translations=translations.get(language, translations['en']))
-
-        session['budget_data'].update({
-            'savings_goal': savings_goal,
-            'auto_email': auto_email
-        })
-
-        # Prepare data for Google Sheets
-        budget_data = session['budget_data']
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        data = [
-            timestamp,
-            budget_data.get('first_name', ''),
-            budget_data.get('email', ''),
-            language,
-            str(budget_data.get('monthly_income', 0.0)),
-            str(budget_data.get('housing_expenses', 0.0)),
-            str(budget_data.get('food_expenses', 0.0)),
-            str(budget_data.get('transport_expenses', 0.0)),
-            str(budget_data.get('other_expenses', 0.0)),
-            str(savings_goal),
-            str(auto_email),
-            '',  # total_expenses (calculated later)
-            '',  # savings (calculated later)
-            '',  # surplus_deficit (calculated later)
-            '',  # badges (calculated later)
-            '',  # rank (calculated later)
-            ''   # total_users (calculated later)
-        ]
-
-        # Append to Google Sheets
-        if not append_to_sheet(data, PREDETERMINED_HEADERS_BUDGET):
-            logger.error(f"Failed to append data to Google Sheets for {budget_data.get('email', 'unknown')}")
-            flash(translations[language]['Error saving data. Please try again.'], 'error')
-            return render_template('budget_step4.html', form=form, translations=translations.get(language, translations['en']))
-
-        # Fetch and calculate metrics
-        user_df = fetch_data_from_sheet(email=budget_data['email'], headers=PREDETERMINED_HEADERS_BUDGET)
-        if user_df.empty:
-            logger.error(f"No data retrieved for {budget_data['email']}")
-            flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-            return render_template('budget_step4.html', form=form, translations=translations.get(language, translations['en']))
-
-        user_df = calculate_budget_metrics(user_df)
-        total_expenses = user_df.iloc[0]['total_expenses']
-        savings = user_df.iloc[0]['savings']
-        surplus_deficit = user_df.iloc[0]['surplus_deficit']
-        outcome_status = user_df.iloc[0]['outcome_status']
-        advice = user_df.iloc[0]['advice']
-
-        # Assign badges and ranking
-        badges = assign_badges_budget(user_df)
-        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET)
-        all_users_df = calculate_budget_metrics(all_users_df)
-        all_users_df = all_users_df.sort_values('surplus_deficit', ascending=False).reset_index(drop=True)
-        user_index = all_users_df.index[all_users_df['email'] == budget_data['email']].tolist()[0]
-        rank = user_index + 1
-        total_users = len(all_users_df.drop_duplicates(subset=['email']))
-
-        # Update Google Sheets with calculated metrics
-        if sheets:
-            with sheets_lock:
-                try:
-                    worksheet = sheets.worksheet('Sheet1')
-                    user_rows = all_users_df[all_users_df['email'] == budget_data['email']]
-                    if not user_rows.empty:
-                        most_recent_idx = user_rows['Timestamp'].idxmax()
-                        row_index = most_recent_idx + 2
-                        worksheet.update(
-                            f'L{row_index}:Q{row_index}',
-                            [[total_expenses, savings, surplus_deficit, ','.join(badges), rank, total_users]],
-                            value_input_option='RAW'
-                        )
-                        logger.info(f"Updated row {row_index} with calculated metrics.")
-                        time.sleep(1)
-                except Exception as e:
-                    logger.error(f"Failed to update calculated metrics: {e}")
-                    flash("Error updating metrics. Dashboard will still display.", 'warning')
-
-        # Generate plots
-        try:
-            expenses_data = {
-                'Housing': budget_data.get('housing_expenses', 0),
-                'Food': budget_data.get('food_expenses', 0),
-                'Transport': budget_data.get('transport_expenses', 0),
-                'Other': budget_data.get('other_expenses', 0)
-            }
-            expenses_df = pd.DataFrame(list(expenses_data.items()), columns=['Category', 'Amount'])
-            pie_fig = px.pie(expenses_df, names='Category', values='Amount', title=translations[language]['Budget Breakdown'])
-            pie_fig.update_layout(
-                margin=dict(l=20, r=20, t=40, b=20),
-                height=300,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            chart_data = pie_fig.to_html(full_html=False, include_plotlyjs=False)
-
-            bar_data_df = pd.DataFrame({
-                'Type': [translations[language]['Monthly Income'], translations[language]['Total Expenses']],
-                'Amount': [budget_data.get('monthly_income', 0), total_expenses]
-            })
-            bar_fig = px.bar(bar_data_df, x='Type', y='Amount', title=translations[language]['Income vs Expenses'])
-            bar_fig.update_layout(
-                margin=dict(l=20, r=20, t=40, b=20),
-                height=300,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            bar_data = bar_fig.to_html(full_html=False, include_plotlyjs=False)
-        except Exception as e:
-            logger.error(f"Error generating plots: {e}")
-            flash(translations[language]['Error generating plots. Dashboard will display without plots.'], 'warning')
-            chart_data = None
-            bar_data = None
-
-        # Send email if requested
-        if auto_email:
-            send_budget_email(budget_data, total_expenses, savings, surplus_deficit, chart_data, bar_data)
-
-        # Store dashboard data in session
-        session['dashboard_data'] = {
-            'step': 4,
-            'language': language,
-            'first_name': budget_data['first_name'],
-            'email': budget_data['email'],
-            'monthly_income': budget_data.get('monthly_income', 0),
-            'housing_expenses': budget_data.get('housing_expenses', 0),
-            'food_expenses': budget_data.get('food_expenses', 0),
-            'transport_expenses': budget_data.get('transport_expenses', 0),
-            'other_expenses': budget_data.get('other_expenses', 0),
+    
+    budget_data = session['budget_data']
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    data = [timestamp] + [budget_data.get(key, '') for key in PREDETERMINED_HEADERS_BUDGET[1:-6]] + [0] * 6
+    if not append_to_sheet(data, PREDETERMINED_HEADERS_BUDGET):
+        flash(translations[language]['Error saving data. Please try again.'], 'error')
+    
+    all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET)
+    if all_users_df is None:
+        flash(translations[language]['Error retrieving data. Please try again.'], 'error')
+        return redirect(url_for('home'))
+    
+    user_df = fetch_data_from_sheet(email=budget_data['email'], headers=PREDETERMINED_HEADERS_BUDGET)
+    if user_df is None or user_df.empty:
+        flash(translations[language]['Error retrieving user data. Please try again.'], 'error')
+        return redirect(url_for('home'))
+    
+    user_df = calculate_budget_metrics(user_df)
+    all_users_df = calculate_budget_metrics(all_users_df)
+    
+    badges = assign_badges_budget(user_df)
+    user_df['badges'] = ','.join(badges) if badges else ''
+    
+    if sheets:
+        with sheets_lock:
+            try:
+                worksheet = sheets.worksheet('Sheet1')
+                user_rows = all_users_df[all_users_df['email'] == budget_data['email']]
+                if not user_rows.empty:
+                    most_recent_idx = user_rows['Timestamp'].idxmax()
+                    row_index = most_recent_idx + 2
+                    worksheet.update(f'O{row_index}', [[','.join(badges)]], value_input_option='RAW')
+                    logger.info(f"Updated badges for row {row_index}: {','.join(badges)}")
+                    time.sleep(1)
+            except Exception as e:
+                logger.error(f"Failed to update badges: {e}")
+                flash("Error updating badges. Dashboard will still display.", 'warning')
+    
+    all_users_df = all_users_df.sort_values('surplus_deficit', ascending=False).reset_index(drop=True)
+    user_index = all_users_df.index[all_users_df['email'] == budget_data['email']].tolist()[0]
+    rank = user_index + 1
+    total_users = len(all_users_df.drop_duplicates(subset=['email']))
+    
+    user_row = user_df.iloc[0]
+    total_expenses = user_row['total_expenses']
+    savings = user_row['savings']
+    surplus_deficit = user_row['surplus_deficit']
+    advice = user_row['advice']
+    
+    if budget_data.get('auto_email', False):
+        chart_data = px.pie(
+            names=['Housing', 'Food', 'Transport', 'Other'],
+            values=[user_row['housing_expenses'], user_row['food_expenses'], user_row['transport_expenses'], user_row['other_expenses']],
+            title='Expense Breakdown'
+        ).to_html(full_html=False, include_plotlyjs=False)
+        bar_data = px.bar(
+            x=['Income', 'Expenses', 'Savings', 'Surplus/Deficit'],
+            y=[user_row['monthly_income'], total_expenses, savings, surplus_deficit],
+            title='Income vs Expenses'
+        ).to_html(full_html=False, include_plotlyjs=False)
+        if not send_budget_email(budget_data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
+            logger.warning(f"Failed to send email to {budget_data['email']}.")
+    
+    flash(translations[language]['Submission Success'], 'success')
+    session['dashboard_data'] = {
+        'step': 1,
+        'language': language,
+        'first_name': budget_data['first_name'],
+        'email': budget_data['email'],
+        'user_data': {
+            'monthly_income': budget_data['monthly_income'],
+            'housing_expenses': budget_data['housing_expenses'],
+            'food_expenses': budget_data['food_expenses'],
+            'transport_expenses': budget_data['transport_expenses'],
+            'other_expenses': budget_data['other_expenses'],
+            'savings_goal': budget_data['savings_goal'],
             'total_expenses': total_expenses,
             'savings': savings,
-            'outcome_status': outcome_status,  # Replaced surplus_deficit with outcome_status
-            'advice': advice,
-            'chart_data': chart_data,
-            'bar_data': bar_data,
-            'badges': badges,
-            'rank': rank,
-            'total_users': total_users
-        }
-        flash(translations[language]['Submission Success'], 'success')
-        return redirect(url_for('dashboard'))
+            'surplus_deficit': surplus_deficit
+        },
+        'rank': rank,
+        'total_users': total_users,
+        'badges': badges,
+        'advice': advice
+    }
+    logger.info(f"Redirecting to budget_dashboard for {budget_data['email']}")
+    return redirect(url_for('budget_dashboard'))
 
-    return render_template(
-        'budget_step4.html',
-        form=form,
-        translations=translations.get(language, translations['en'])
-    )
-
-@app.route('/dashboard')
-def dashboard():
+@app.route('/budget_dashboard', methods=['GET'])
+def budget_dashboard():
     if 'dashboard_data' not in session:
-        logger.warning("Session data missing in dashboard.")
-        flash(translations['en']['Session Expired'], 'error')
+        logger.warning("No session data found for budget dashboard.")
+        flash(translations.get(session.get('language', 'en'), translations['en'])['Session Expired'], 'error')
         return redirect(url_for('home'))
-
+    
     dashboard_data = session['dashboard_data']
-    step = dashboard_data.get('step', 1)
     language = dashboard_data.get('language', 'en')
     if language not in translations:
-        logger.warning(f"Invalid language '{language}' in session. Defaulting to English.")
         language = 'en'
+    
+    return render_template(
+        'dashboard.html',
+        translations=translations,
+        language=language,
+        first_name=dashboard_data.get('first_name', ''),
+        email=dashboard_data.get('email', ''),
+        user_data=dashboard_data.get('user_data', {}),
+        rank=dashboard_data.get('rank', 0),
+        total_users=dashboard_data.get('total_users', 0),
+        badges=dashboard_data.get('badges', []),
+        advice=dashboard_data.get('advice', ''),
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL
+    )
 
-    if step == 1:  # Health Dashboard
-        user_df = pd.DataFrame(dashboard_data['user_df'])
-        all_users_df = pd.DataFrame(dashboard_data['all_users_df'])
-        breakdown_plot = generate_breakdown_plot(user_df)
-        comparison_plot = generate_comparison_plot(user_df, all_users_df)
-
-        return render_template(
-            'health_dashboard.html',
-            translations=translations.get(language, translations['en']),
-            first_name=dashboard_data.get('first_name', 'User'),
-            user_data=dashboard_data.get('user_data', {}),
-            health_score=dashboard_data.get('health_score', 0),
-            peer_data=dashboard_data.get('peer_data', {}),
-            rank=dashboard_data.get('rank', 1),
-            total_users=dashboard_data.get('total_users', 1),
-            badges=dashboard_data.get('badges', []),
-            course_title=dashboard_data.get('course_title', ''),
-            course_url=dashboard_data.get('course_url', ''),
-            personalized_message=dashboard_data.get('personalized_message', 'N/A'),
-            breakdown_plot=breakdown_plot,
-            comparison_plot=comparison_plot,
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            LINKEDIN_URL=LINKEDIN_URL,
-            TWITTER_URL=TWITTER_URL
-        )
-
-    else:  # Budget Dashboard (step 4)
-        return render_template(
-            'budget_dashboard.html',
-            translations=translations.get(language, translations['en']),
-            first_name=dashboard_data.get('first_name', 'User'),
-            email=dashboard_data.get('email', ''),
-            monthly_income=dashboard_data.get('monthly_income', 0),
-            housing_expenses=dashboard_data.get('housing_expenses', 0),
-            food_expenses=dashboard_data.get('food_expenses', 0),
-            transport_expenses=dashboard_data.get('transport_expenses', 0),
-            other_expenses=dashboard_data.get('other_expenses', 0),
-            total_expenses=dashboard_data.get('total_expenses', 0),
-            savings=dashboard_data.get('savings', 0),
-            outcome_status=dashboard_data.get('outcome_status', ''),  # Replaced surplus_deficit with outcome_status
-            advice=dashboard_data.get('advice', ''),
-            chart_data=dashboard_data.get('chart_data', None),
-            bar_data=dashboard_data.get('bar_data', None),
-            badges=dashboard_data.get('badges', []),
-            rank=dashboard_data.get('rank', 1),
-            total_users=dashboard_data.get('total_users', 1),
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            COURSE_URL=COURSE_URL,
-            COURSE_TITLE=COURSE_TITLE,
-            LINKEDIN_URL=LINKEDIN_URL,
-            TWITTER_URL=TWITTER_URL
-        )
-
-# Run the app
 if __name__ == '__main__':
-    load_dotenv()
-    port = int(os.getenv('PORT', 5000))
-    logger.info(f"Starting Flask app on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=True, host='0.0.0.0', port=5000)
