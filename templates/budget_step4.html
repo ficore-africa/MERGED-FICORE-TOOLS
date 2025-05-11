@@ -22,7 +22,7 @@
         .form-label { color: #0288D1; font-weight: 500; margin-bottom: 5px; }
         .form-control { border: 2px solid #0288D1; border-radius: 8px; padding: 10px; transition: border-color 0.3s ease, background-color 0.3s ease; min-height: 48px; }
         .form-control:focus { border-color: #2E7D32; box-shadow: 0 0 8px rgba(46,125,50,0.3); outline: none; background-color: #f8f9fa; }
-        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; }
+        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; display: inline-block !important; visibility: visible !important; min-width: 200px; text-align: center; }
         .btn-primary:hover { transform: scale(1.05); background: linear-gradient(135deg, #1B5E20, #01579B); }
         .btn-secondary { background: #6c757d; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; margin-right: 10px; }
         .btn-secondary:hover { transform: scale(1.05); background: #5a6268; }
@@ -88,7 +88,7 @@
                 </div>
                 <div class="text-center">
                     <a href="{{ url_for('budget_step3') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Expenses', 'Back to Expenses') }}">{{ trans.get('Back', 'Back') }}</a>
-                    {{ form.submit(class="btn btn-primary", value=trans.get('Continue to Dashboard', 'Continue to Dashboard') + ' →', **{'aria-label': trans.get('Continue to Dashboard', 'Continue to Dashboard')}) }}
+                    {{ form.submit(class="btn btn-primary", **{'aria-label': trans.get('Continue to Dashboard', 'Continue to Dashboard')}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ trans.get('Please enter a valid savings goal amount', 'Please enter a valid savings goal amount') }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
@@ -122,17 +122,21 @@
             const savingsGoalInput = document.getElementById('savings_goal');
             const spinner = document.getElementById('spinner');
 
-            // Prevent form submission if savings goal is invalid
-            form.addEventListener('submit', (e) => {
+            // Real-time validation feedback
+            savingsGoalInput.addEventListener('input', () => {
                 const value = parseFloat(savingsGoalInput.value);
-                if (savingsGoalInput.value && value < 0) {
-                    e.preventDefault();
-                    errorMessage.style.display = 'block';
-                    savingsGoalInput.classList.add('is-invalid');
+                if (savingsGoalInput.value && value >= 0) {
+                    savingsGoalInput.classList.remove('is-invalid');
+                    savingsGoalInput.classList.add('is-valid');
                 } else {
-                    errorMessage.style.display = 'none';
-                    spinner.style.display = 'flex';
+                    savingsGoalInput.classList.remove('is-valid');
+                    savingsGoalInput.classList.add('is-invalid');
                 }
+            });
+
+            // Show spinner on submission
+            form.addEventListener('submit', () => {
+                spinner.style.display = 'flex';
             });
 
             // Tooltip click support
@@ -148,5 +152,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4b9bd4ef6bf73',t:'MTc0Njk5ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4b9bd4ef6bf73',t:'MTc0Njk5ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e55848dd957bd0',t:'MTc0NzAwNDk3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </html>
