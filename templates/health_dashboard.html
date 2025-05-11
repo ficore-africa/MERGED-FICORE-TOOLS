@@ -553,7 +553,7 @@
         // Chart Data
         const userData = {{ user_data | tojson }};
         const healthScore = {{ health_score | tojson }};
-        const peerData = { averageScore: {{ total_users > 0 ? (all_users_df['HealthScore'].mean() if 'all_users_df' in globals() else 50) : 50 | tojson }} };
+        const peerData = { averageScore: {{ (all_users_df['HealthScore'].mean() if 'all_users_df' in globals() else 50) if total_users > 0 else 50 | tojson }} };
         const language = '{{ language }}';
         const translations = {{ translations[language] | tojson }};
 
