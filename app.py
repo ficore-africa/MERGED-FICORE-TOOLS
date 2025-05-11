@@ -1194,7 +1194,17 @@ def health_score_form():
                     sanitize_input(form.last_name.data or ''),
                     form.user_type.data,
                     sanitize_input(form.email.data),
-                    form.language.data
+                    form.language.data,
+                    '',  # Placeholder for monthly_income
+                    '',  # Placeholder for total_expenses
+                    '',  # Placeholder for cash_flow
+                    '',  # Placeholder for debt_to_income
+                    '',  # Placeholder for debt_interest
+                    '',  # Placeholder for health_score
+                    '',  # Placeholder for score_description
+                    '',  # Placeholder for course_title
+                    '',  # Placeholder for course_url
+                    ''   # Placeholder for badges (will be updated below)
                 ]
                 # Fetch all users data to calculate badges
                 all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
@@ -1306,8 +1316,10 @@ def step2():
     form = Step2Form()
     if form.validate_on_submit():
         session['budget_data']['monthly_income'] = form.income.data
-        logger.info(f"Step2: Income saved for {session['budget_data']['email']}. Redirecting to step3.")
+        logger.info(f"Step2: Income saved for {session['budget_data']['email']}: {form.income.data}. Redirecting to step3.")
         return redirect(url_for('step3'))
+    else:
+        logger.warning(f"Step2: Form validation failed for {session['budget_data']['email']}. Errors: {form.errors}")
     
     return render_template(
         'budget_step2.html',
@@ -1363,6 +1375,12 @@ def step4():
             'auto_email': form.auto_email.data
         })
         data = session['budget_data']
+        # Ensure monthly_income exists
+        if 'monthly_income' not in data:
+            logger.error(f"Step4: monthly_income missing in session for {data['email']}")
+            flash(translations[language]['Session data incomplete. Please start over.'], 'error')
+            return redirect(url_for('budget'))
+        
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         data_row = [
             timestamp,
@@ -1533,7 +1551,8 @@ def internal_server_error(e):
     return render_template(
         '500.html',
         translations=translations,
-        language=language
+        language=language,
+        error_message=str(e)
     ), 500
 
 if __name__ == '__main__':
