@@ -22,7 +22,7 @@
         .form-label { color: #0288D1; font-weight: 500; margin-bottom: 5px; }
         .form-control, .form-select { border: 2px solid #0288D1; border-radius: 8px; padding: 10px; transition: border-color 0.3s ease, background-color 0.3s ease; min-height: 48px; }
         .form-control:focus, .form-select:focus { border-color: #2E7D32; box-shadow: 0 0 8px rgba(46,125,50,0.3); outline: none; background-color: #f8f9fa; }
-        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; }
+        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; display: inline-block !important; visibility: visible !important; min-width: 200px; text-align: center; }
         .btn-primary:hover { transform: scale(1.05); background: linear-gradient(135deg, #1B5E20, #01579B); }
         .btn-secondary { background: #6c757d; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; margin-right: 10px; }
         .btn-secondary:hover { transform: scale(1.05); background: #5a6268; }
@@ -82,7 +82,7 @@
                     {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), **{'aria-required': 'true', 'aria-label': trans.get('Email', 'Email')}) }}
                     <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Get your budget report by email.', 'Get your budget report by email.') }}</span></span>
                     <div class="valid-feedback">{{ trans.get('Looks good!', 'Looks good!') }}</div>
-                    <div class="invalid-feedback">{{ trans.get('Invalid Email', 'Invalid Email') }}</···
+                    <div class="invalid-feedback">{{ trans.get('Invalid Email', 'Invalid Email') }}</div>
                 </div>
                 <div class="form-group">
                     <label for="language" class="form-label"><span class="visual-icon">🌐</span> {{ trans.get('Language', 'Language') }}</label>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="text-center">
                     <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
-                    {{ form.submit(class="btn btn-primary", value=trans.get('Continue to Income', 'Continue to Income') + ' →', **{'aria-label': trans.get('Continue to Income', 'Continue to Income')}) }}
+                    {{ form.submit(class="btn btn-primary", **{'aria-label': trans.get('Continue to Income', 'Continue to Income')}) }}
                 </div>
                 <div class="error-message" id="form-error">{{ trans.get('Please fill all required fields', 'Please fill all required fields') }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
@@ -129,7 +129,7 @@
             const languageSelect = document.getElementById('language');
             const spinner = document.getElementById('spinner');
 
-            // Real-time validation
+            // Real-time validation feedback (visual only)
             firstNameInput.addEventListener('input', () => {
                 if (firstNameInput.value.trim()) {
                     firstNameInput.classList.remove('is-invalid');
@@ -161,19 +161,9 @@
                 }
             });
 
-            // Prevent form submission if required fields are empty
-            form.addEventListener('submit', (e) => {
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!firstNameInput.value.trim() || !emailPattern.test(emailInput.value) || !languageSelect.value) {
-                    e.preventDefault();
-                    errorMessage.style.display = 'block';
-                    if (!firstNameInput.value.trim()) firstNameInput.classList.add('is-invalid');
-                    if (!emailPattern.test(emailInput.value)) emailInput.classList.add('is-invalid');
-                    if (!languageSelect.value) languageSelect.classList.add('is-invalid');
-                } else {
-                    errorMessage.style.display = 'none';
-                    spinner.style.display = 'flex';
-                }
+            // Show spinner on submission
+            form.addEventListener('submit', () => {
+                spinner.style.display = 'flex';
             });
 
             // Tooltip click support
@@ -189,5 +179,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4b9bc393d12d2',t:'MTc0Njk5ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4b9bc393d12d2',t:'MTc0Njk5ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e55848db656738',t:'MTc0NzAwNDk3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </html>
