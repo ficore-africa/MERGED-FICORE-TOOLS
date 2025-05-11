@@ -1526,7 +1526,7 @@ def health_score_form():
     return render_template(
         'health_score_form.html',
         form=form,
-        translations=translations,
+        trans=translations,
         language=language
     )
     
@@ -1576,7 +1576,7 @@ def health_dashboard():
 
         return render_template(
             'health_dashboard.html',
-            translations=translations[language],
+            trans=translations[language],
             results=results,
             breakdown_plot=breakdown_plot,
             comparison_plot=comparison_plot,
