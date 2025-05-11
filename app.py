@@ -937,12 +937,16 @@ def assign_badges_health(user_df, all_users_df):
 def send_budget_email(data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
     try:
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = translations[data.get('language', 'en')]['Budget Report Subject']
+        language = data.get('language', 'en')
+        if language not in translations:
+            language = 'en'
+        msg['Subject'] = translations[language]['Budget Report Subject']
         msg['From'] = os.getenv('SMTP_USER')
         msg['To'] = data['email']
         html = render_template(
             'budget_email.html',
-            translations=translations[data.get('language', 'en')],
+            trans=translations[language],
+            language=language,
             user_name=sanitize_input(data.get('first_name', 'User')),
             monthly_income=data.get('monthly_income', 0),
             housing_expenses=data.get('housing_expenses', 0),
@@ -953,12 +957,12 @@ def send_budget_email(data, total_expenses, savings, surplus_deficit, chart_data
             savings=savings,
             surplus_deficit=surplus_deficit,
             chart_data=chart_data,
-            bar_data=bar_data,
+            advice=data.get('advice', []),  # Pass advice explicitly
+            badges=data.get('badges', []),  # Pass badges explicitly
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
             course_url=COURSE_URL,
-            course_title=COURSE_TITLE,
             linkedin_url=LINKEDIN_URL,
             twitter_url=TWITTER_URL
         )
@@ -969,13 +973,13 @@ def send_budget_email(data, total_expenses, savings, surplus_deficit, chart_data
             server.login(os.getenv('SMTP_USER'), os.getenv('SMTP_PASSWORD'))
             server.sendmail(msg['From'], msg['To'], msg.as_string())
         logger.info(f"Email sent to {data['email']}")
-        flash(translations[data.get('language', 'en')]['Check Inbox'], 'info')
+        flash(translations[language]['Check Inbox'], 'info')
         return True
     except Exception as e:
         logger.error(f"Error sending budget email to {data.get('email', 'unknown')}: {e}")
         flash("Error sending email notification. Dashboard will still display.", 'warning')
         return False
-
+        
 def send_health_email(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language):
     try:
         msg = MIMEMultipart()
@@ -1296,6 +1300,20 @@ def budget_step4():
                     'labels': ['Income', 'Expenses', 'Savings'],
                     'values': [budget_data['monthly_income'], total_expenses, savings]
                 }
+                # Calculate advice
+                advice = []
+                if surplus_deficit >= 0:
+                    advice.append(translations[language]['Great job! Save or invest your surplus to grow your wealth.'])
+                else:
+                    advice.append(translations[language]['Reduce non-essential spending to balance your budget.'])
+                if budget_data['housing_expenses'] > budget_data['monthly_income'] * 0.4:
+                    advice.append(translations[language]['Housing costs are high. Look for cheaper rent or utilities.'])
+                if budget_data['food_expenses'] > budget_data['monthly_income'] * 0.3:
+                    advice.append(translations[language]['Food spending is high. Try cooking at home more.'])
+                if budget_data['other_expenses'] > budget_data['monthly_income'] * 0.2:
+                    advice.append(translations[language]['Other spending is high. Cut back on non-essentials like clothes or entertainment.'])
+                budget_data['advice'] = advice
+                budget_data['badges'] = badges
                 send_budget_email(
                     budget_data,
                     total_expenses,
@@ -1331,7 +1349,7 @@ def budget_step4():
         translations=translations[language],
         step=4
     )
-
+    
 @app.route('/budget_dashboard')
 def budget_dashboard():
     language = session.get('language', 'en')
@@ -1376,6 +1394,7 @@ def budget_dashboard():
         return render_template(
             'budget_dashboard.html',
             trans=translations[language],
+            language=language,  # Added
             results=results,
             chart_data=chart_data,
             bar_data=bar_data,
@@ -1389,9 +1408,9 @@ def budget_dashboard():
         )
     except Exception as e:
         logger.error(f"Error rendering budget dashboard: {e}")
-        flash(trans[language]['Error retrieving data. Please try again.'], 'error')
+        flash(translations[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
-
+        
 @app.route('/health_score_form', methods=['GET', 'POST'])
 def health_score_form():
     form = HealthForm()
