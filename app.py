@@ -1605,12 +1605,16 @@ def page_not_found(e):
 def internal_server_error(e):
     language = session.get('language', 'en')
     if language not in translations:
+        logger.warning(f"Invalid language in session: {language}. Defaulting to English.")
         language = 'en'
+        session['language'] = language
+        session.modified = True
     logger.error(f"500 error: {e}")
-    return render_template(
-        '500.html',
-        translations=translations[language]
-    ), 500
-
+    try:
+        return render_template('500.html', translations=translations[language], language=language), 500
+    except Exception as render_error:
+        logger.error(f"Failed to render 500.html: {render_error}")
+        return "Internal Server Error", 500
+        
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
