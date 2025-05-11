@@ -1480,7 +1480,7 @@ def health():
             return redirect(url_for('health'))
 
     return render_template(
-        'health_form.html',
+        'health_score_form.html',
         form=form,
         translations=translations[language]
     )
@@ -1536,6 +1536,57 @@ def health_dashboard():
         logger.error(f"Error rendering health dashboard: {e}")
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health'))
+
+@app.route('/change_language', methods=['POST'])
+def change_language():
+    try:
+        # Retrieve language from form data, default to 'en'
+        language = request.form.get('language', 'en')
+        if not language:
+            logger.warning("No language provided in form data. Defaulting to English.")
+            language = 'en'
+
+        # Validate language against translations dictionary
+        if language not in translations:
+            logger.warning(f"Invalid language selection: {language}. Defaulting to English.")
+            language = 'en'
+
+        # Update session with selected language
+        try:
+            session['language'] = language
+            session.modified = True  # Ensure session is marked as modified
+            logger.info(f"Language changed to {language} for session")
+        except Exception as e:
+            logger.error(f"Failed to update session language: {e}")
+            language = 'en'  # Default to English on session error
+            session['language'] = language
+            session.modified = True
+            logger.info("Session language reset to English due to session error")
+
+        # Retrieve translation for flash message
+        try:
+            flash_message = translations[language]['Language selected!']
+        except KeyError as e:
+            logger.error(f"Translation key 'Language selected!' not found for language {language}: {e}")
+            flash_message = translations['en']['Language selected!']  # Fallback to English
+
+        # Flash success message
+        flash(flash_message, 'success')
+
+        # Redirect to home page
+        return redirect(url_for('home'))
+
+    except Exception as e:
+        # Catch any unexpected errors
+        logger.error(f"Unexpected error in change_language route: {e}")
+        try:
+            session['language'] = 'en'
+            session.modified = True
+            flash(translations['en']['An unexpected error occurred. Please try again.'], 'error')
+        except Exception as session_error:
+            logger.error(f"Failed to set fallback language or flash message: {session_error}")
+            # If session/flash fails, proceed with redirect to avoid breaking the flow
+        return redirect(url_for('home'))
 
 @app.errorhandler(404)
 def page_not_found(e):
