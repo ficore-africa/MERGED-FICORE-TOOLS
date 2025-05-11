@@ -1028,7 +1028,7 @@ def home():
     )
 
 @app.route('/budget', methods=['GET', 'POST'])
-def budget():
+def budget_budget():
     logger.info("Accessing budget route")
     language = request.args.get('language', 'en')
     if language not in translations:
@@ -1051,7 +1051,7 @@ def budget():
         return redirect(url_for('step2'))
     
     return render_template(
-        'step1.html',
+        'budget_step1.html',
         form=form,
         translations=translations,
         language=language,
@@ -1327,7 +1327,7 @@ def health_score_submit():
         return redirect(url_for('health_score_form'))
 
 @app.route('/step2', methods=['GET', 'POST'])
-def step2():
+def budget_step2():
     logger.info("Accessing step2 route")
     if 'budget_data' not in session:
         logger.warning("No budget_data in session for step2")
@@ -1343,7 +1343,7 @@ def step2():
         return redirect(url_for('step3'))
 
     return render_template(
-        'step2.html',
+        'budget_step2.html',
         form=form,
         translations=translations[language],
         language=language,
@@ -1353,7 +1353,7 @@ def step2():
     )
 
 @app.route('/step3', methods=['GET', 'POST'])
-def step3():
+def budget_step3():
     logger.info("Accessing step3 route")
     if 'budget_data' not in session:
         logger.warning("No budget_data in session for step3")
@@ -1374,7 +1374,7 @@ def step3():
         return redirect(url_for('step4'))
 
     return render_template(
-        'step3.html',
+        'budget_step3.html',
         form=form,
         translations=translations[language],
         language=language,
@@ -1384,7 +1384,7 @@ def step3():
     )
 
 @app.route('/step4', methods=['GET', 'POST'])
-def step4():
+def _budget_step4():
     logger.info("Accessing step4 route")
     if 'budget_data' not in session:
         logger.warning("No budget_data in session for step4")
@@ -1403,7 +1403,7 @@ def step4():
         return redirect(url_for('dashboard'))
 
     return render_template(
-        'step4.html',
+        'budget_step4.html',
         form=form,
         translations=translations[language],
         language=language,
