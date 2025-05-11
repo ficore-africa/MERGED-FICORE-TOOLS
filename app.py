@@ -1166,6 +1166,7 @@ def budget_step2():
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True  # Ensure session is saved
 
     if 'budget_data' not in session:
         flash(translations[language]['Session Expired'], 'error')
@@ -1174,12 +1175,13 @@ def budget_step2():
     if form.validate_on_submit():
         session['budget_data']['monthly_income'] = form.income.data
         logger.info(f"Step 2 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step3.html'))
+        return redirect(url_for('budget_step3'))
     
     return render_template(
         'budget_step2.html',
         form=form,
-        translations=translations[language],
+        translations=translations,
+        language=language,  # Explicitly pass language
         step=2
     )
 
