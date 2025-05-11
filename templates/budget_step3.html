@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations['Monthly Budget Planner'] }}</title>
+    <title>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -92,8 +53,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>{{ translations['Monthly Budget Planner'] }}</h2>
-            <p>{{ translations['Financial growth passport for Africa'] }}</p>
+            <h2>{{ translations[language].get('Monthly Budget Planner', translations['en']['Monthly Budget Planner']) }}</h2>
+            <p>{{ translations[language].get('Financial growth passport for Africa', translations['en']['Financial growth passport for Africa']) }}</p>
         </div>
         <div class="progress">
             <div class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
@@ -106,62 +67,62 @@
             {% endif %}
         {% endwith %}
         <div class="form-card slide-in">
-            <h3>{{ translations['Step 3'] }}: {{ translations['Expenses'] }}</h3>
+            <h3>{{ translations[language].get('Step 3', translations['en']['Step 3']) }}: {{ translations[language].get('Expenses', translations['en']['Expenses']) }}</h3>
             <form method="POST" id="step3-form" action="{{ url_for('step3') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="housing" class="form-label"><span class="visual-icon">🏠</span> {{ translations['Housing Expenses'] }}</label>
+                    <label for="housing" class="form-label"><span class="visual-icon">🏠</span> {{ translations[language].get('Housing Expenses', translations['en']['Housing Expenses']) }}</label>
                     <div style="position: relative;">
-                        {{ form.housing(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦30,000'], **{'aria-required': 'true', 'aria-label': translations['Housing Expenses']}) }}
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Rent, electricity, or water bills.'] }}</span></span>
+                        {{ form.housing(class="form-control", type="number", step="0.01", min="0", placeholder=translations[language].get('e.g. ₦30,000', translations['en']['e.g. ₦30,000']), **{'aria-required': 'true', 'aria-label': translations[language].get('Housing Expenses', translations['en']['Housing Expenses'])}) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Rent, electricity, or water bills.', translations['en']['Rent, electricity, or water bills.']) }}</span></span>
                     </div>
-                    <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
-                    <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
+                    <div class="valid-feedback">{{ translations[language].get('Valid amount!', translations['en']['Valid amount!']) }}</div>
+                    <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="form-group">
-                    <label for="food" class="form-label"><span class="visual-icon">🍽️</span> {{ translations['Food Expenses'] }}</label>
+                    <label for="food" class="form-label"><span class="visual-icon">🍽️</span> {{ translations[language].get('Food Expenses', translations['en']['Food Expenses']) }}</label>
                     <div style="position: relative;">
-                        {{ form.food(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦45,000'], **{'aria-required': 'true', 'aria-label': translations['Food Expenses']}) }}
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Money spent on food each month.'] }}</span></span>
+                        {{ form.food(class="form-control", type="number", step="0.01", min="0", placeholder=translations[language].get('e.g. ₦45,000', translations['en']['e.g. ₦45,000']), **{'aria-required': 'true', 'aria-label': translations[language].get('Food Expenses', translations['en']['Food Expenses'])}) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Money spent on food each month.', translations['en']['Money spent on food each month.']) }}</span></span>
                     </div>
-                    <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
-                    <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
+                    <div class="valid-feedback">{{ translations[language].get('Valid amount!', translations['en']['Valid amount!']) }}</div>
+                    <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="form-group">
-                    <label for="transport" class="form-label"><span class="visual-icon">🚗</span> {{ translations['Transport Expenses'] }}</label>
+                    <label for="transport" class="form-label"><span class="visual-icon">🚗</span> {{ translations[language].get('Transport Expenses', translations['en']['Transport Expenses']) }}</label>
                     <div style="position: relative;">
-                        {{ form.transport(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦10,000'], **{'aria-required': 'true', 'aria-label': translations['Transport Expenses']}) }}
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Bus, bike, taxi, or fuel costs.'] }}</span></span>
+                        {{ form.transport(class="form-control", type="number", step="0.01", min="0", placeholder=translations[language].get('e.g. ₦10,000', translations['en']['e.g. ₦10,000']), **{'aria-required': 'true', 'aria-label': translations[language].get('Transport Expenses', translations['en']['Transport Expenses'])}) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Bus, bike, taxi, or fuel costs.', translations['en']['Bus, bike, taxi, or fuel costs.']) }}</span></span>
                     </div>
-                    <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
-                    <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
+                    <div class="valid-feedback">{{ translations[language].get('Valid amount!', translations['en']['Valid amount!']) }}</div>
+                    <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="form-group">
-                    <label for="other" class="form-label"><span class="visual-icon">🛠️</span> {{ translations['Other Expenses'] }}</label>
+                    <label for="other" class="form-label"><span class="visual-icon">🛠️</span> {{ translations[language].get('Other Expenses', translations['en']['Other Expenses']) }}</label>
                     <div style="position: relative;">
-                        {{ form.other(class="form-control", type="number", step="0.01", min="0", placeholder=translations['e.g. ₦20,000'], **{'aria-required': 'true', 'aria-label': translations['Other Expenses']}) }}
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations['Internet, clothes, or other spending.'] }}</span></span>
+                        {{ form.other(class="form-control", type="number", step="0.01", min="0", placeholder=translations[language].get('e.g. ₦20,000', translations['en']['e.g. ₦20,000']), **{'aria-required': 'true', 'aria-label': translations[language].get('Other Expenses', translations['en']['Other Expenses'])}) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ translations[language].get('Internet, clothes, or other spending.', translations['en']['Internet, clothes, or other spending.']) }}</span></span>
                     </div>
-                    <div class="valid-feedback">{{ translations['Valid amount!'] }}</div>
-                    <div class="invalid-feedback">{{ translations['Invalid Number'] }}</div>
+                    <div class="valid-feedback">{{ translations[language].get('Valid amount!', translations['en']['Valid amount!']) }}</div>
+                    <div class="invalid-feedback">{{ translations[language].get('Invalid Number', translations['en']['Invalid Number']) }}</div>
                 </div>
                 <div class="text-center">
-                    <a href="{{ url_for('step2') }}" class="btn btn-secondary" aria-label="{{ translations['Back to Income'] }}">{{ translations['Back'] }}</a>
-                    {{ form.submit(class="btn btn-primary", value=translations['Continue to Savings & Review'] + ' →', **{'aria-label': translations['Continue to Savings & Review']}) }}
+                    <a href="{{ url_for('step2') }}" class="btn btn-secondary" aria-label="{{ translations[language].get('Back to Income', translations['en']['Back to Income']) }}">{{ translations[language].get('Back', translations['en']['Back']) }}</a>
+                    {{ form.submit(class="btn btn-primary", value=translations[language].get('Continue to Savings & Review', translations['en']['Continue to Savings & Review']) + ' →', **{'aria-label': translations[language].get('Continue to Savings & Review', translations['en']['Continue to Savings & Review'])}) }}
                 </div>
-                <div class="error-message" id="form-error">{{ translations['Please enter valid amounts for all expenses'] }}</div>
+                <div class="error-message" id="form-error">{{ translations[language].get('Please enter valid amounts for all expenses', translations['en']['Please enter valid amounts for all expenses']) }}</div>
                 <div class="spinner-container" id="spinner" aria-live="polite">
                     <div class="spinner"></div>
-                    <div class="spinner-text">{{ translations['Analyzing your expenses'] }}</div>
+                    <div class="spinner-text">{{ translations[language].get('Analyzing your expenses', translations['en']['Analyzing your expenses']) }}</div>
                 </div>
             </form>
         </div>
         <footer class="footer">
-            <p>{{ translations['About Ficore Africa: Empowering financial growth across Africa since 2023'] }}</p>
+            <p>{{ translations[language].get('About Ficore Africa: Empowering financial growth across Africa since 2023', translations['en']['About Ficore Africa: Empowering financial growth across Africa since 2023']) }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations['Provide Feedback'] }}">{{ translations['Feedback'] }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations['Join Waitlist'] }}">{{ translations['Join Waitlist'] }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations['Book Consultancy'] }}">{{ translations['Consultancy'] }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ translations[language].get('Provide Feedback', translations['en']['Provide Feedback']) }}">{{ translations[language].get('Feedback', translations['en']['Feedback']) }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}">{{ translations[language].get('Join Waitlist', translations['en']['Join Waitlist']) }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ translations[language].get('Book Consultancy', translations['en']['Book Consultancy']) }}">{{ translations[language].get('Consultancy', translations['en']['Consultancy']) }}</a>
             </div>
             <div class="social-icons">
                 <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
