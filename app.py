@@ -875,6 +875,11 @@ def calculate_health_score(df):
         df['NormDebtInterest'] = 1 - df['DebtInterestBurden']
         df['HealthScore'] = (df['NormCashFlow'] * 0.333 + df['NormDebtToIncome'] * 0.333 + df['NormDebtInterest'] * 0.333) * 100
         df['HealthScore'] = df['HealthScore'].round(2)
+        df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
+        return df
+    except Exception as e:
+        logger.error(f"Error calculating health score: {e}\n{traceback.format_exc()}")
+        raise
 
 def score_description_and_course(row):
     score = row['HealthScore']
@@ -900,7 +905,7 @@ def score_description_and_course(row):
         if debt_to_income > 0.5 or cash_flow < 0.3:
             return ('Critical; add source of income! pay off debt! manage your expense!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
         return ('Critical; seek financial help and advice!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
-
+        
         df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
         return df
     except Exception as e:
