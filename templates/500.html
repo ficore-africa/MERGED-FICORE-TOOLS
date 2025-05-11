@@ -1,58 +1,72 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ translations[language]['500 Error'] }}</title>
+    <title>{{ translations[language].get('500 Error', 'Server Error') }}</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
-    <div class="container">
-        <h1>{{ translations[language]['500 Error'] }}</h1>
-        <p>{{ translations[language]['An unexpected error occurred on the server.'] }}</p>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <!-- JavaScript for handling XLSX file data -->
+    <script type="text/javascript">
+        // Global variables for XLSX file processing
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        // Utility function to check if a cell is filled
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+
+        // Load and process file data (XLSX or other formats)
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    // Read XLSX file from base64 data
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+
+                    // Convert sheet to JSON, excluding blank rows
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    // Filter out rows where all cells are empty
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                    // Heuristic to find header row (row with fewer or equal filled cells compared to next row)
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    // Fallback to first row if heuristic fails or exceeds 25 rows
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+
+                    // Convert filtered data back to CSV
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error('Error processing XLSX file:', e);
+                    return "";
+                }
+            }
+            // Return raw file data or empty string if not XLSX or file not found
+            return gk_fileData[filename] || "";
+        }
+    </script>
+    <div class="container mx-auto px-4 py-8 max-w-lg bg-white rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-red-600 mb-4">{{ translations[language].get('500 Error', 'Server Error') }}</h1>
+        <p class="text-gray-700 mb-4">{{ translations[language].get('An unexpected error occurred on the server.', 'An unexpected error occurred on the server.') }}</p>
         {% if error_message %}
-            <p><strong>Error Details:</strong> {{ error_message }}</p>
+            <p class="text-gray-700 mb-4"><strong>{{ translations[language].get('Error Details', 'Error Details') }}:</strong> {{ error_message }}</p>
         {% endif %}
-        <p><a href="{{ url_for('home') }}">{{ translations[language]['Return to Home'] }}</a></p>
+        <a href="{{ url_for('home') }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition duration-300">
+            {{ translations[language].get('Return to Home', 'Return to Home') }}
+        </a>
     </div>
 </body>
 </html>
