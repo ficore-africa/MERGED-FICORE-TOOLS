@@ -1412,8 +1412,8 @@ def step4():
         TWITTER_URL=TWITTER_URL
     )
 
-@app.route('/dashboard', methods=['GET'])
-def dashboard():
+@app.route('/budget_dashboard', methods=['GET'])
+def budget_dashboard():
     logger.info("Accessing dashboard route")
     if 'budget_data' not in session:
         logger.warning("No budget_data in session for dashboard")
@@ -1555,7 +1555,7 @@ def dashboard():
         advice.append(translations[language]['Other spending is high. Cut back on non-essentials like clothes or entertainment.'])
 
     return render_template(
-        'dashboard.html',
+        'budget_dashboard.html',
         translations=translations[language],
         language=language,
         budget_data=budget_data,
