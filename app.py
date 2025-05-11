@@ -1430,7 +1430,7 @@ def health_score_form():
             else:
                 logger.error(f"Failed to save health data for {health_data['email']}")
                 flash(translations[language]['Error saving data. Please try again.'], 'error')
-                return redirect(url_for('health'))
+                return redirect(url_for('health_score_form'))  # Fixed endpoint
 
             user_df = fetch_data_from_sheet(health_data['email'], PREDETERMINED_HEADERS_HEALTH, 'Health')
             user_df = calculate_health_score(user_df)
@@ -1484,23 +1484,23 @@ def health_score_form():
                         )
                     ).start()
 
-                return redirect(url_for('health_dashboard.html'))
+                return redirect(url_for('health_dashboard'))  # Correct endpoint
             else:
                 flash(translations[language]['Error retrieving data. Please try again.'], 'error')
-                return redirect(url_for('health_score_form'))
+                return redirect(url_for('health_score_form'))  # Fixed endpoint
 
         except Exception as e:
             logger.error(f"Error processing health form for {health_data['email']}: {e}")
             flash(translations[language]['An unexpected error occurred. Please try again.'], 'error')
-        return redirect(url_for('health_dashboard'))  # Fix endpoint reference
+            return redirect(url_for('health_score_form'))  # Fixed endpoint
     
     return render_template(
         'health_score_form.html',
         form=form,
         translations=translations,
-        language=language,  # Explicitly pass language
+        language=language
     )
-
+    
 @app.route('/health_dashboard')
 def health_dashboard():
     language = session.get('language', 'en')
