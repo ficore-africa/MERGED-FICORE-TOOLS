@@ -1080,6 +1080,9 @@ def generate_comparison_plot(user_df, all_users_df):
         return None
         
 # Form Definitions
+def get_translation(language, key):
+    return translations.get(language, translations['en']).get(key, key)
+
 class Step1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -1088,15 +1091,15 @@ class Step1Form(FlaskForm):
 
     def __init__(self, language='en', *args, **kwargs):
         super(Step1Form, self).__init__(*args, **kwargs)
-        self.submit.label.text = translations.get(language, translations['en'])['Continue to Income']
-        
+        self.submit.label.text = get_translation(language, 'Continue to Income')
+
 class Step2Form(FlaskForm):
     income = FloatField('Monthly Income', validators=[DataRequired()])
     submit = SubmitField()
 
     def __init__(self, language='en', *args, **kwargs):
         super(Step2Form, self).__init__(*args, **kwargs)
-        self.submit.label.text = translations.get(language, translations['en'])['Continue to Expenses']
+        self.submit.label.text = get_translation(language, 'Continue to Expenses')
 
 class Step3Form(FlaskForm):
     housing = FloatField('Housing Expenses', validators=[DataRequired()])
@@ -1107,8 +1110,8 @@ class Step3Form(FlaskForm):
 
     def __init__(self, language='en', *args, **kwargs):
         super(Step3Form, self).__init__(*args, **kwargs)
-        self.submit.label.text = translations.get(language, translations['en'])['Continue to Savings & Review']
-        
+        self.submit.label.text = get_translation(language, 'Continue to Savings & Review')
+
 class Step4Form(FlaskForm):
     savings_goal = FloatField('Savings Goal', validators=[Optional()])
     auto_email = BooleanField('Receive Email Report')
@@ -1116,7 +1119,7 @@ class Step4Form(FlaskForm):
 
     def __init__(self, language='en', *args, **kwargs):
         super(Step4Form, self).__init__(*args, **kwargs)
-        self.submit.label.text = translations.get(language, translations['en'])['Continue to Dashboard']
+        self.submit.label.text = get_translation(language, 'Continue to Dashboard')
         
 class HealthForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
