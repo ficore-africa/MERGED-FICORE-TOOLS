@@ -68,7 +68,7 @@
         {% endwith %}
         <div class="form-card">
             <h3>{{ translations[language].get('Step 1', translations['en']['Step 1']) }}: {{ translations[language].get('Personal Information', translations['en']['Personal Information']) }}</h3>
-            <form method="POST" id="step1-form" action="{{ url_for('budget') }}">
+            <form method="POST" id="step1-form" action="{{ url_for('budget_step1') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     <label for="first_name" class="form-label"><span class="visual-icon">👤</span> {{ translations[language].get('First Name', translations['en']['First Name']) }}</label>
