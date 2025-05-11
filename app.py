@@ -62,6 +62,11 @@ app.config['CACHE_DEFAULT_TIMEOUT'] = 600  # 10 minutes
 os.makedirs(app.config['CACHE_DIR'], exist_ok=True)
 cache = Cache(app)
 
+#Add a custom validator function 
+def non_negative(form, field):
+    if field.data < 0:
+        raise ValidationError('Value must be non-negative.')
+        
 # Custom Jinja2 filter for currency formatting
 def format_currency(value, currency='NGN'):
     try:
@@ -983,10 +988,10 @@ class Step4Form(FlaskForm):
 
 class HealthForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
-    income_revenue = FloatField('Income Revenue', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Income/Revenue must be non-negative.')])
-    expenses_costs = FloatField('Expenses Costs', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Expenses/Costs must be non-negative.')])
-    debt_loan = FloatField('Debt Loan', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Debt/Loan must be non-negative.')])
-    debt_interest_rate = FloatField('Debt Interest Rate', validators=[DataRequired(), lambda x: x >= 0 or ValidationError('Debt Interest Rate must be non-negative.')])
+    income_revenue = FloatField('Income Revenue', validators=[DataRequired(), non_negative])
+    expenses_costs = FloatField('Expenses Costs', validators=[DataRequired(), non_negative])
+    debt_loan = FloatField('Debt Loan', validators=[DataRequired(), non_negative])
+    debt_interest_rate = FloatField('Debt Interest Rate', validators=[DataRequired(), non_negative])
     auto_email = StringField('Confirm Your Email', validators=[DataRequired(), Email()])
     phone_number = StringField('Phone Number', validators=[Optional()])
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -999,7 +1004,7 @@ class HealthForm(FlaskForm):
     def validate_auto_email(self, auto_email):
         if auto_email.data != self.email.data:
             raise ValidationError(translations[self.language.data or 'en']['Email addresses must match.'])
-
+            
 @app.route('/change_language', methods=['POST'])
 def change_language():
     language = request.form.get('language', 'en')
