@@ -63,17 +63,21 @@ class CompressedSession(SessionInterface):
     def open_session(self, app, request):
         session_data = request.cookies.get(self.get_cookie_name(app))
         if not session_data:
+            logger.info("No session cookie found, creating new session")
             return SecureCookieSession()
         try:
             compressed_data = bytes.fromhex(session_data)
             decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
-            return SecureCookieSession(json.loads(decompressed_data))
+            session = SecureCookieSession(json.loads(decompressed_data))
+            logger.debug(f"Session loaded: {session}")
+            return session
         except Exception as e:
             logger.error(f"Error decompressing session data: {e}")
             return SecureCookieSession()
 
     def save_session(self, app, session, response):
         if not session.modified:
+            logger.debug("Session not modified, skipping save")
             return
         domain = self.get_cookie_domain(app)
         path = self.get_cookie_path(app)
@@ -82,21 +86,25 @@ class CompressedSession(SessionInterface):
                 response.delete_cookie(
                     self.get_cookie_name(app), domain=domain, path=path
                 )
+                logger.info("Empty session, deleted cookie")
             return
-        # Compress session data
-        session_data = json.dumps(dict(session)).encode('utf-8')
-        compressed_data = zlib.compress(session_data)
-        encoded_data = compressed_data.hex()  # Convert to hex string for storage
-        response.set_cookie(
-            self.get_cookie_name(app),
-            encoded_data,
-            max_age=app.permanent_session_lifetime,
-            secure=app.config['SESSION_COOKIE_SECURE'],
-            httponly=self.get_cookie_httponly(app),
-            samesite=self.get_cookie_samesite(app),
-            domain=domain,
-            path=path
-        )
+        try:
+            session_data = json.dumps(dict(session)).encode('utf-8')
+            compressed_data = zlib.compress(session_data)
+            encoded_data = compressed_data.hex()
+            response.set_cookie(
+                self.get_cookie_name(app),
+                encoded_data,
+                max_age=app.permanent_session_lifetime,
+                secure=app.config['SESSION_COOKIE_SECURE'],
+                httponly=self.get_cookie_httponly(app),
+                samesite=self.get_cookie_samesite(app),
+                domain=domain,
+                path=path
+            )
+            logger.debug(f"Session saved: {dict(session)}")
+        except Exception as e:
+            logger.error(f"Error saving session: {e}")
 
     def is_null_session(self, session):
         return not isinstance(session, SecureCookieSession) or not session
@@ -1132,6 +1140,7 @@ def budget_step1():
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True  # Ensure session is saved
 
     if form.validate_on_submit():
         session['budget_data'] = {
@@ -1140,12 +1149,13 @@ def budget_step1():
             'language': form.language.data
         }
         logger.info(f"Step 1 completed for {session['budget_data']['email']}")
-        return redirect(url_for('budget_step2.html'))
+        return redirect(url_for('budget_step2'))  # Fix endpoint reference
     
     return render_template(
         'budget_step1.html',
         form=form,
-        translations=translations[language],
+        translations=translations,
+        language=language,  # Explicitly pass language
         step=1
     )
 
@@ -1378,6 +1388,7 @@ def health_score_form():
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True  # Ensure session is saved
 
     if form.validate_on_submit():
         health_data = {
@@ -1479,12 +1490,13 @@ def health_score_form():
         except Exception as e:
             logger.error(f"Error processing health form for {health_data['email']}: {e}")
             flash(translations[language]['An unexpected error occurred. Please try again.'], 'error')
-            return redirect(url_for('health'))
-
+        return redirect(url_for('health_dashboard'))  # Fix endpoint reference
+    
     return render_template(
         'health_score_form.html',
         form=form,
-        translations=translations[language]
+        translations=translations,
+        language=language,  # Explicitly pass language
     )
 
 @app.route('/health/dashboard')
