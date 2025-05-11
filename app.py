@@ -56,7 +56,21 @@ app.config['SESSION_COOKIE_SECURE'] = True
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Custom session interface for compression
-class CompressedSession(Session):
+from flask.sessions import SessionInterface, SecureCookieSession
+
+class CompressedSession(SessionInterface):
+    def open_session(self, app, request):
+        session_data = request.cookies.get(self.get_cookie_name(app))
+        if not session_data:
+            return SecureCookieSession()
+        try:
+            compressed_data = bytes.fromhex(session_data)
+            decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
+            return SecureCookieSession(json.loads(decompressed_data))
+        except Exception as e:
+            logger.error(f"Error decompressing session data: {e}")
+            return SecureCookieSession()
+
     def save_session(self, app, session, response):
         if not session.modified:
             return
@@ -77,23 +91,51 @@ class CompressedSession(Session):
             encoded_data,
             max_age=app.permanent_session_lifetime,
             secure=app.config['SESSION_COOKIE_SECURE'],
-            httponly=app.config['SESSION_COOKIE_HTTPONLY'],
-            samesite=app.config['SESSION_COOKIE_SAMESITE'],
+            httponly=self.get_cookie_httponly(app),
+            samesite=self.get_cookie_samesite(app),
             domain=domain,
             path=path
         )
 
-    def load_session(self, app):
-        session_data = request.cookies.get(self.get_cookie_name(app))
-        if not session_data:
-            return self.session_class()
-        try:
-            compressed_data = bytes.fromhex(session_data)
-            decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
-            return self.session_class(json.loads(decompressed_data))
-        except Exception as e:
-            logger.error(f"Error decompressing session data: {e}")
-            return self.session_class()
+    def is_null_session(self, session):
+        return not isinstance(session, SecureCookieSession) or not session
+
+    def get_cookie_name(self, app):
+        return app.config.get('SESSION_COOKIE_NAME', 'session')
+
+    def get_cookie_domain(self, app):
+        return app.config.get('SESSION_COOKIE_DOMAIN', None)
+
+    def get_cookie_path(self, app):
+        return app.config.get('SESSION_COOKIE_PATH', '/')
+
+    def get_cookie_httponly(self, app):
+        return app.config.get('SESSION_COOKIE_HTTPONLY', True)
+
+    def get_cookie_secure(self, app):
+        return app.config.get('SESSION_COOKIE_SECURE', True)
+
+    def get_cookie_samesite(self, app):
+        return app.config.get('SESSION_COOKIE_SAMESITE', 'Lax')
+
+    def should_set_cookie(self, app, session):
+        return session.modified or app.config.get('SESSION_REFRESH_EACH_REQUEST', True)
+        
+def open_session(self, app, request):
+    session_data = request.cookies.get(self.get_cookie_name(app))
+    if not session_data:
+        return self.session_class()
+    try:
+        compressed_data = bytes.fromhex(session_data)
+        decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
+        return self.session_class(json.loads(decompressed_data))
+    except Exception as e:
+        logger.error(f"Error decompressing session data: {e}")
+        return self.session_class()
+
+def is_null_session(self, session):
+    from flask.sessions import SecureCookieSession
+    return not isinstance(session, SecureCookieSession) or not session
 
 app.session_interface = CompressedSession()
 
