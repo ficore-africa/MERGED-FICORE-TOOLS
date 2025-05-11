@@ -913,12 +913,6 @@ def score_description_and_course(row):
             return ('Critical; add source of income! pay off debt! manage your expense!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
         return ('Critical; seek financial help and advice!', 'Ficore Financial Recovery: First Steps to Stability in 2025', clean_recovery_url)
         
-        df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
-        return df
-    except Exception as e:
-        logger.error(f"Error calculating health score: {e}\n{traceback.format_exc()}")
-        raise
-
 def assign_badges_health(user_df, all_users_df):
     badges = []
     if user_df.empty:
