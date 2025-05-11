@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ translations[language]['Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.'] or 'Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.' }}">
+    <meta name="description" content="{{ trans.get('Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.', 'Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.') }}">
     <meta name="keywords" content="ficore africa, financial health, dashboard, Africa SME finance, smart insights">
     <meta name="author" content="Ficore Africa">
-    <title>{{ translations[language]['Ficore Africa - Your Financial Health Dashboard'] or 'Ficore Africa - Your Financial Health Dashboard' }}</title>
+    <title>{{ trans.get('Ficore Africa - Your Financial Health Dashboard', 'Ficore Africa - Your Financial Health Dashboard') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -298,9 +298,9 @@
     <div class="container">
         <header class="my-4">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ translations[language]['Ficore Africa Logo'] or 'Ficore Africa Logo' }}" class="img-fluid">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
             </div>
-            <h1>{{ translations[language]['Your Financial Health Dashboard'] or 'Your Financial Health Dashboard' }}</h1>
+            <h1>{{ trans.get('Your Financial Health Dashboard', 'Your Financial Health Dashboard') }}</h1>
         </header>
 
         <!-- Flash Messages -->
@@ -310,7 +310,7 @@
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ translations[language]['Close'] or 'Close' }}"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -327,31 +327,31 @@
         <!-- Step 1: Welcome and Financial Health Score -->
         {% if step == 1 %}
             <div class="card">
-                <div class="card-header">🎉 {{ translations[language]['Welcome'] or 'Welcome' }}, {{ first_name }}!</div>
+                <div class="card-header">🎉 {{ trans.get('Welcome', 'Welcome') }}, {{ first_name }}!</div>
                 <div class="card-body light-blue">
-                    <div class="info-box">{{ translations[language]['Submission Success'] or 'Your financial health data has been successfully submitted.' }}</div>
-                    <div class="info-box">{{ translations[language]['Email'] or 'Email' }}: {{ email }}</div>
+                    <div class="info-box">{{ trans.get('Submission Success', 'Your financial health data has been successfully submitted.') }}</div>
+                    <div class="info-box">{{ trans.get('Email', 'Email') }}: {{ email }}</div>
                     <div class="score-box">
-                        <h3>⭐ {{ translations[language]['Your Financial Health Score'] or 'Your Financial Health Score' }}</h3>
+                        <h3>⭐ {{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}</h3>
                         <p>{{ health_score|round(1) }}/100</p>
                     </div>
-                    <div class="info-box">{{ translations[language]['Ranked'] or 'Ranked' }} #{{ rank }} {{ translations[language]['out of'] or 'out of' }} {{ total_users }} {{ translations[language]['users'] or 'users' }}</div>
+                    <div class="info-box">{{ trans.get('Ranked', 'Ranked') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}</div>
                     <div class="info-box">
                         {% if health_score >= 75 %}
-                            {{ translations[language]['Strong Financial Health'] or 'Strong Financial Health' }}
+                            {{ trans.get('Strong Financial Health', 'Strong Financial Health') }}
                         {% elif health_score >= 50 %}
-                            {{ translations[language]['Stable Finances'] or 'Stable Finances' }}
+                            {{ trans.get('Stable Finances', 'Stable Finances') }}
                         {% elif health_score >= 25 %}
-                            {{ translations[language]['Financial Strain'] or 'Financial Strain' }}
+                            {{ trans.get('Financial Strain', 'Financial Strain') }}
                         {% else %}
-                            {{ translations[language]['Urgent Attention Needed'] or 'Urgent Attention Needed' }}
+                            {{ trans.get('Urgent Attention Needed', 'Urgent Attention Needed') }}
                         {% endif %}
                     </div>
-                    <div class="info-box">{{ translations[language]['Check Inbox'] or 'Check your inbox for a detailed report.' }}</div>
+                    <div class="info-box">{{ trans.get('Check Inbox', 'Check your inbox for a detailed report.') }}</div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-primary" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -360,37 +360,37 @@
         <!-- Step 2: Score Breakdown -->
         {% if step == 2 %}
             <div class="card">
-                <div class="card-header">📊 {{ translations[language]['Score Breakdown'] or 'Score Breakdown' }}</div>
+                <div class="card-header">📊 {{ trans.get('Score Breakdown', 'Score Breakdown') }}</div>
                 <div class="card-body light-blue">
                     {% if breakdown_plot %}
                         <div class="chart-container">
                             <div id="score-breakdown-chart"></div>
                         </div>
                     {% else %}
-                        <div class="info-box">{{ translations[language]['Chart Unavailable'] or 'Chart unavailable due to data issues.' }}</div>
+                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
                     {% endif %}
                     <div class="score-box">
-                        <h4>{{ translations[language]['Score Composition'] or 'Score Composition' }}:</h4>
+                        <h4>{{ trans.get('Score Composition', 'Score Composition') }}:</h4>
                         <ul>
-                            <li><strong>{{ translations[language]['Cash Flow'] or 'Cash Flow' }}</strong>: {{ (user_data['income_revenue'] - user_data['expenses_costs'])|round(2) }} ₦</li>
-                            <li><strong>{{ translations[language]['Debt-to-Income Ratio'] or 'Debt-to-Income Ratio' }}</strong>: {{ ((user_data['debt_loan'] / user_data['income_revenue'] * 100) if user_data['income_revenue'] > 0 else 0)|round(1) }}%</li>
-                            <li><strong>{{ translations[language]['Debt Interest Burden'] or 'Debt Interest Burden' }}</strong>: {{ translations[language]['Debt Interest Description'] or 'Based on your debt interest rate.' }}</li>
+                            <li><strong>{{ trans.get('Cash Flow', 'Cash Flow') }}</strong>: {{ (user_data['income_revenue'] - user_data['expenses_costs'])|round(2) }} ₦</li>
+                            <li><strong>{{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}</strong>: {{ ((user_data['debt_loan'] / user_data['income_revenue'] * 100) if user_data['income_revenue'] > 0 else 0)|round(1) }}%</li>
+                            <li><strong>{{ trans.get('Debt Interest Burden', 'Debt Interest Burden') }}</strong>: {{ trans.get('Debt Interest Description', 'Based on your debt interest rate.') }}</li>
                         </ul>
                         <p>
                             {% if health_score >= 75 %}
-                                {{ translations[language]['Balanced Components'] or 'Your financial components are well-balanced.' }}
+                                {{ trans.get('Balanced Components', 'Your financial components are well-balanced.') }}
                             {% elif health_score >= 50 %}
-                                {{ translations[language]['Components Need Attention'] or 'Some components need attention to improve your score.' }}
+                                {{ trans.get('Components Need Attention', 'Some components need attention to improve your score.') }}
                             {% else %}
-                                {{ translations[language]['Components Indicate Challenges'] or 'Your components indicate financial challenges.' }}
+                                {{ trans.get('Components Indicate Challenges', 'Your components indicate financial challenges.') }}
                             {% endif %}
                         </p>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-primary" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</a>
-                        <a href="{{ url_for('health_score_submit', step=1) }}" class="btn btn-secondary" aria-label="{{ translations[language]['Back'] or 'Back' }}">{{ translations[language]['Back'] or 'Back' }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=1) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -399,29 +399,29 @@
         <!-- Step 3: Badges and Recommended Learning -->
         {% if step == 3 %}
             <div class="card">
-                <div class="card-header">🏅 {{ translations[language]['Your Badges'] or 'Your Badges' }}</div>
+                <div class="card-header">🏅 {{ trans.get('Your Badges', 'Your Badges') }}</div>
                 <div class="card-body">
                     <div class="badge-box">
                         {% if badges %}
                             {% for badge in badges %}
-                                <span class="badge" onclick="alert('{{ translations[language].get(badge, badge) }}: {{ translations[language]['Congratulations!'] or 'Congratulations!' }}')" aria-label="{{ translations[language].get(badge, badge) }}">{{ translations[language].get(badge, badge) }}</span>
+                                <span class="badge" onclick="alert('{{ trans.get(badge, badge) }}: {{ trans.get('Congratulations!', 'Congratulations!') }}')" aria-label="{{ trans.get(badge, badge) }}">{{ trans.get(badge, badge) }}</span>
                             {% endfor %}
                         {% else %}
-                            <p>{{ translations[language]['No Badges Yet'] or 'No badges earned yet. Keep improving!' }}</p>
+                            <p>{{ trans.get('No Badges Yet', 'No badges earned yet. Keep improving!') }}</p>
                         {% endif %}
                     </div>
                     <div class="learning-box">
-                        <h3>📚 {{ translations[language]['Recommended Learning'] or 'Recommended Learning' }}</h3>
+                        <h3>📚 {{ trans.get('Recommended Learning', 'Recommended Learning') }}</h3>
                         <div class="d-flex flex-wrap justify-content-center gap-2">
-                            <a href="{{ course_url }}" target="_blank" class="course-link" aria-label="{{ translations[language]['View Course'] or 'View Course' }}">{{ course_title or translations[language]['Financial Health Course'] or 'Financial Health Course' }}</a>
-                            <a href="{{ course_url }}" target="_blank" class="enroll-button" aria-label="{{ translations[language]['Enroll Now'] or 'Enroll Now' }}">{{ translations[language]['Enroll Now'] or 'Enroll Now' }}</a>
+                            <a href="{{ course_url }}" target="_blank" class="course-link" aria-label="{{ trans.get('View Course', 'View Course') }}">{{ course_title or trans.get('Financial Health Course', 'Financial Health Course') }}</a>
+                            <a href="{{ course_url }}" target="_blank" class="enroll-button" aria-label="{{ trans.get('Enroll Now', 'Enroll Now') }}">{{ trans.get('Enroll Now', 'Enroll Now') }}</a>
                         </div>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-primary" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</a>
-                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-secondary" aria-label="{{ translations[language]['Back'] or 'Back' }}">{{ translations[language]['Back'] or 'Back' }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -430,43 +430,43 @@
         <!-- Step 4: Quick Financial Tips -->
         {% if step == 4 %}
             <div class="card">
-                <div class="card-header">💡 {{ translations[language]['Quick Financial Tips'] or 'Quick Financial Tips' }}</div>
+                <div class="card-header">💡 {{ trans.get('Quick Financial Tips', 'Quick Financial Tips') }}</div>
                 <div class="card-body">
                     <ul class="tips-list learning-box">
                         {% if health_score >= 75 %}
                             <li>
-                                <span><strong>{{ translations[language]['Invest'] or 'Invest' }}</strong>: {{ translations[language]['Invest Wisely'] or 'Consider investing surplus funds wisely.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Explore investment options.'] or 'Explore investment options.' }}')" aria-label="{{ translations[language]['Try Investing'] or 'Try Investing' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Invest', 'Invest') }}</strong>: {{ trans.get('Invest Wisely', 'Consider investing surplus funds wisely.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Explore investment options.', 'Explore investment options.') }}')" aria-label="{{ trans.get('Try Investing', 'Try Investing') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                             <li>
-                                <span><strong>{{ translations[language]['Scale'] or 'Scale' }}</strong>: {{ translations[language]['Scale Smart'] or 'Scale your business or finances smartly.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Plan for scalable growth.'] or 'Plan for scalable growth.' }}')" aria-label="{{ translations[language]['Try Scaling'] or 'Try Scaling' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Scale', 'Scale') }}</strong>: {{ trans.get('Scale Smart', 'Scale your business or finances smartly.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Plan for scalable growth.', 'Plan for scalable growth.') }}')" aria-label="{{ trans.get('Try Scaling', 'Try Scaling') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                         {% elif health_score >= 50 %}
                             <li>
-                                <span><strong>{{ translations[language]['Build'] or 'Build' }}</strong>: {{ translations[language]['Build Savings'] or 'Focus on building your savings.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Start a savings plan.'] or 'Start a savings plan.' }}')" aria-label="{{ translations[language]['Try Building Savings'] or 'Try Building Savings' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Build', 'Build') }}</strong>: {{ trans.get('Build Savings', 'Focus on building your savings.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Start a savings plan.', 'Start a savings plan.') }}')" aria-label="{{ trans.get('Try Building Savings', 'Try Building Savings') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                             <li>
-                                <span><strong>{{ translations[language]['Cut'] or 'Cut' }}</strong>: {{ translations[language]['Cut Costs'] or 'Identify and cut unnecessary costs.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Review your expenses.'] or 'Review your expenses.' }}')" aria-label="{{ translations[language]['Try Cutting Costs'] or 'Try Cutting Costs' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Cut', 'Cut') }}</strong>: {{ trans.get('Cut Costs', 'Identify and cut unnecessary costs.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Review your expenses.', 'Review your expenses.') }}')" aria-label="{{ trans.get('Try Cutting Costs', 'Try Cutting Costs') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                         {% else %}
                             <li>
-                                <span><strong>{{ translations[language]['Reduce'] or 'Reduce' }}</strong>: {{ translations[language]['Reduce Debt'] or 'Prioritize reducing your debt.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Create a debt repayment plan.'] or 'Create a debt repayment plan.' }}')" aria-label="{{ translations[language]['Try Reducing Debt'] or 'Try Reducing Debt' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Reduce', 'Reduce') }}</strong>: {{ trans.get('Reduce Debt', 'Prioritize reducing your debt.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Create a debt repayment plan.', 'Create a debt repayment plan.') }}')" aria-label="{{ trans.get('Try Reducing Debt', 'Try Reducing Debt') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                             <li>
-                                <span><strong>{{ translations[language]['Boost'] or 'Boost' }}</strong>: {{ translations[language]['Boost Income'] or 'Explore ways to boost your income.' }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ translations[language]['Consider side hustles or new revenue streams.'] or 'Consider side hustles or new revenue streams.' }}')" aria-label="{{ translations[language]['Try Boosting Income'] or 'Try Boosting Income' }}">{{ translations[language]['Try It'] or 'Try It' }}</button>
+                                <span><strong>{{ trans.get('Boost', 'Boost') }}</strong>: {{ trans.get('Boost Income', 'Explore ways to boost your income.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Consider side hustles or new revenue streams.', 'Consider side hustles or new revenue streams.') }}')" aria-label="{{ trans.get('Try Boosting Income', 'Try Boosting Income') }}">{{ trans.get('Try It', 'Try It') }}</button>
                             </li>
                         {% endif %}
                     </ul>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=5) }}" class="btn btn-primary" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</a>
-                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-secondary" aria-label="{{ translations[language]['Back'] or 'Back' }}">{{ translations[language]['Back'] or 'Back' }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('health_score_submit', step=5) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -475,33 +475,33 @@
         <!-- Step 5: How You Compare to Others -->
         {% if step == 5 %}
             <div class="card">
-                <div class="card-header">⚖️ {{ translations[language]['How You Compare'] or 'How You Compare' }}</div>
+                <div class="card-header">⚖️ {{ trans.get('How You Compare', 'How You Compare') }}</div>
                 <div class="card-body light-blue">
                     {% if comparison_plot %}
                         <div class="chart-container">
                             <div id="compare-others-chart"></div>
                         </div>
                     {% else %}
-                        <div class="info-box">{{ translations[language]['Chart Unavailable'] or 'Chart unavailable due to data issues.' }}</div>
+                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
                     {% endif %}
                     <div class="info-box">
-                        {{ translations[language]['Your Rank'] or 'Your Rank' }} #{{ rank }} {{ translations[language]['out of'] or 'out of' }} {{ total_users }} {{ translations[language]['users'] or 'users' }} {{ translations[language]['places you'] or 'places you' }}:
+                        {{ trans.get('Your Rank', 'Your Rank') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }} {{ trans.get('places you', 'places you') }}:
                         {% if rank <= total_users * 0.1 %}
-                            {{ translations[language]['Top 10%'] or 'Top 10%' }}
+                            {{ trans.get('Top 10%', 'Top 10%') }}
                         {% elif rank <= total_users * 0.3 %}
-                            {{ translations[language]['Top 30%'] or 'Top 30%' }}
+                            {{ trans.get('Top 30%', 'Top 30%') }}
                         {% elif rank <= total_users * 0.7 %}
-                            {{ translations[language]['Middle Range'] or 'Middle Range' }}
+                            {{ trans.get('Middle Range', 'Middle Range') }}
                         {% else %}
-                            {{ translations[language]['Lower Range'] or 'Lower Range' }}
+                            {{ trans.get('Lower Range', 'Lower Range') }}
                         {% endif %}
-                        {{ translations[language]['Regular Submissions'] or 'Regular submissions can improve your ranking.' }}
+                        {{ trans.get('Regular Submissions', 'Regular submissions can improve your ranking.') }}
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=6) }}" class="btn btn-primary" aria-label="{{ translations[language]['Next'] or 'Next' }}">{{ translations[language]['Next'] or 'Next' }}</a>
-                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-secondary" aria-label="{{ translations[language]['Back'] or 'Back' }}">{{ translations[language]['Back'] or 'Back' }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('health_score_submit', step=6) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -510,25 +510,25 @@
         <!-- Step 6: What’s Next? -->
         {% if step == 6 %}
             <div class="card">
-                <div class="card-header">🔓 {{ translations[language]['Whats Next'] or 'What’s Next?' }}</div>
+                <div class="card-header">🔓 {{ trans.get('Whats Next', 'What’s Next?') }}</div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                        <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ translations[language]['Provide Feedback'] or 'Provide Feedback' }}">{{ translations[language]['Provide Feedback'] or 'Provide Feedback' }}</a>
-                        <a href="{{ WAITLIST_FORM_URL }}" class="btn btn-secondary" aria-label="{{ translations[language]['Join Waitlist'] or 'Join Waitlist' }}">{{ translations[language]['Join Waitlist'] or 'Join Waitlist' }}</a>
-                        <a href="{{ CONSULTANCY_FORM_URL }}" class="btn btn-secondary" aria-label="{{ translations[language]['Book Consultancy'] or 'Book Consultancy' }}">{{ translations[language]['Book Consultancy'] or 'Book Consultancy' }}</a>
+                        <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+                        <a href="{{ WAITLIST_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+                        <a href="{{ CONSULTANCY_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a>
                     </div>
                     <div class="info-box">
-                        {{ translations[language]['Contact Us'] or 'Contact Us' }} 
-                        <a href="mailto:support@ficoreafrica.com" class="email-btn" aria-label="{{ translations[language]['Email Support'] or 'Email Support' }}">{{ translations[language]['Email Us'] or 'Email Us' }}</a> 
-                        {{ translations[language]['for support'] or 'for support' }} | 
-                        {{ translations[language]['Follow us on'] or 'Follow us on' }} 
+                        {{ trans.get('Contact Us', 'Contact Us') }} 
+                        <a href="mailto:support@ficoreafrica.com" class="email-btn" aria-label="{{ trans.get('Email Support', 'Email Support') }}">{{ trans.get('Email Us', 'Email Us') }}</a> 
+                        {{ trans.get('for support', 'for support') }} | 
+                        {{ trans.get('Follow us on', 'Follow us on') }} 
                         <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a> 
-                        {{ translations[language]['and'] or 'and' }} 
+                        {{ trans.get('and', 'and') }} 
                         <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i> Twitter</a>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('index') }}" class="btn btn-primary no-arrow" aria-label="{{ translations[language]['Back to Home'] or 'Back to Home' }}">{{ translations[language]['Back to Home'] or 'Back to Home' }}</a>
-                        <button class="voice-btn" onclick="alert('{{ translations[language]['Voice guidance coming soon!'] or 'Voice guidance coming soon!' }}')" aria-label="{{ translations[language]['Listen to Voice Guidance'] or 'Listen to Voice Guidance' }}">🎙️ {{ translations[language]['Listen'] or 'Listen' }}</button>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary no-arrow" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
             </div>
@@ -536,14 +536,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>{{ translations[language]['About Ficore Africa: Empowering financial growth across Africa since 2023'] or 'About Ficore Africa: Empowering financial growth across Africa since 2023' }}</p>
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="social-icons">
                 <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="mailto:support@ficoreafrica.com">{{ translations[language]['Click to Email'] or 'Click to Email' }} {{ translations[language]['for support'] or 'for support' }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ translations[language]['Provide Feedback'] or 'Provide Feedback' }}</a>
+                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
             </p>
         </footer>
     </div>
@@ -555,7 +555,7 @@
         const healthScore = {{ health_score | tojson }};
         const peerData = { averageScore: {{ (all_users_df['HealthScore'].mean() if 'all_users_df' in globals() else 50) if total_users > 0 else 50 | tojson }} };
         const language = '{{ language }}';
-        const translations = {{ translations[language] | tojson }};
+        const translations = {{ trans | tojson }};
 
         const chartTranslations = {
             'en': {
