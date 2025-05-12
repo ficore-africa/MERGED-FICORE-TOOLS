@@ -927,7 +927,16 @@ def assign_badges_health(user_df, all_users_df):
     if user_df.empty:
         logger.warning("Empty user_df in assign_badges_health.")
         return badges
+
     try:
+        # Debug: Log the columns to verify
+        logger.debug(f"Columns in user_df: {list(user_df.columns)}")
+
+        # Check if 'Timestamp' column exists
+        if 'Timestamp' not in user_df.columns:
+            logger.error("Timestamp column missing in user_df. Cannot assign badges.")
+            return badges
+
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', dayfirst=True, errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
         user_row = user_df.iloc[0]
@@ -937,47 +946,52 @@ def assign_badges_health(user_df, all_users_df):
         if language not in translations:
             logger.warning(f"Invalid language '{language}' for user {email}. Defaulting to English.")
             language = 'en'
+
         if len(user_df) == 1:
             badges.append(translations[language]['First Health Score Completed!'])
         if health_score >= 50:
             badges.append(translations[language]['Financial Stability Achieved!'])
         if user_row['DebtToIncomeRatio'] < 0.3:
             badges.append(translations[language]['Debt Slayer!'])
+
         return badges
     except Exception as e:
         logger.error(f"Error in assign_badges_health: {e}")
         return badges
-        
 def send_health_email(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language):
+    """
+    Send a health assessment email to the user using Flask-Mail.
+    """
     try:
-        msg = MIMEMultipart()
-        msg['From'] = os.getenv('SMTP_USER')
-        msg['To'] = to_email
+        if language not in translations:
+            logger.warning(f"Invalid language '{language}' for email to {to_email}. Defaulting to English.")
+            language = 'en'
+
         subject = translations[language]['Top 10% Subject'] if rank <= total_users * 0.1 else translations[language]['Score Report Subject'].format(user_name=user_name)
-        msg['Subject'] = subject
-        html = render_template(
-            'health_score_email.html',
-            translations=translations[language],
-            user_name=sanitize_input(user_name),
-            health_score=health_score,
-            score_description=score_description,
-            rank=rank,
-            total_users=total_users,
-            course_title=course_title,
-            course_url=course_url,
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            linkedin_url=LINKEDIN_URL,
-            twitter_url=TWITTER_URL,
-            language=language
+
+        msg = Message(
+            subject=subject,
+            recipients=[to_email],
+            html=render_template(
+                'health_score_email.html',
+                trans=translations[language],  # Changed 'translations' to 'trans' to match template
+                user_name=sanitize_input(user_name),
+                health_score=health_score,
+                score_description=score_description,
+                rank=rank,
+                total_users=total_users,
+                course_title=course_title,
+                course_url=course_url,
+                FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+                WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+                CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+                linkedin_url=LINKEDIN_URL,
+                twitter_url=TWITTER_URL,
+                language=language
+            )
         )
-        msg.attach(MIMEText(html, 'html'))
-        with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as server:
-            server.starttls()
-            server.login(os.getenv('SMTP_USER'), os.getenv('SMTP_PASSWORD'))
-            server.send_message(msg)
-        logger.info(f"Email sent to {to_email}")
+        mail.send(msg)
+        logger.info(f"Health email sent to {to_email}")
         return True
     except Exception as e:
         logger.error(f"Error sending health email to {to_email}: {e}")
