@@ -1262,7 +1262,7 @@ def budget_step3():
         language=language,
         step=3
     )
-    @app.route('/budget_step4', methods=['GET', 'POST'])
+@app.route('/budget_step4', methods=['GET', 'POST'])
 def budget_step4():
     language = session.get('language', session.get('budget_data', {}).get('language', 'en'))
     if language not in translations:
@@ -1343,19 +1343,31 @@ def budget_step4():
                 0,   # rank (to be updated later)
                 0    # total_users (to be updated later)
             ]
-            if append_to_sheet(data_row, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
-                logger.info(f"Budget data saved for {budget_data['email']}")
-            else:
-                logger.error(f"Failed to save budget data for {budget_data['email']}")
+            try:
+                if append_to_sheet(data_row, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
+                    logger.info(f"Budget data saved for {budget_data['email']}")
+                else:
+                    logger.error(f"Failed to save budget data for {budget_data['email']}")
+                    flash(translations[language]['Error saving data. Please try again.'], 'error')
+            except Exception as e:
+                logger.error(f"Step 4: Failed to save data to Google Sheets: {e}")
                 flash(translations[language]['Error saving data. Please try again.'], 'error')
+                return redirect(url_for('budget_step4'))
 
             # Calculate badges and ranking
-            user_df = fetch_data_from_sheet(budget_data['email'], PREDETERMINED_HEADERS_BUDGET, 'Budget')
-            user_df = calculate_budget_metrics(user_df)
-            all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
-            badges = assign_badges_budget(user_df)
-            total_users = len(all_users_df)
-            rank = total_users  # Simplified ranking
+            try:
+                user_df = fetch_data_from_sheet(budget_data['email'], PREDETERMINED_HEADERS_BUDGET, 'Budget')
+                user_df = calculate_budget_metrics(user_df)
+                all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
+                badges = assign_badges_budget(user_df)
+                total_users = len(all_users_df)
+                rank = total_users  # Simplified ranking
+            except Exception as e:
+                logger.error(f"Step 4: Failed to calculate badges or ranking: {e}")
+                flash(translations[language]['Error calculating badges. Proceeding to dashboard.'], 'warning')
+                badges = []
+                total_users = 0
+                rank = 0
 
             # Store results in session
             session['budget_results'] = {
@@ -1372,20 +1384,28 @@ def budget_step4():
                 'badges': badges,
                 'rank': rank,
                 'total_users': total_users,
-                'advice': [translations[language]['Great job! Save or invest your surplus to grow your wealth.'] if surplus_deficit >= 0 
-                          else translations[language]['Reduce non-essential spending to balance your budget.']]
+                'advice': [
+                    translations[language]['Great job! Save or invest your surplus to grow your wealth.']
+                    if surplus_deficit >= 0
+                    else translations[language]['Reduce non-essential spending to balance your budget.']
+                ]
             }
 
             # Send email if auto_email is enabled
             if budget_data['auto_email']:
-                send_budget_email(
-                    budget_data,
-                    total_expenses,
-                    savings,
-                    surplus_deficit,
-                    chart_data,
-                    bar_data
-                )
+                try:
+                    send_budget_email(
+                        budget_data,
+                        total_expenses,
+                        savings,
+                        surplus_deficit,
+                        chart_data,
+                        bar_data
+                    )
+                    logger.info(f"Budget email sent to {budget_data['email']}")
+                except Exception as e:
+                    logger.error(f"Step 4: Failed to send budget email to {budget_data['email']}: {e}")
+                    flash(translations[language]['Failed to send email. You can still view your dashboard.'], 'warning')
 
             flash(translations[language]['Submission Success'], 'success')
             return redirect(url_for('budget_dashboard'))
@@ -1403,6 +1423,29 @@ def budget_step4():
         step=4,
         total_expenses=total_expenses
     )
+
+def send_budget_email(budget_data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
+    try:
+        msg = Message(
+            subject=translations[budget_data['language']].get('Your Budget Summary', 'Your Budget Summary'),
+            recipients=[budget_data['email']],
+            html=render_template(
+                'budget_email.html',
+                trans=translations[budget_data['language']],
+                user_name=budget_data['first_name'],
+                monthly_income=budget_data.get('monthly_income', 0.0),
+                total_expenses=total_expenses,
+                savings=savings,
+                surplus_deficit=surplus_deficit,
+                chart_data=chart_data,
+                bar_data=bar_data
+            )
+        )
+        mail.send(msg)
+        logger.info(f"Budget email sent to {budget_data['email']}")
+    except Exception as e:
+        logger.error(f"send_budget_email: Failed to send budget email to {budget_data['email']}: {e}")
+        raise
     
 @app.route('/budget_dashboard')
 def budget_dashboard():
