@@ -1122,7 +1122,7 @@ class Step4Form(FlaskForm):
         super(Step4Form, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translation(language, 'Continue to Dashboard')
         
-class HealthForm(FlaskForm):
+class HealthScoreForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
     income_revenue = FloatField('Income Revenue', validators=[DataRequired(), non_negative])
     expenses_costs = FloatField('Expenses Costs', validators=[DataRequired(), non_negative])
