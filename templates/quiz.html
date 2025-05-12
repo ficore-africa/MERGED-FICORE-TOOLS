@@ -1,51 +1,43 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="{{ language }}">
+<!DOCTYPE html>
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans['Financial Personality Quiz'] }} - Ficore Africa</title>
+    <meta name="description" content="{{ trans.get('Take the Ficore Africa financial quiz to assess your knowledge.', 'Take the Ficore Africa financial quiz to assess your knowledge.') }}">
+    <meta name="keywords" content="ficore africa, financial quiz, financial literacy, Africa SME finance">
+    <meta name="author" content="Ficore Africa">
+    <title>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }} - Ficore Africa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        header {
+            background: linear-gradient(45deg, #2E7D32, #0288D1);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .logo-container img {
+            max-width: 200px;
+        }
         .progress-bar {
             width: 100%;
             background-color: #e0e0e0;
@@ -89,6 +81,9 @@
         }
         .radio-group {
             margin-bottom: 20px;
+            background: #E3F2FD;
+            padding: 15px;
+            border-radius: 8px;
         }
         .submit-btn {
             background: linear-gradient(to right, #28a745, #007bff);
@@ -97,65 +92,128 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .submit-btn:hover {
+            transform: scale(1.05);
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #333;
+        }
+        .footer a {
+            color: #0288D1;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .social-icons a {
+            font-size: 1.2rem;
+            margin: 0 10px;
+            color: #0288D1;
+        }
+        .social-icons a:hover {
+            color: #2E7D32;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .radio-group { padding: 10px; }
+            .submit-btn { padding: 8px 16px; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{ trans['Financial Personality Quiz'] }}</h1>
-        <p>{{ trans['Discover Your Financial Personality'] }}</p>
-    </header>
-    <main>
-        <div class="progress-bar">
-            <div class="progress" id="progress" style="width: 20%;"></div>
-        </div>
-        <form method="POST" id="quiz-form">
-            {{ form.hidden_tag() }}
-            <div class="form-group">
-                <label for="{{ form.first_name.id }}">{{ trans['First Name'] }}</label>
-                {{ form.first_name(placeholder=trans['Enter your first name'], class='form-control') }}
+    <div class="container">
+        <header class="my-4">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
             </div>
-            <div class="form-group">
-                <label for="{{ form.email.id }}">{{ trans['Email'] }}</label>
-                {{ form.email(placeholder=trans['Enter your email'], class='form-control') }}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.language.id }}">{{ trans['Language'] }}</label>
-                {{ form.language(class='form-control') }}
-            </div>
-            {% for i, question in questions|enumerate %}
-                <div class="radio-group">
-                    <label class="tooltip">
-                        {{ trans['Question'] }} {{ i+1 }} {{ trans['of'] }} 5: {{ question.text }}
-                        <span class="tooltiptext">{{ question.tooltip }}</span>
-                    </label>
-                    {{ form['question_' + (i+1)|string](class='radio-options') }}
+            <h1>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</h1>
+            <p>{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container my-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-            <button type="submit" class="submit-btn">{{ trans['Submit Quiz'] }}</button>
-        </form>
-        <footer>
-            <p><a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans['Provide Feedback'] }}</a></p>
-            <p><a href="{{ WAITLIST_FORM_URL }}" target="_blank">{{ trans['Join Waitlist'] }}</a></p>
-            <p><a href="{{ CONSULTANCY_FORM_URL }}" target="_blank">{{ trans['Book Consultancy'] }}</a></p>
-            <p><a href="{{ LINKEDIN_URL }}" target="_blank">{{ trans['Connect on LinkedIn'] }}</a></p>
-            <p> <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-            <p><a href="{{ TWITTER_URL }}" target="_blank">{{ trans['Follow on Twitter'] }}</a></p>
+            {% endif %}
+        {% endwith %}
+
+        <main>
+            <div class="progress-bar">
+                <div class="progress" id="progress" style="width: 20%;"></div>
+            </div>
+            <form method="POST" id="quiz-form" class="row g-3">
+                {{ form.hidden_tag() }}
+                <div class="col-md-6 form-group">
+                    <label for="{{ form.first_name.id }}">{{ trans.get('First Name', 'First Name') }}</label>
+                    {{ form.first_name(placeholder=trans.get('Enter your first name', 'Enter your first name'), class='form-control') }}
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="{{ form.email.id }}">{{ trans.get('Email', 'Email') }}</label>
+                    {{ form.email(placeholder=trans.get('Enter your email', 'Enter your email'), class='form-control') }}
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="{{ form.language.id }}">{{ trans.get('Language', 'Language') }}</label>
+                    {{ form.language(class='form-control') }}
+                </div>
+                {% for question in questions %}
+                    <div class="col-12 radio-group">
+                        <label class="tooltip">
+                            {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} 5: {{ trans.get(question.text, question.text) }}
+                            <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip) }}</span>
+                        </label>
+                        {% for option in form['question_' + loop.index|string] %}
+                            <div class="form-check">
+                                {{ option(class='form-check-input radio-options', type='radio') }}
+                                {{ option.label(class='form-check-label') }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="col-12 d-flex justify-content-center gap-2">
+                    <button type="submit" class="submit-btn" aria-label="{{ trans.get('Submit Quiz', 'Submit Quiz') }}">{{ trans.get('Submit Quiz', 'Submit Quiz') }}</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                </div>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
+            <div class="social-icons">
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+            <p>
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+            </p>
         </footer>
-    </main>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
             // Update progress bar based on form completion
-            $('#quiz-form input, #quiz-form select').on('change', function() {
-                let totalFields = $('#quiz-form input, #quiz-form select').length;
-                let filledFields = $('#quiz-form input:filled, #quiz-form select:valid').length;
+            $('#quiz-form input, #quiz-form select').on('change input', function() {
+                let totalFields = $('#quiz-form input, #quiz-form select').not('[type=hidden]').length;
+                let filledFields = $('#quiz-form input:valid, #quiz-form select:valid').not('[type=hidden]').length;
                 let progress = (filledFields / totalFields) * 100;
                 $('#progress').css('width', progress + '%');
             });
             // Accessibility: Handle keyboard navigation
-            $('.radio-options input').on('keydown', function(e) {
+            $('.radio-options').on('keydown', function(e) {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    let $inputs = $(this).closest('.radio-options').find('input');
+                    let $inputs = $(this).closest('.radio-group').find('.radio-options');
                     let index = $inputs.index(this);
                     let nextIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
                     if (nextIndex >= 0 && nextIndex < $inputs.length) {
