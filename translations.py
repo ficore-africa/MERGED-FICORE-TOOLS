@@ -507,7 +507,7 @@ def get_translations(language):
             'Complete the health score form ...': 'Cika fom ɗin makin lafiya ...',
             'New to finances? ...': 'Sabon shiga cikin kuɗi? ...',
             'Close': 'Rufe',
-            'Feedback': 'Ra'ayi',
+            'Feedback': 'Ra\ayi',
             'Consultancy': 'Shawara',
             'Component': 'Abun Haɗin',
             'Score Contribution': 'Gudummawar Maki',
