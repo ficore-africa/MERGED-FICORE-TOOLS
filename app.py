@@ -724,6 +724,8 @@ def initialize_sheets(max_retries=5, backoff_factor=2):
             creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
             client = gspread.authorize(creds)
             sheets = client.open_by_key(SPREADSHEET_ID)
+            # Verify or set headers for 'Health' worksheet
+            set_sheet_headers(PREDETERMINED_HEADERS_HEALTH, 'Health')
             logger.info("Successfully initialized Google Sheets.")
             return True
         except json.JSONDecodeError as e:
@@ -739,7 +741,6 @@ def initialize_sheets(max_retries=5, backoff_factor=2):
                 time.sleep(backoff_factor ** attempt)
     logger.critical("Max retries exceeded for Google Sheets initialization.")
     return False
-
 # Initialize Google Sheets at startup
 if not initialize_sheets():
     raise RuntimeError("Failed to initialize Google Sheets at startup.")
@@ -903,33 +904,61 @@ def calculate_health_score(df):
     try:
         if df.empty:
             logger.warning("Empty DataFrame in calculate_health_score.")
+            df['HealthScore'] = 0.0  # Initialize HealthScore for empty DataFrame
             return df
+
+        # Verify required columns
+        required_cols = ['income_revenue', 'expenses_costs', 'debt_loan', 'debt_interest_rate']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            logger.error(f"Missing required columns in DataFrame: {missing_cols}")
+            df['HealthScore'] = 0.0  # Initialize HealthScore to avoid downstream errors
+            return df
+
         # Convert columns to numeric, handling strings and commas
-        for col in ['income_revenue', 'expenses_costs', 'debt_loan', 'debt_interest_rate']:
-            df[col] = df[col].apply(lambda x: float(re.sub(r'[,]', '', str(x))) if isinstance(x, str) and x else 0.0)
+        for col in required_cols:
+            df[col] = df[col].apply(
+                lambda x: float(re.sub(r'[,]', '', str(x))) if isinstance(x, str) and x.strip() else (float(x) if pd.notnull(x) else 0.0)
+            ).fillna(0.0)
+
         # Initialize HealthScore
         df['HealthScore'] = 0.0
+
         # Avoid division by zero
         df['IncomeRevenueSafe'] = df['income_revenue'].replace(0, 1e-10)
+
         # Calculate ratios
         df['CashFlowRatio'] = (df['income_revenue'] - df['expenses_costs']) / df['IncomeRevenueSafe']
         df['DebtToIncomeRatio'] = df['debt_loan'] / df['IncomeRevenueSafe']
         df['DebtInterestBurden'] = df['debt_interest_rate'].clip(lower=0) / 20
         df['DebtInterestBurden'] = df['DebtInterestBurden'].clip(upper=1)
+
         # Normalize values
         df['NormCashFlow'] = df['CashFlowRatio'].clip(0, 1)
         df['NormDebtToIncome'] = 1 - df['DebtToIncomeRatio'].clip(0, 1)
         df['NormDebtInterest'] = 1 - df['DebtInterestBurden']
+
         # Calculate final HealthScore
-        df['HealthScore'] = (df['NormCashFlow'] * 0.333 + df['NormDebtToIncome'] * 0.333 + df['NormDebtInterest'] * 0.333) * 100
+        df['HealthScore'] = (
+            df['NormCashFlow'] * 0.333 +
+            df['NormDebtToIncome'] * 0.333 +
+            df['NormDebtInterest'] * 0.333
+        ) * 100
         df['HealthScore'] = df['HealthScore'].round(2)
+
         # Apply score description and course recommendation
-        df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(score_description_and_course, axis=1, result_type='expand')
+        df[['ScoreDescription', 'CourseTitle', 'CourseURL']] = df.apply(
+            score_description_and_course, axis=1, result_type='expand'
+        )
+
+        logger.debug(f"HealthScore calculated successfully: {df['HealthScore'].iloc[0]}")
         return df
+
     except Exception as e:
         logger.error(f"Error calculating health score: {e}\n{traceback.format_exc()}")
-        raise
-
+        df['HealthScore'] = 0.0  # Ensure HealthScore is set even on failure
+        return df
+        
 def score_description_and_course(row):
     score = row['HealthScore']
     cash_flow = row['CashFlowRatio']
@@ -1128,7 +1157,7 @@ class Step4Form(FlaskForm):
         super(Step4Form, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translation(language, 'Continue to Dashboard')
 
-class HealthScoreForm(FlaskForm):
+class HealthScore(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -1144,7 +1173,7 @@ class HealthScoreForm(FlaskForm):
     submit = SubmitField()
 
     def __init__(self, language='en', *args, **kwargs):
-        super(HealthScoreForm, self).__init__(*args, **kwargs)
+        super(HealthScore, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translation(language, 'Submit')
 
 # Routes
@@ -1326,6 +1355,15 @@ def budget_dashboard():
             title=translations[language]['Income vs Expenses']
         )
         comparison_plot = comparison_fig.to_html(full_html=False, include_plotlyjs=False)
+        # Define results as a summary dictionary
+        results = {
+            'monthly_income': user_row['monthly_income'],
+            'total_expenses': user_row['total_expenses'],
+            'savings': user_row['savings'],
+            'surplus_deficit': user_row['surplus_deficit'],
+            'outcome_status': user_row['outcome_status'],
+            'advice': user_row['advice']
+        }
         return render_template(
             'budget_dashboard.html',
             trans=translations[language],
@@ -1335,6 +1373,7 @@ def budget_dashboard():
             total_users=total_users,
             breakdown_plot=breakdown_plot,
             comparison_plot=comparison_plot,
+            results=results,  # Add results to the template context
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
@@ -1344,10 +1383,10 @@ def budget_dashboard():
             course_title=COURSE_TITLE
         )
     except Exception as e:
-        logger.error(f"Error in budget_dashboard: {e}")
+        logger.error(f"Error in budget_dashboard: {e}\n{traceback.format_exc()}")
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
-
+        
 @app.route('/health_score', methods=['GET', 'POST'])
 def health_score():
     language = session.get('language', 'en')
@@ -1388,16 +1427,35 @@ def health_score():
             }
             df = pd.DataFrame([data])
             df = calculate_health_score(df)
-            data['badges'] = ''
+            if 'HealthScore' not in df.columns:
+                logger.error(f"HealthScore not computed for new data: {df}")
+                flash(translations[language]['Error saving data. Please try again.'], 'error')
+                return render_template('health_score.html', form=form, trans=translations[language])
+
+            data['badges'] = ''  # Will be updated after badges are assigned
             if append_to_sheet(list(data.values()), PREDETERMINED_HEADERS_HEALTH, 'Health'):
                 logger.info(f"Health score data saved to Google Sheets for {data['email']}")
                 user_df = fetch_data_from_sheet(email=data['email'], headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
                 all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
+
+                # Calculate health scores for fetched data
                 user_df = calculate_health_score(user_df)
+                all_users_df = calculate_health_score(all_users_df)
+
+                if 'HealthScore' not in user_df.columns or 'HealthScore' not in all_users_df.columns:
+                    logger.error(f"HealthScore missing in user_df or all_users_df: user_df={user_df.columns}, all_users_df={all_users_df.columns}")
+                    flash(translations[language]['Error retrieving data. Please try again.'], 'error')
+                    return render_template('health_score.html', form=form, trans=translations[language])
+
+                # Calculate rank
                 rank = sum(all_users_df['HealthScore'].astype(float) > df['HealthScore'].iloc[0]) + 1
                 total_users = len(all_users_df)
+
+                # Assign badges
                 badges = assign_badges_health(user_df, all_users_df)
                 data['badges'] = ', '.join(badges)
+
+                # Send email if requested
                 if session['health_data']['auto_email']:
                     threading.Thread(
                         target=send_health_email_async,
@@ -1413,8 +1471,11 @@ def health_score():
                             data['language']
                         )
                     ).start()
+
+                # Generate plots
                 breakdown_plot = generate_breakdown_plot(user_df)
                 comparison_plot = generate_comparison_plot(user_df, all_users_df)
+
                 flash(translations[language]['Submission Success'], 'success')
                 return render_template(
                     'health_score_dashboard.html',
@@ -1435,10 +1496,10 @@ def health_score():
                 logger.error(f"Failed to save health score data to Google Sheets for {data['email']}")
                 flash(translations[language]['Google Sheets Error'], 'error')
         except Exception as e:
-            logger.error(f"Error in health_score: {e}")
+            logger.error(f"Error in health_score: {e}\n{traceback.format_exc()}")
             flash(translations[language]['Error saving data. Please try again.'], 'error')
     return render_template('health_score.html', form=form, trans=translations[language])
-
+    
 def send_budget_email(to_email, user_name, user_data, language):
     try:
         if language not in translations:
