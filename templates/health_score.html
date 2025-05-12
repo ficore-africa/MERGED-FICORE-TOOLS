@@ -364,8 +364,6 @@
                             <div class="mb-3">
                                 {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
                                 {{ form.auto_email(class="form-check-input", type="checkbox") }}
-                                <span class="form-check-label">{{ trans.get('Receive Email Report', 'Receive Email Report') }}</span>
-                            </div>
                             </div>
                             <div class="mb-3">
                                 {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
@@ -434,7 +432,7 @@
                                         <span class="tooltip-fallback">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.debt_loan(class="form-control", placeholder=trans.get('e.g. 25000', 'e.g. 25000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
+                                {{ form.debt_loan(class="form-control", placeholder=trans.get('e.g. 25000', 'e.g. 25000'), type="number", step="0.01", min="0") }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
@@ -445,7 +443,7 @@
                                         <span class="tooltip-fallback">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.debt_interest_rate(class="form-control", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
+                                {{ form.debt_interest_rate(class="form-control", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0") }}
                             </div>
                             <div class="step-navigation">
                                 <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(2)" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</button>
@@ -462,16 +460,16 @@
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="social-icons">
                 <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
                 <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
             </p>
         </footer>
     </div>
 
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Multi-Step Form Navigation
@@ -523,6 +521,19 @@
                     input.setCustomValidity('');
                 }
             });
+
+            // Email confirmation validation
+            if (step === 1) {
+                const email = document.getElementById('email').value;
+                const autoEmailCheckbox = document.getElementById('auto_email');
+                if (autoEmailCheckbox.checked && !email) {
+                    document.getElementById('email').setCustomValidity("{{ trans.get('Email is required when opting for email results.', 'Email is required when opting for email results.') }}");
+                    document.getElementById('email').reportValidity();
+                    isValid = false;
+                } else {
+                    document.getElementById('email').setCustomValidity('');
+                }
+            }
 
             return isValid;
         }
