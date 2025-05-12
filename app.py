@@ -1524,21 +1524,18 @@ def budget_dashboard():
         
 @app.route('/health_score_form', methods=['GET', 'POST'])
 def health_score_form():
-    # Get language from session, default to English
     language = session.get('language', 'en')
     if language not in translations:
         language = 'en'
         session['language'] = language
         session.modified = True
 
-    # Initialize form with current language
     form = HealthScoreForm(language=language)
     logger.debug(f"Health Score Form: Rendering with language={language}, submit label={form.submit.label.text}")
 
     if request.method == 'POST':
         logger.debug(f"Health Score Form: Form submitted with data: {form.data}")
         if form.validate_on_submit():
-            # Validate email confirmation
             if form.email.data != form.auto_email.data:
                 logger.warning("Health Score Form: Email confirmation mismatch")
                 flash(translations[language]['Email addresses must match.'], 'danger')
@@ -1552,49 +1549,47 @@ def health_score_form():
                     FEEDBACK_FORM_URL=FEEDBACK_FORM_URL
                 )
 
-            # Store form data in a dictionary
             health_data = {
-                'first_name': form.first_name.data.strip(),
-                'last_name': form.last_name.data.strip() if form.last_name.data else '',
-                'email': form.email.data.lower().strip(),
-                'auto_email': form.auto_email.data.lower().strip(),
-                'phone_number': form.phone_number.data.strip() if form.phone_number.data else '',
-                'language': form.language.data,
                 'business_name': form.business_name.data.strip(),
-                'user_type': form.user_type.data,
                 'income_revenue': float(form.income_revenue.data or 0.0),
                 'expenses_costs': float(form.expenses_costs.data or 0.0),
                 'debt_loan': float(form.debt_loan.data or 0.0),
-                'debt_interest_rate': float(form.debt_interest_rate.data or 0.0)
+                'debt_interest_rate': float(form.debt_interest_rate.data or 0.0),
+                'auto_email': form.auto_email.data.lower().strip(), if form.auto_email.data else '',
+                'phone_number': form.phone_number.data.strip() if form.phone_number.data else '',
+                'first_name': form.first_name.data.strip(), else '',
+                'last_name': form.last_name.data.strip() if form.last_name.data else '',
+                'user_type': form.user_type.data,
+                'email': form.email.data.lower().strip(), if form.email.data else '',
+                'language': form.language.data in ['en', 'ha'] else 'en',
             }
 
-            # Calculate health score
-            try:
-                health_score = calculate_health_score_simple(health_data)
-            except Exception as e:
-                logger.error(f"Health Score Form: Failed to calculate health score: {e}")
-                flash(translations[language]['Error calculating health score. Please try again.'], 'error')
-                return redirect(url_for('health_score_form'))
-
-            # Save data to Google Sheets
             data_row = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                health_data['first_name'],
-                health_data['last_name'],
-                health_data['email'],
-                health_data['phone_number'],
-                health_data['language'],
                 health_data['business_name'],
-                health_data['user_type'],
                 health_data['income_revenue'],
                 health_data['expenses_costs'],
                 health_data['debt_loan'],
                 health_data['debt_interest_rate'],
-                health_score,
-                '',  # Badges (to be updated later)
-                0,   # Rank (to be updated later)
-                0    # Total Users (to be updated later)
+                str(health_data['auto_email']).lower(),
+                health_data['phone_number'],
+                health_data['first_name'],
+                health_data['last_name'],
+                health_data['user_type'],
+                health_data['email'],
+                '',  # badges
+                health_data['language']
             ]
+
+            # Log the data row for debugging
+            logger.debug(f"Health Score Form: data_row={data_row}, length={len(data_row)}")
+
+            # Validate data_row length
+            if len(data_row) != len(PREDETERMINED_HEADERS_HEALTH):
+                logger.error(f"Health Score Form: Data row length mismatch. Expected {len(PREDETERMINED_HEADERS_HEALTH)}, got {len(data_row)}: {data_row}")
+                flash(translations[language]['Error saving data. Invalid data format.'], 'error')
+                return redirect(url_for('health_score_form'))
+
             try:
                 if append_to_sheet(data_row, PREDETERMINED_HEADERS_HEALTH, 'Health'):
                     logger.info(f"Health data saved for {health_data['email']}")
@@ -1603,37 +1598,79 @@ def health_score_form():
                     flash(translations[language]['Error saving data. Please try again.'], 'error')
                     return redirect(url_for('health_score_form'))
             except Exception as e:
-                logger.error(f"Health Score Form: Failed to save data to Google Sheets: {e}")
+                logger.error(f"Health Score Form: Failed to save data to Google Sheets: {str(e)}")
                 flash(translations[language]['Error saving data. Please try again.'], 'error')
                 return redirect(url_for('health_score_form'))
 
-            # Store results in session for dashboard
+            # Rest of the route (calculate health score, etc.) remains unchanged
+            try:
+                user_df = pd.DataFrame([health_data])
+                user_df = calculate_health_score(user_df)
+                health_score = user_df['HealthScore'].iloc[0]
+                score_description = user_df['ScoreDescription'].iloc[0]
+                course_title = user_df['CourseTitle'].iloc[0]
+                course_url = user_df['CourseURL'].iloc[0]
+            except Exception as e:
+                logger.error(f"Health Score Form: Failed to calculate health score: {str(e)}")
+                flash(translations[language]['Error calculating health score. Please try again.'], 'error')
+                return redirect(url_for('health_score_form'))
+
+            try:
+                all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
+                all_users_df = calculate_health_score(all_users_df)
+                rank = sum(all_users_df['HealthScore'] > health_score) + 1
+                total_users = len(all_users_df)
+                badges = assign_badges_health(user_df, all_users_df)
+            except Exception as e:
+                logger.error(f"Health Score Form: Failed to calculate rank or badges: {str(e)}")
+                rank = 1
+                total_users = 1
+                badges = []
+
             session['health_results'] = {
-                'first_name': health_data['first_name'],
-                'email': health_data['email'],
-                'health_score': health_score,
-                'language': health_data['language'],
                 'business_name': health_data['business_name'],
-                'user_type': health_data['user_type'],
                 'income_revenue': health_data['income_revenue'],
                 'expenses_costs': health_data['expenses_costs'],
                 'debt_loan': health_data['debt_loan'],
-                'debt_interest_rate': health_data['debt_interest_rate']
+                'debt_interest_rate': health_data['debt_interest_rate'],
+                'email': health_data['email'],
+                'phone_number': health_data['phone_number'],
+                'first_name': health_data['first_name'],
+                'last_name': health_data['last_name'],
+                'user_type': health_data['user_type'],
+                'health_score': float(health_score),
+                'score_description': score_description,
+                'badges': badges,
+                'rank': int(rank),
+                'total_users': int(total_users),
+                'course_title': course_title,
+                'course_url': course_url
             }
-            session['dashboard_step'] = 1  # Start dashboard at step 1
-            session.modified = True
 
-            # Send email if auto_email matches email
-            if health_data['auto_email'] == health_data['email']:
+            if health_data['auto_email']:
                 try:
-                    send_health_email(health_data, health_score)
-                    logger.info(f"Health score email sent to {health_data['email']}")
+                    email_thread = threading.Thread(
+                        target=send_health_email_async,
+                        args=(
+                            health_data['email'],
+                            health_data['first_name'],
+                            health_score,
+                            score_description,
+                            rank,
+                            total_users,
+                            course_title,
+                            course_url,
+                            language
+                        )
+                    )
+                    email_thread.start()
+                    flash(translations[language]['Check Inbox'], 'info')
                 except Exception as e:
-                    logger.error(f"Health Score Form: Failed to send email to {health_data['email']}: {e}")
+                    logger.error(f"Health Score Form: Failed to start email thread for {health_data['email']}: {str(e)}")
                     flash(translations[language]['Failed to send email. You can still view your dashboard.'], 'warning')
 
             flash(translations[language]['Submission Success'], 'success')
-            return redirect(url_for('health_dashboard', step=1))
+            return redirect(url_for('health_dashboard'))
         else:
             logger.warning(f"Health Score Form: Form validation failed. Errors: {form.errors}")
             for field, errors in form.errors.items():
@@ -1647,7 +1684,9 @@ def health_score_form():
         language=language,
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
-        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL
     )
 
 def calculate_health_score_simple(data):
