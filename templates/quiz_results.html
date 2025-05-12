@@ -1,54 +1,50 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="{{ language }}">
+<!DOCTYPE html>
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans['Your Financial Personality'] }} - Ficore Africa</title>
+    <meta name="description" content="{{ trans.get('Discover your financial personality with Ficore Africa.', 'Discover your financial personality with Ficore Africa.') }}">
+    <meta name="keywords" content="ficore africa, financial personality, quiz results, financial literacy">
+    <meta name="author" content="Ficore Africa">
+    <title>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }} - Ficore Africa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        header {
+            background: linear-gradient(45deg, #2E7D32, #0288D1);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .logo-container img {
+            max-width: 200px;
+        }
         .result-container {
             text-align: center;
             padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 2px solid #0288D1;
         }
         .personality {
             font-size: 2em;
@@ -63,12 +59,16 @@
             margin: 5px;
             display: inline-block;
         }
-        .share-btn {
+        .share-btn, .action-btn {
             margin: 10px;
             padding: 10px 20px;
             border-radius: 5px;
             text-decoration: none;
             color: white;
+            transition: transform 0.2s ease;
+        }
+        .share-btn:hover, .action-btn:hover {
+            transform: scale(1.05);
         }
         .whatsapp-btn {
             background-color: #25D366;
@@ -78,68 +78,118 @@
         }
         .action-btn {
             background: linear-gradient(to right, #28a745, #007bff);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin: 10px;
-            display: inline-block;
-            text-decoration: none;
         }
         .chart-container {
             max-width: 600px;
             margin: 20px auto;
         }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #333;
+        }
+        .footer a {
+            color: #0288D1;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .social-icons a {
+            font-size: 1.2rem;
+            margin: 0 10px;
+            color: #0288D1;
+        }
+        .social-icons a:hover {
+            color: #2E7D32;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .result-container { padding: 15px; }
+            .personality { font-size: 1.5em; }
+            .share-btn, .action-btn { padding: 8px 16px; font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{ trans['Your Financial Personality'] }}</h1>
-    </header>
-    <main>
-        <div class="result-container">
-            <h2 class="personality">{{ results.personality }}</h2>
-            <p>{{ results.personality_desc }}</p>
-            <h3>{{ trans['Habits'] }}</h3>
-            <ul>
-                {% for question, answer in results.answers %}
-                    <li>{{ question }}: {{ answer }}</li>
-                {% endfor %}
-            </ul>
-            <h3>{{ trans['Personalized Tip'] }}</h3>
-            <p>{{ results.tip }}</p>
-            <h3>{{ trans['Your Badges'] }}</h3>
-            {% for badge in results.badges %}
-                <span class="badge">{{ badge }}</span>
-            {% endfor %}
-            {% if results.summary_chart %}
-                <div class="chart-container">
-                    {{ results.summary_chart | safe }}
+    <div class="container">
+        <header class="my-4">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
+            </div>
+            <h1>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</h1>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container my-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
+                        </div>
+                    {% endfor %}
                 </div>
             {% endif %}
-            <div>
-                <a href="https://api.whatsapp.com/send?text={{ trans['Your Financial Personality'] }}: {{ results.personality }} - {{ results.tip }}%0A{{ url_for('quiz', _external=True) }}"
-                   class="share-btn whatsapp-btn" target="_blank">{{ trans['Share on WhatsApp'] }}</a>
-                <a href="https://twitter.com/intent/tweet?text={{ trans['Your Financial Personality'] }}: {{ results.personality }} - {{ results.tip }}&url={{ url_for('quiz', _external=True) }}"
-                   class="share-btn twitter-btn" target="_blank">{{ trans['Share on Twitter'] }}</a>
-            </div>
-            <div>
-                <a href="{{ url_for('quiz') }}" class="action-btn">{{ trans['Retake Quiz'] }}</a>
-                {% if results.personality in ['Spender', 'Avoider'] %}
-                    <a href="{{ url_for('personal_info') }}" class="action-btn">{{ trans['Explore Budget Planner'] }}</a>
+        {% endwith %}
+
+        <main>
+            <div class="result-container">
+                <h2 class="personality">{{ results.personality }}</h2>
+                <p>{{ results.personality_desc }}</p>
+                <h3>{{ trans.get('Habits', 'Habits') }}</h3>
+                <ul>
+                    {% for question, answer in results.answers %}
+                        <li>{{ trans.get(question, question) }}: {{ trans.get(answer, answer) }}</li>
+                    {% endfor %}
+                </ul>
+                <h3>{{ trans.get('Personalized Tip', 'Personalized Tip') }}</h3>
+                <p>{{ results.tip }}</p>
+                <h3>{{ trans.get('Your Badges', 'Your Badges') }}</h3>
+                {% if results.badges %}
+                    {% for badge in results.badges %}
+                        <span class="badge">{{ trans.get(badge, badge) }}</span>
+                    {% endfor %}
                 {% else %}
-                    <a href="{{ url_for('health') }}" class="action-btn">{{ trans['Explore Financial Health Tool'] }}</a>
+                    <p>{{ trans.get('No Badges Yet', 'No badges earned yet. Keep improving!') }}</p>
                 {% endif %}
-                <a href="https://www.youtube.com/@FICORE.AFRICA" class="action-btn" target="_blank">{{ trans['Learn How to Be a Planner'] }}</a>
+                {% if results.summary_chart %}
+                    <div class="chart-container">
+                        {{ results.summary_chart | safe }}
+                    </div>
+                {% endif %}
+                <div>
+                    <a href="https://api.whatsapp.com/send?text={{ trans.get('Your Financial Personality', 'Your Financial Personality') }}: {{ results.personality }} - {{ results.tip }}%0A{{ url_for('quiz', _external=True) }}"
+                       class="share-btn whatsapp-btn" target="_blank">{{ trans.get('Share on WhatsApp', 'Share on WhatsApp') }}</a>
+                    <a href="https://twitter.com/intent/tweet?text={{ trans.get('Your Financial Personality', 'Your Financial Personality') }}: {{ results.personality }} - {{ results.tip }}&url={{ url_for('quiz', _external=True) }}"
+                       class="share-btn twitter-btn" target="_blank">{{ trans.get('Share on Twitter', 'Share on Twitter') }}</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('quiz') }}" class="action-btn">{{ trans.get('Retake Quiz', 'Retake Quiz') }}</a>
+                    {% if results.personality in ['Spender', 'Avoider'] %}
+                        <a href="{{ url_for('personal_info') }}" class="action-btn">{{ trans.get('Explore Budget Planner', 'Explore Budget Planner') }}</a>
+                    {% else %}
+                        <a href="{{ url_for('health') }}" class="action-btn">{{ trans.get('Explore Financial Health Tool', 'Explore Financial Health Tool') }}</a>
+                    {% endif %}
+                    <a href="https://www.youtube.com/@FICORE.AFRICA" class="action-btn" target="_blank">{{ trans.get('Learn How to Be a Planner', 'Learn How to Be a Planner') }}</a>
+                </div>
             </div>
-        </div>
-        <footer>
-            <p><a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans['Provide Feedback'] }}</a></p>
-            <p><a href="{{ WAITLIST_FORM_URL }}" target="_blank">{{ trans['Join Waitlist'] }}</a></p>
-            <p><a href="{{ CONSULTANCY_FORM_URL }}" target="_blank">{{ trans['Book Consultancy'] }}</a></p>
-            <p><a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-            <p><a href="{{ LINKEDIN_URL }}" target="_blank">{{ trans['Connect on LinkedIn'] }}</a></p>
-            <p><a href="{{ TWITTER_URL }}" target="_blank">{{ trans['Follow on Twitter'] }}</a></p>
+        </main>
+
+        <footer class="footer">
+            <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
+            <div class="social-icons">
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+            <p>
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+            </p>
         </footer>
-    </main>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
