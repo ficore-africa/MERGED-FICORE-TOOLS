@@ -709,42 +709,6 @@ def sanitize_input(text):
     text = re.sub(r'[<>";]', '', text.strip())[:100]
     return text
 
-def initialize_sheets(max_retries=5, backoff_factor=2):
-    global sheets
-    if not SPREADSHEET_ID or SPREADSHEET_ID == "None":
-        logger.critical("SPREADSHEET_ID is not set or invalid.")
-        return False
-    for attempt in range(max_retries):
-        try:
-            creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-            if not creds_json:
-                logger.critical("GOOGLE_CREDENTIALS_JSON not set.")
-                return False
-            creds_dict = json.loads(creds_json)
-            creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
-            client = gspread.authorize(creds)
-            sheets = client.open_by_key(SPREADSHEET_ID)
-            # Verify or set headers for 'Health' worksheet
-            set_sheet_headers(PREDETERMINED_HEADERS_HEALTH, 'Health')
-            logger.info("Successfully initialized Google Sheets.")
-            return True
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid GOOGLE_CREDENTIALS_JSON format: {e}")
-            return False
-        except gspread.exceptions.APIError as e:
-            logger.error(f"Google Sheets API error on attempt {attempt + 1}: {e}")
-            if attempt < max_retries - 1:
-                time.sleep(backoff_factor ** attempt)
-        except Exception as e:
-            logger.error(f"Attempt {attempt + 1} failed: {e}")
-            if attempt < max_retries - 1:
-                time.sleep(backoff_factor ** attempt)
-    logger.critical("Max retries exceeded for Google Sheets initialization.")
-    return False
-# Initialize Google Sheets at startup
-if not initialize_sheets():
-    raise RuntimeError("Failed to initialize Google Sheets at startup.")
-
 def get_sheets_client():
     global sheets
     if sheets is None:
@@ -816,6 +780,43 @@ def set_sheet_headers(headers, worksheet_name='Health'):
         logger.error(f"Unexpected error setting headers in worksheet '{worksheet_name}': {e}")
         return False
 
+def initialize_sheets(max_retries=5, backoff_factor=2):
+    global sheets
+    if not SPREADSHEET_ID or SPREADSHEET_ID == "None":
+        logger.critical("SPREADSHEET_ID is not set or invalid.")
+        return False
+    for attempt in range(max_retries):
+        try:
+            creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+            if not creds_json:
+                logger.critical("GOOGLE_CREDENTIALS_JSON not set.")
+                return False
+            creds_dict = json.loads(creds_json)
+            creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
+            client = gspread.authorize(creds)
+            sheets = client.open_by_key(SPREADSHEET_ID)
+            # Verify or set headers for 'Health' worksheet
+            set_sheet_headers(PREDETERMINED_HEADERS_HEALTH, 'Health')
+            logger.info("Successfully initialized Google Sheets.")
+            return True
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid GOOGLE_CREDENTIALS_JSON format: {e}")
+            return False
+        except gspread.exceptions.APIError as e:
+            logger.error(f"Google Sheets API error on attempt {attempt + 1}: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(backoff_factor ** attempt)
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(backoff_factor ** attempt)
+    logger.critical("Max retries exceeded for Google Sheets initialization.")
+    return False
+
+# Initialize Google Sheets at startup
+if not initialize_sheets():
+    raise RuntimeError("Failed to initialize Google Sheets at startup.")
+    
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def append_to_sheet(data, headers, worksheet_name='Health', max_retries=3, backoff_factor=2):
     for attempt in range(max_retries):
