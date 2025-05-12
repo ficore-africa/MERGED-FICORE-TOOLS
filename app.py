@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
+mail = Mail(app)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 if not app.config['SECRET_KEY']:
     logger.critical("FLASK_SECRET_KEY not set. Application will not start.")
@@ -1289,7 +1290,6 @@ def budget_step4():
         flash(translations[language].get('Session Expired', 'Your session has expired. Please start over.'), 'danger')
         return redirect(url_for('budget_step1'))
 
-    # Ensure all required data is present
     required_keys = ['first_name', 'email', 'language', 'housing_expenses', 'food_expenses', 'transport_expenses', 'other_expenses']
     for key in required_keys:
         if key not in session['budget_data']:
@@ -1313,13 +1313,11 @@ def budget_step4():
             })
             session.modified = True
 
-            # Calculate budget metrics
             budget_data = session['budget_data']
             monthly_income = budget_data.get('monthly_income', 0.0)
             savings = budget_data['savings_goal'] if budget_data['savings_goal'] > 0 else max(0, monthly_income * 0.1)
             surplus_deficit = monthly_income - total_expenses - savings
 
-            # Prepare chart data
             chart_data = {
                 'labels': ['Housing', 'Food', 'Transport', 'Other'],
                 'values': [
@@ -1334,7 +1332,6 @@ def budget_step4():
                 'values': [monthly_income, total_expenses, savings]
             }
 
-            # Save data to Google Sheets
             data_row = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 budget_data['first_name'],
@@ -1350,9 +1347,9 @@ def budget_step4():
                 total_expenses,
                 savings,
                 surplus_deficit,
-                '',  # badges (to be updated later)
-                0,   # rank (to be updated later)
-                0    # total_users (to be updated later)
+                '',  # badges
+                0,   # rank
+                0    # total_users
             ]
             try:
                 if append_to_sheet(data_row, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
@@ -1365,7 +1362,6 @@ def budget_step4():
                 flash(translations[language].get('Error saving data. Please try again.', 'Error saving data. Please try again.'), 'error')
                 return redirect(url_for('budget_step4'))
 
-            # Calculate badges and ranking
             try:
                 user_df = fetch_data_from_sheet(budget_data['email'], PREDETERMINED_HEADERS_BUDGET, 'Budget')
                 user_df = calculate_budget_metrics(user_df)
@@ -1380,7 +1376,6 @@ def budget_step4():
                 total_users = 0
                 rank = 0
 
-            # Store results in session
             session['budget_results'] = {
                 'first_name': budget_data['first_name'],
                 'email': budget_data['email'],
@@ -1402,7 +1397,6 @@ def budget_step4():
                 ]
             }
 
-            # Send email if auto_email is enabled
             if budget_data['auto_email']:
                 try:
                     send_budget_email(
@@ -1437,26 +1431,32 @@ def budget_step4():
 
 def send_budget_email(budget_data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
     """
-    Send a budget summary email to the user.
+    Send a budget summary email to the user using Flask-Mail.
     """
     try:
+        language = budget_data.get('language', 'en')
+        if language not in translations:
+            language = 'en'
+
         msg = Message(
-            subject=translations[budget_data['language']].get('Your Budget Summary', 'Your Budget Summary'),
+            subject=translations[language].get('Your Budget Summary', 'Your Budget Summary'),
             recipients=[budget_data['email']],
             html=render_template(
                 'budget_email.html',
-                trans=translations[budget_data['language']],
-                user_name=budget_data['first_name'],
+                trans=translations[language],
+                user_name=sanitize_input(budget_data.get('first_name', 'User')),
                 monthly_income=budget_data.get('monthly_income', 0.0),
+                housing_expenses=budget_data.get('housing_expenses', 0.0),
+                food_expenses=budget_data.get('food_expenses', 0.0),
+                transport_expenses=budget_data.get('transport_expenses', 0.0),
+                other_expenses=budget_data.get('other_expenses', 0.0),
                 total_expenses=total_expenses,
                 savings=savings,
                 surplus_deficit=surplus_deficit,
                 chart_data=chart_data,
                 bar_data=bar_data,
-                housing_expenses=budget_data.get('housing_expenses', 0.0),
-                food_expenses=budget_data.get('food_expenses', 0.0),
-                transport_expenses=budget_data.get('transport_expenses', 0.0),
-                other_expenses=budget_data.get('other_expenses', 0.0)
+                advice=budget_data.get('advice', []),  # Ensure advice is a list
+                badges=budget_data.get('badges', [])   # Ensure badges is a list
             )
         )
         mail.send(msg)
