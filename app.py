@@ -1220,6 +1220,10 @@ def budget_step2():
         logger.info(f"Step 2 completed for {session['budget_data']['email']}")
         return redirect(url_for('budget_step3'))
     
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{field.capitalize()}: {error}", 'danger')
+    
     return render_template(
         'budget_step2.html',
         form=form,
@@ -1467,12 +1471,26 @@ def budget_dashboard():
     if language not in translations:
         language = 'en'
         session['language'] = language
+        session.modified = True
 
     if 'budget_results' not in session:
         flash(translations[language]['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
 
     results = session['budget_results']
+    # Validate required fields
+    required_fields = [
+        'monthly_income', 'housing_expenses', 'food_expenses', 'transport_expenses',
+        'other_expenses', 'total_expenses', 'savings', 'surplus_deficit', 'badges', 'advice'
+    ]
+    for field in required_fields:
+        if field not in results:
+            logger.error(f"Missing field '{field}' in budget_results: {results}")
+            flash(translations[language]['Error retrieving data. Please try again.'], 'error')
+            return redirect(url_for('budget_step1'))
+
+    logger.debug(f"Rendering budget_dashboard with results: {results}")
+
     user_df = fetch_data_from_sheet(results['email'], PREDETERMINED_HEADERS_BUDGET, 'Budget')
     all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
 
@@ -1488,27 +1506,11 @@ def budget_dashboard():
             'total_users': total_users
         })
 
-        chart_data = {
-            'labels': ['Housing', 'Food', 'Transport', 'Other'],
-            'values': [
-                results['housing_expenses'],
-                results['food_expenses'],
-                results['transport_expenses'],
-                results['other_expenses']
-            ]
-        }
-        bar_data = {
-            'labels': ['Income', 'Expenses', 'Savings'],
-            'values': [results['monthly_income'], results['total_expenses'], results['savings']]
-        }
-
         return render_template(
             'budget_dashboard.html',
-            trans=translations[language],  # Already correct
-            language=language,  # Added
+            trans=translations[language],
+            language=language,
             results=results,
-            chart_data=chart_data,
-            bar_data=bar_data,
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
             WAITLIST_FORM_URL=WAITLIST_FORM_URL,
             CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
