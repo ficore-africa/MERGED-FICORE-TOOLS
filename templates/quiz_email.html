@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="{{ language }}">
+<!DOCTYPE html>
+<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans['Quiz Report Subject'] }}</title>
+    <title>{{ trans.get('Quiz Report Subject', 'Your Financial Personality Report') }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -84,30 +45,40 @@
             border-radius: 5px;
             margin: 10px 0;
         }
+        .footer a {
+            color: #0288D1;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        @media only screen and (max-width: 600px) {
+            .container { padding: 10px; }
+            .header, .content, .footer { padding: 10px; }
+            .button { padding: 8px 16px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ trans['Your Financial Personality'] }}</h1>
+            <h1>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</h1>
         </div>
         <div class="content">
-            <p>{{ trans['Dear'] }} {{ user_name }},</p>
-            <p>{{ trans['Here is your monthly budget summary.'] }}</p>
-            <h2>{{ trans['Your Financial Personality'] }}: {{ personality }}</h2>
+            <p>{{ trans.get('Dear', 'Dear') }} {{ user_name }},</p>
+            <p>{{ trans.get('Thank you for completing the Financial Personality Quiz. Here is your personalized report.', 'Thank you for completing the Financial Personality Quiz. Here is your personalized report.') }}</p>
+            <h2>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}: {{ personality }}</h2>
             <p>{{ personality_desc }}</p>
-            <h3>{{ trans['Personalized Tip'] }}</h3>
+            <h3>{{ trans.get('Personalized Tip', 'Personalized Tip') }}</h3>
             <p>{{ tip }}</p>
-            <p><a href="{{ url_for('quiz', _external=True) }}" class="button">{{ trans['Retake Quiz'] }}</a></p>
-            <p>{{ trans['Thank you for choosing Ficore Africa!'] }}</p>
+            <p><a href="{{ url_for('quiz', _external=True) }}" class="button">{{ trans.get('Retake Quiz', 'Retake Quiz') }}</a></p>
+            <p>{{ trans.get('Thank you for choosing Ficore Africa!', 'Thank you for choosing Ficore Africa!') }}</p>
         </div>
         <div class="footer">
-            <p><a href="{{ FEEDBACK_FORM_URL }}">{{ trans['Provide Feedback'] }}</a></p>
-            <p><a href="{{ WAITLIST_FORM_URL }}">{{ trans['Join Waitlist'] }}</a></p>
-            <p><a href="{{ CONSULTANCY_FORM_URL }}">{{ trans['Book Consultancy'] }}</a></p>
-            <p><a href="{{ LINKEDIN_URL }}">{{ trans['Connect on LinkedIn'] }}</a></p>
-            <p><a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-            <p><a href="{{ TWITTER_URL }}">{{ trans['Follow on Twitter'] }}</a></p>
+            <p><a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a></p>
+            <p><a href="{{ WAITLIST_FORM_URL }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a></p>
+            <p><a href="{{ CONSULTANCY_FORM_URL }}">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a></p>
+            <p><a href="{{ LINKEDIN_URL }}">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a></p>
+            <p><a href="{{ FACEBOOK_URL }}">{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}</a></p>
+            <p><a href="{{ TWITTER_URL }}">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a></p>
         </div>
     </div>
 </body>
