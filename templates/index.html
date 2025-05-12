@@ -395,7 +395,7 @@
     <section class="hero">
         <h2>Your All-in-One Toolkit for Personal & SME Financial Health Across Africa</h2>
         <p>Track income, calculate net worth, plan budgets, and grow with confidence.</p>
-        <a href="{{ url_for('health_score_form') }}" class="cta-button">Get Your Free Financial Health Score</a>
+        <a href="{{ url_for('health_score') }}" class="cta-button">Get Your Free Financial Health Score</a>
     </section>
 
     <section class="tools-section">
@@ -404,7 +404,7 @@
             <div class="tool-card">
                 <h3>{{ trans['Financial Health Score'] or 'Financial Health Score' }}</h3>
                 <p>{{ trans['Your Financial Health Summary'] or 'Evaluates income, expenses, and debt for a health score' }}</p>
-                <a href="{{ url_for('health_score_form') }}" aria-label="{{ trans['Start Financial Health Score Assessment'] or 'Start Financial Health Score Assessment' }}">{{ trans['Start'] or 'Start' }}</a>
+                <a href="{{ url_for('health_score') }}" aria-label="{{ trans['Start Financial Health Score Assessment'] or 'Start Financial Health Score Assessment' }}">{{ trans['Start'] or 'Start' }}</a>
             </div>
             <div class="tool-card">
                 <h3>{{ trans['Monthly Budget Planner'] or 'Monthly Budget Planner' }}</h3>
