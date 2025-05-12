@@ -1467,7 +1467,11 @@ def send_budget_email(to_email, user_name, user_data, language):
     except Exception as e:
         logger.error(f"Error sending budget email to {to_email}: {e}")
         return False
-
+        
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/x-icon')
+    
 # Error Handlers
 @app.errorhandler(404)
 def page_not_found(e):
