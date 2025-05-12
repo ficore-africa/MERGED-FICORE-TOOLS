@@ -1385,7 +1385,7 @@ def budget_dashboard():
 @app.route('/health_score', methods=['GET', 'POST'])
 def health_score():
     language = session.get('language', 'en')
-    form = HealthScoreForm(language=language)
+    form = HealthScore(language=language)
     if form.validate_on_submit():
         session['health_data'] = {
             'first_name': sanitize_input(form.first_name.data),
