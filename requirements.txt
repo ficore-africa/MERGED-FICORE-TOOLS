@@ -17,3 +17,4 @@ Flask==3.1.0
 email_validator==2.2.0
 flask-session==0.6.0  # Add
 tenacity>=8.2.3
+flask-mail
