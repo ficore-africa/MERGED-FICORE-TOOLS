@@ -45,26 +45,31 @@
         .navbar form {
             display: flex;
             align-items: center;
-            margin-right: 20px; /* Added padding from edge */
+            margin-right: 20px;
         }
         .navbar select {
             padding: 8px;
             border-radius: 5px;
             border: 2px solid #0288D1;
             margin-right: 10px;
-            min-width: 100px; /* Ensure minimum width for visibility */
+            min-width: 100px;
         }
-        .navbar button {
+        .navbar .refresh-button {
             padding: 8px 15px;
             border: none;
             border-radius: 5px;
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             cursor: pointer;
-            white-space: nowrap; /* Prevent text wrapping */
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
         }
-        .navbar button:hover {
+        .navbar .refresh-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
+        }
+        .navbar .refresh-button i {
+            margin-right: 5px;
         }
         .hero {
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/images/hero-bg.jpg');
@@ -226,7 +231,7 @@
             vertical-align: middle;
         }
         .testimonials-section .testimonial span.name {
-            color: #2E7D32; /* Added color to names */
+            color: #2E7D32;
             font-weight: bold;
         }
         .recommended-learning {
@@ -374,13 +379,17 @@
 <body>
     <nav class="navbar">
         <h1>Ficore Africa</h1>
-        <form action="{{ url_for('change_language') }}" method="POST">
-            <select name="language" onchange="this.form.submit()" aria-label="{{ translations['Choose your language'] or 'Choose your language' }}">
-                <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
-                <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
-            </select>
-            <button type="submit">{{ translations['Refresh'] or 'Refresh' }}</button>
-        </form>
+        <div style="display: flex; align-items: center;">
+            <form action="{{ url_for('change_language') }}" method="POST" style="margin-right: 20px;">
+                <select name="language" onchange="this.form.submit()" aria-label="{{ translations['Choose your language'] or 'Choose your language' }}">
+                    <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
+                    <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
+                </select>
+            </form>
+            <button class="refresh-button" onclick="window.location.reload()" title="Reload the page">
+                <i class="fas fa-sync-alt"></i> {{ translations['Refresh'] or 'Refresh' }}
+            </button>
+        </div>
     </nav>
 
     <section class="hero">
@@ -490,3 +499,5 @@
             document.querySelector('.tools-section').appendChild(tipElement);
         });
     </script>
+</body>
+</html>
