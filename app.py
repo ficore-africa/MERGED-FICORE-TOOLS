@@ -5,6 +5,7 @@ import json
 import threading
 import time
 import re
+from jinja2 import Environment
 import zlib
 from datetime import datetime
 from flask import Flask, render_template, request, flash, redirect, url_for, session, send_from_directory, make_response
@@ -39,6 +40,12 @@ app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 if not app.config['SECRET_KEY']:
     logger.critical("FLASK_SECRET_KEY not set. Application will not start.")
     raise RuntimeError("FLASK_SECRET_KEY environment variable not set.")
+    
+# Enable the zip filter in Jinja2
+def zip_filter(*args, **kwargs):
+    return zip(*args, **kwargs)
+
+app.jinja_env.filters['zip'] = zip_filter
 
 # Validate critical environment variables
 required_env_vars = ['SMTP_SERVER', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD', 'SPREADSHEET_ID', 'GOOGLE_CREDENTIALS_JSON']
