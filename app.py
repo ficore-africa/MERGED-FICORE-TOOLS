@@ -1275,7 +1275,7 @@ def budget_step4():
 
     if 'budget_data' not in session:
         logger.warning("Step 4: Session data missing.")
-        flash(translations[language]['Session Expired'], 'danger')
+        flash(translations[language].get('Session Expired', 'Your session has expired. Please start over.'), 'danger')
         return redirect(url_for('budget_step1'))
 
     # Ensure all required data is present
@@ -1283,7 +1283,7 @@ def budget_step4():
     for key in required_keys:
         if key not in session['budget_data']:
             logger.error(f"Step 4: Missing key '{key}' in budget_data: {session['budget_data']}")
-            flash(translations[language]['Incomplete Data'], 'danger')
+            flash(translations[language].get('Incomplete Data', 'Incomplete data. Please complete previous steps.'), 'danger')
             return redirect(url_for('budget_step3'))
 
     total_expenses = (
@@ -1348,10 +1348,10 @@ def budget_step4():
                     logger.info(f"Budget data saved for {budget_data['email']}")
                 else:
                     logger.error(f"Failed to save budget data for {budget_data['email']}")
-                    flash(translations[language]['Error saving data. Please try again.'], 'error')
+                    flash(translations[language].get('Error saving data. Please try again.', 'Error saving data. Please try again.'), 'error')
             except Exception as e:
                 logger.error(f"Step 4: Failed to save data to Google Sheets: {e}")
-                flash(translations[language]['Error saving data. Please try again.'], 'error')
+                flash(translations[language].get('Error saving data. Please try again.', 'Error saving data. Please try again.'), 'error')
                 return redirect(url_for('budget_step4'))
 
             # Calculate badges and ranking
@@ -1364,7 +1364,7 @@ def budget_step4():
                 rank = total_users  # Simplified ranking
             except Exception as e:
                 logger.error(f"Step 4: Failed to calculate badges or ranking: {e}")
-                flash(translations[language]['Error calculating badges. Proceeding to dashboard.'], 'warning')
+                flash(translations[language].get('Error calculating badges. Proceeding to dashboard.', 'Error calculating badges. Proceeding to dashboard.'), 'warning')
                 badges = []
                 total_users = 0
                 rank = 0
@@ -1385,9 +1385,9 @@ def budget_step4():
                 'rank': rank,
                 'total_users': total_users,
                 'advice': [
-                    translations[language]['Great job! Save or invest your surplus to grow your wealth.']
+                    translations[language].get('Great job! Save or invest your surplus to grow your wealth.', 'Great job! Save or invest your surplus to grow your wealth.')
                     if surplus_deficit >= 0
-                    else translations[language]['Reduce non-essential spending to balance your budget.']
+                    else translations[language].get('Reduce non-essential spending to balance your budget.', 'Reduce non-essential spending to balance your budget.')
                 ]
             }
 
@@ -1405,9 +1405,9 @@ def budget_step4():
                     logger.info(f"Budget email sent to {budget_data['email']}")
                 except Exception as e:
                     logger.error(f"Step 4: Failed to send budget email to {budget_data['email']}: {e}")
-                    flash(translations[language]['Failed to send email. You can still view your dashboard.'], 'warning')
+                    flash(translations[language].get('Failed to send email. You can still view your dashboard.', 'Failed to send email. You can still view your dashboard.'), 'warning')
 
-            flash(translations[language]['Submission Success'], 'success')
+            flash(translations[language].get('Submission Success', 'Your submission was successful!'), 'success')
             return redirect(url_for('budget_dashboard'))
         else:
             logger.warning(f"Step 4: Form validation failed. Errors: {form.errors}")
@@ -1425,6 +1425,9 @@ def budget_step4():
     )
 
 def send_budget_email(budget_data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
+    """
+    Send a budget summary email to the user.
+    """
     try:
         msg = Message(
             subject=translations[budget_data['language']].get('Your Budget Summary', 'Your Budget Summary'),
@@ -1438,7 +1441,11 @@ def send_budget_email(budget_data, total_expenses, savings, surplus_deficit, cha
                 savings=savings,
                 surplus_deficit=surplus_deficit,
                 chart_data=chart_data,
-                bar_data=bar_data
+                bar_data=bar_data,
+                housing_expenses=budget_data.get('housing_expenses', 0.0),
+                food_expenses=budget_data.get('food_expenses', 0.0),
+                transport_expenses=budget_data.get('transport_expenses', 0.0),
+                other_expenses=budget_data.get('other_expenses', 0.0)
             )
         )
         mail.send(msg)
