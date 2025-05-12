@@ -3,231 +3,624 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</title>
+    <meta name="description" content="{{ trans.get('Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.', 'Track your financial health with Ficore Africa. See your score, earn badges, and get smart insights.') }}">
+    <meta name="keywords" content="ficore africa, financial health, dashboard, Africa SME finance, smart insights">
+    <meta name="author" content="Ficore Africa">
+    <title>{{ trans.get('Ficore Africa - Your Financial Health Dashboard', 'Ficore Africa - Your Financial Health Dashboard') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        .header { background: linear-gradient(135deg, #2E7D32, #0288D1); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header h2 { color: #FFFFFF; margin: 0; }
-        .header p { font-style: italic; color: #E0F7FA; font-size: 0.9rem; margin: 5px 0 0 0; }
-        .dashboard-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0; transform: translateY(20px); }
-        .dashboard-card.slide-in { opacity: 1; transform: translateY(0); }
-        .progress { height: 10px; margin-bottom: 20px; background: #e9ecef; border-radius: 5px; }
-        .progress-bar { background: #2E7D32; transition: width 0.3s ease; }
-        .btn-primary { background: linear-gradient(135deg, #2E7D32, #0288D1); border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; }
-        .btn-primary:hover { transform: scale(1.05); background: linear-gradient(135deg, #1B5E20, #01579B); }
-        .btn-secondary { background: #6c757d; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; color: white; transition: transform 0.2s ease; margin-right: 10px; }
-        .btn-secondary:hover { transform: scale(1.05); background: #5a6268; }
-        .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
-        .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
-        .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
-        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .summary-box:hover, .badges-box:hover, .tips-box:hover, .chart-box:hover { transform: scale(1.02); }
-        .section-header { color: #2E7D32; font-weight: 600; margin-bottom: 15px; }
-        .badge-item, .tip-item { margin-bottom: 10px; }
-        .badge-item strong, .tip-item strong { color: #0288D1; }
-        .deficit { color: #D32F2F; font-weight: 600; }
-        .chart-container { position: relative; height: 300px; width: 100%; margin: 0 auto; }
-        .text-center { margin-top: 20px; }
-        .info-icon { cursor: pointer; color: #0288D1; margin-left: 5px; }
-        .info-icon:hover { color: #2E7D32; }
-        .tooltip-text { visibility: hidden; width: 220px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; }
-        .info-icon:hover .tooltip-text, .info-icon.active .tooltip-text { visibility: visible; opacity: 1; }
-        .footer { text-align: center; margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
-        .footer p { margin: 0; color: #0288D1; }
-        .footer-links a { color: #2E7D32; margin: 0 10px; text-decoration: none; }
-        .footer-links a:hover { text-decoration: underline; }
-        .social-icons a { color: #0288D1; margin: 0 8px; font-size: 1.2rem; }
-        .social-icons a:hover { color: #2E7D32; }
-        @media (max-width: 576px) {
-            .container { padding: 10px; }
-            .dashboard-card { padding: 1rem; }
-            .summary-box, .badges-box, .tips-box, .chart-box { padding: 15px; }
-            .btn-primary, .btn-secondary { font-size: 1rem; }
-            .chart-container { height: 250px; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #E3F2FD, #F5F7FA);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        header {
+            background: linear-gradient(45deg, #2E7D32, #0288D1);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .logo-container {
+            margin-bottom: 1rem;
+        }
+        .logo-container img {
+            max-width: 200px;
+        }
+        .progress-tracker {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .step {
+            width: 35px;
+            height: 35px;
+            background: #E0E0E0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .step.active {
+            background: #2E7D32;
+            color: white;
+        }
+        .step.completed {
+            background: #0288D1;
+            color: white;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border: 2px solid #0288D1;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-header {
+            background: linear-gradient(135deg, #2E7D32, #0288D1);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .card-body.light-blue {
+            background: #E3F2FD;
+        }
+        .info-box {
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            background: #F5F7FA;
+        }
+        .score-box {
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+            border-radius: 8px;
+            background: #E3F2FD;
+            color: #2E7D32;
+        }
+        .badge-box {
+            background: #E3F2FD;
+            border: 2px solid #0288D1;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .learning-box {
+            background: #FFF3E0;
+            border: 2px solid #0288D1;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tips-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #F5F7FA;
+            border-radius: 8px;
+        }
+        .badge {
+            background: #0288D1;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.95rem;
+            transition: transform 0.3s ease;
+            border: 1px solid #01579B;
+            cursor: pointer;
+        }
+        .badge:hover {
+            transform: scale(1.1);
+        }
+        .btn-primary, .btn-secondary, .btn-back {
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2E7D32, #0288D1);
+            border: none;
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #1B5E20, #01579B);
+        }
+        .btn-primary:not(.no-arrow)::after {
+            content: '→';
+            margin-left: 8px;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #B0BEC5, #78909C);
+            border: none;
+            color: white;
+        }
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #90A4AE, #607D8B);
+        }
+        .btn-secondary::after {
+            content: '←';
+            margin-right: 8px;
+        }
+        .btn-back {
+            background: #6c757d;
+            border: none;
+            color: white;
+        }
+        .btn-back:hover {
+            transform: scale(1.05);
+            background: #5a6268;
+        }
+        .course-link, .enroll-button {
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #0288D1;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .course-link:hover, .enroll-button:hover {
+            transform: scale(1.05);
+            background: #01579B;
+        }
+        .try-it-btn, .voice-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: transform 0.3s ease;
+            color: white;
+        }
+        .try-it-btn {
+            background: #2E7D32;
+        }
+        .try-it-btn:hover {
+            transform: scale(1.05);
+            background: #1B5E20;
+        }
+        .voice-btn {
+            background: #0288D1;
+        }
+        .voice-btn:hover {
+            transform: scale(1.05);
+            background: #01579B;
+        }
+        .email-btn {
+            background: #0288D1;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .email-btn:hover {
+            transform: scale(1.05);
+            background: #01579B;
+        }
+        .chart-container {
+            min-height: 300px;
+            max-width: 100%;
+        }
+        #score-breakdown-chart, #compare-others-chart {
+            width: 100%;
+            height: 300px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #333;
+        }
+        .footer a {
+            color: #0288D1;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .social-icons a {
+            font-size: 1.2rem;
+            margin: 0 10px;
+            color: #0288D1;
+        }
+        .social-icons a:hover {
+            color: #2E7D32;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card-header { font-size: 1.4rem; padding: 1rem; }
+            .card-body { padding: 1rem; }
+            .info-box, .score-box, .badge-box, .learning-box { font-size: 0.9rem; padding: 8px; }
+            .tips-list li { font-size: 0.9rem; padding: 8px; }
+            .btn-primary, .btn-secondary, .btn-back { padding: 10px 20px; font-size: 0.9rem; }
+            .badge { font-size: 0.8rem; padding: 6px 10px; }
+            #score-breakdown-chart, #compare-others-chart { height: 220px; }
+            .progress-tracker { gap: 10px; }
+            .step { width: 30px; height: 30px; font-size: 1rem; }
+            .email-btn { font-size: 0.85rem; padding: 6px 12px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</h2>
-            <p>{{ trans.get('Financial growth passport for Africa', 'Financial growth passport for Africa') }}</p>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
+        <header class="my-4">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
+            </div>
+            <h1>{{ trans.get('Your Financial Health Dashboard', 'Your Financial Health Dashboard') }}</h1>
+        </header>
+
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <!-- Debug block for development (optional) -->
-        {% if debug %}
-        <pre>
-        Variables passed to template:
-        {{ dict(trans=trans, user_data=user_data, badges=badges, rank=rank, total_users=total_users) | pprint }}
-        </pre>
-        {% endif %}
-        <div class="dashboard-card slide-in">
-            <div class="summary-box" aria-labelledby="summary-header">
-                <h3 id="summary-header" class="section-header">{{ trans.get('Summary with Emoji', 'Summary with Emoji') }}</h3>
-                <ul>
-                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ user_data.monthly_income | default(0.0) | format_currency('NGN') }}
-                        {% if user_data.monthly_income | default(0.0) == 0.0 %}
-                            <span class="text-warning"> (Warning: No income recorded!)</span>
-                        {% endif %}
-                    </li>
-                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ user_data.housing_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ user_data.food_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ user_data.transport_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ user_data.other_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ user_data.total_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Savings', 'Savings') }}:</strong> {{ user_data.savings | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Balance', 'Balance') }}:</strong> <span {% if user_data.surplus_deficit | default(0.0) < 0 %}class="deficit"{% endif %}>{{ user_data.surplus_deficit | default(0.0) | format_currency('NGN') }}</span>
-                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Income minus expenses and savings goal.', 'Income minus expenses and savings goal.') }}</span></span>
-                    </li>
-                </ul>
-            </div>
-            <div class="chart-box" aria-labelledby="chart-header">
-                <h3 id="chart-header" class="section-header">{{ trans.get('Expense Breakdown', 'Expense Breakdown') }}</h3>
-                <div class="chart-container">
-                    <canvas id="expenseChart" aria-label="{{ trans.get('Pie chart of expense breakdown', 'Pie chart of expense breakdown') }}"></canvas>
-                </div>
-            </div>
-            <div class="badges-box" aria-labelledby="badges-header">
-                <h3 id="badges-header" class="section-header">{{ trans.get('Badges', 'Badges') }}</h3>
-                {% if badges %}
-                    {% for badge in badges %}
-                        <div class="badge-item" aria-label="{{ trans.get(badge, badge) }}">
-                            <strong>{{ trans.get(badge, badge) }}</strong>
-                            <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Earned for managing your budget effectively.', 'Earned for managing your budget effectively.') }}</span></span>
+                <div class="alert-container my-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
                         </div>
                     {% endfor %}
-                {% else %}
-                    <p>{{ trans.get('No badges earned yet.', 'No badges earned yet.') }}</p>
-                {% endif %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Progress Tracker -->
+        <div class="progress-tracker">
+            {% for i in range(1, 7) %}
+                <div class="step {% if step > i %}completed{% elif step == i %}active{% endif %}">{{ i }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- Step 1: Welcome and Financial Health Score -->
+        {% if step == 1 %}
+            <div class="card">
+                <div class="card-header">🎉 {{ trans.get('Welcome', 'Welcome') }}, {{ first_name }}!</div>
+                <div class="card-body light-blue">
+                    <div class="info-box">{{ trans.get('Submission Success', 'Your financial health data has been successfully submitted.') }}</div>
+                    <div class="info-box">{{ trans.get('Email', 'Email') }}: {{ email }}</div>
+                    <div class="score-box">
+                        <h3>⭐ {{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}</h3>
+                        <p>{{ health_score|round(1) }}/100</p>
+                    </div>
+                    <div class="info-box">{{ trans.get('Ranked', 'Ranked') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}</div>
+                    <div class="info-box">
+                        {% if health_score >= 75 %}
+                            {{ trans.get('Strong Financial Health', 'Strong Financial Health') }}
+                        {% elif health_score >= 50 %}
+                            {{ trans.get('Stable Finances', 'Stable Finances') }}
+                        {% elif health_score >= 25 %}
+                            {{ trans.get('Financial Strain', 'Financial Strain') }}
+                        {% else %}
+                            {{ trans.get('Urgent Attention Needed', 'Urgent Attention Needed') }}
+                        {% endif %}
+                    </div>
+                    <div class="info-box">{{ trans.get('Check Inbox', 'Check your inbox for a detailed report.') }}</div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
             </div>
-            <div class="tips-box" aria-labelledby="tips-header">
-                <h3 id="tips-header" class="section-header">{{ trans.get('Tips', 'Tips') }}</h3>
-                {% if user_data.advice %}
-                    {% if user_data.advice is string %}
-                        <div class="tip-item" aria-describedby="tip-1">
-                            <strong>{{ trans.get('Tip', 'Tip') }} 1:</strong> {{ trans.get(user_data.advice, user_data.advice) }}
-                            <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Actionable advice to improve your budget.', 'Actionable advice to improve your budget.') }}</span></span>
+        {% endif %}
+
+        <!-- Step 2: Score Breakdown -->
+        {% if step == 2 %}
+            <div class="card">
+                <div class="card-header">📊 {{ trans.get('Score Breakdown', 'Score Breakdown') }}</div>
+                <div class="card-body light-blue">
+                    {% if breakdown_plot %}
+                        <div class="chart-container">
+                            <div id="score-breakdown-chart"></div>
                         </div>
                     {% else %}
-                        {% for tip in user_data.advice %}
-                            <div class="tip-item" aria-describedby="tip-{{ loop.index }}">
-                                <strong>{{ trans.get('Tip', 'Tip') }} {{ loop.index }}:</strong> {{ trans.get(tip, tip) }}
-                                <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Actionable advice to improve your budget.', 'Actionable advice to improve your budget.') }}</span></span>
-                            </div>
-                        {% endfor %}
+                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
                     {% endif %}
-                {% else %}
-                    <p>{{ trans.get('No tips available.', 'No tips available.') }}</p>
-                {% endif %}
+                    <div class="score-box">
+                        <h4>{{ trans.get('Score Composition', 'Score Composition') }}:</h4>
+                        <ul>
+                            <li><strong>{{ trans.get('Cash Flow', 'Cash Flow') }}</strong>: {{ (user_data['income_revenue'] - user_data['expenses_costs'])|round(2) }} ₦</li>
+                            <li><strong>{{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}</strong>: {{ ((user_data['debt_loan'] / user_data['income_revenue'] * 100) if user_data['income_revenue'] > 0 else 0)|round(1) }}%</li>
+                            <li><strong>{{ trans.get('Debt Interest Burden', 'Debt Interest Burden') }}</strong>: {{ trans.get('Debt Interest Description', 'Based on your debt interest rate.') }}</li>
+                        </ul>
+                        <p>
+                            {% if health_score >= 75 %}
+                                {{ trans.get('Balanced Components', 'Your financial components are well-balanced.') }}
+                            {% elif health_score >= 50 %}
+                                {{ trans.get('Components Need Attention', 'Some components need attention to improve your score.') }}
+                            {% else %}
+                                {{ trans.get('Components Indicate Challenges', 'Your components indicate financial challenges.') }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=1) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
             </div>
-            <div class="text-center">
-                <a href="{{ url_for('budget_step4') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Savings & Review', 'Back to Savings & Review') }}">{{ trans.get('Back', 'Back') }}</a>
-                <a href="{{ course_url | default('') }}" class="btn btn-primary" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">{{ trans.get('Join Course', 'Join Course') }}</a>
+        {% endif %}
+
+        <!-- Step 3: Badges and Recommended Learning -->
+        {% if step == 3 %}
+            <div class="card">
+                <div class="card-header">🏅 {{ trans.get('Your Badges', 'Your Badges') }}</div>
+                <div class="card-body">
+                    <div class="badge-box">
+                        {% if badges %}
+                            {% for badge in badges %}
+                                <span class="badge" onclick="alert('{{ trans.get(badge, badge) }}: {{ trans.get('Congratulations!', 'Congratulations!') }}')" aria-label="{{ trans.get(badge, badge) }}">{{ trans.get(badge, badge) }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <p>{{ trans.get('No Badges Yet', 'No badges earned yet. Keep improving!') }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="learning-box">
+                        <h3>📚 {{ trans.get('Recommended Learning', 'Recommended Learning') }}</h3>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="{{ course_url }}" target="_blank" class="course-link" aria-label="{{ trans.get('View Course', 'View Course') }}">{{ course_title or trans.get('Financial Health Course', 'Financial Health Course') }}</a>
+                            <a href="{{ course_url }}" target="_blank" class="enroll-button" aria-label="{{ trans.get('Enroll Now', 'Enroll Now') }}">{{ trans.get('Enroll Now', 'Enroll Now') }}</a>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
             </div>
-        </div>
+        {% endif %}
+
+        <!-- Step 4: Quick Financial Tips -->
+        {% if step == 4 %}
+            <div class="card">
+                <div class="card-header">💡 {{ trans.get('Quick Financial Tips', 'Quick Financial Tips') }}</div>
+                <div class="card-body">
+                    <ul class="tips-list learning-box">
+                        {% if health_score >= 75 %}
+                            <li>
+                                <span><strong>{{ trans.get('Invest', 'Invest') }}</strong>: {{ trans.get('Invest Wisely', 'Consider investing surplus funds wisely.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Explore investment options.', 'Explore investment options.') }}')" aria-label="{{ trans.get('Try Investing', 'Try Investing') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ trans.get('Scale', 'Scale') }}</strong>: {{ trans.get('Scale Smart', 'Scale your business or finances smartly.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Plan for scalable growth.', 'Plan for scalable growth.') }}')" aria-label="{{ trans.get('Try Scaling', 'Try Scaling') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                        {% elif health_score >= 50 %}
+                            <li>
+                                <span><strong>{{ trans.get('Build', 'Build') }}</strong>: {{ trans.get('Build Savings', 'Focus on building your savings.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Start a savings plan.', 'Start a savings plan.') }}')" aria-label="{{ trans.get('Try Building Savings', 'Try Building Savings') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ trans.get('Cut', 'Cut') }}</strong>: {{ trans.get('Cut Costs', 'Identify and cut unnecessary costs.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Review your expenses.', 'Review your expenses.') }}')" aria-label="{{ trans.get('Try Cutting Costs', 'Try Cutting Costs') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                        {% else %}
+                            <li>
+                                <span><strong>{{ trans.get('Reduce', 'Reduce') }}</strong>: {{ trans.get('Reduce Debt', 'Prioritize reducing your debt.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Create a debt repayment plan.', 'Create a debt repayment plan.') }}')" aria-label="{{ trans.get('Try Reducing Debt', 'Try Reducing Debt') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                            <li>
+                                <span><strong>{{ trans.get('Boost', 'Boost') }}</strong>: {{ trans.get('Boost Income', 'Explore ways to boost your income.') }}</span>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Consider side hustles or new revenue streams.', 'Consider side hustles or new revenue streams.') }}')" aria-label="{{ trans.get('Try Boosting Income', 'Try Boosting Income') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('health_score_submit', step=5) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 5: How You Compare to Others -->
+        {% if step == 5 %}
+            <div class="card">
+                <div class="card-header">⚖️ {{ trans.get('How You Compare', 'How You Compare') }}</div>
+                <div class="card-body light-blue">
+                    {% if comparison_plot %}
+                        <div class="chart-container">
+                            <div id="compare-others-chart"></div>
+                        </div>
+                    {% else %}
+                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
+                    {% endif %}
+                    <div class="info-box">
+                        {{ trans.get('Your Rank', 'Your Rank') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }} {{ trans.get('places you', 'places you') }}:
+                        {% if rank <= total_users * 0.1 %}
+                            {{ trans.get('Top 10%', 'Top 10%') }}
+                        {% elif rank <= total_users * 0.3 %}
+                            {{ trans.get('Top 30%', 'Top 30%') }}
+                        {% elif rank <= total_users * 0.7 %}
+                            {{ trans.get('Middle Range', 'Middle Range') }}
+                        {% else %}
+                            {{ trans.get('Lower Range', 'Lower Range') }}
+                        {% endif %}
+                        {{ trans.get('Regular Submissions', 'Regular submissions can improve your ranking.') }}
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('health_score_submit', step=6) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Step 6: What’s Next? -->
+        {% if step == 6 %}
+            <div class="card">
+                <div class="card-header">🔓 {{ trans.get('Whats Next', 'What’s Next?') }}</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                        <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+                        <a href="{{ WAITLIST_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+                        <a href="{{ CONSULTANCY_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a>
+                    </div>
+                    <div class="info-box">
+                        {{ trans.get('Contact Us', 'Contact Us') }} 
+                        <a href="mailto:support@ficoreafrica.com" class="email-btn" aria-label="{{ trans.get('Email Support', 'Email Support') }}">{{ trans.get('Email Us', 'Email Us') }}</a> 
+                        {{ trans.get('for support', 'for support') }} | 
+                        {{ trans.get('Follow us on', 'Follow us on') }} 
+                        <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a> 
+                        {{ trans.get('and', 'and') }} 
+                        <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i> Twitter</a>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary no-arrow" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Footer -->
         <footer class="footer">
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
-            <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
-                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
-            </div>
             <div class="social-icons">
-                <a href="{{ twitter_url | default('#') }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                <a href="{{ linkedin_url | default('#') }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
+            <p>
+                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+            </p>
         </footer>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Animation for dashboard card
-            const dashboardCard = document.querySelector('.dashboard-card');
-            setTimeout(() => dashboardCard.classList.add('slide-in'), 100);
+        // Chart Data
+        const userData = {{ user_data | tojson }};
+        const healthScore = {{ health_score | tojson }};
+        const peerData = { averageScore: {{ (all_users_df['HealthScore'].mean() if 'all_users_df' in globals() else 50) if total_users > 0 else 50 | tojson }} };
+        const language = '{{ language }}';
+        const translations = {{ trans | tojson }};
 
-            // Pie chart for expenses
-            const ctx = document.getElementById('expenseChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: [
-                        '{{ trans.get("Housing", "Housing") }}',
-                        '{{ trans.get("Food", "Food") }}',
-                        '{{ trans.get("Transport", "Transport") }}',
-                        '{{ trans.get("Other", "Other") }}'
-                    ],
-                    datasets: [{
-                        data: [
-                            {{ user_data.housing_expenses | default(0.0) }},
-                            {{ user_data.food_expenses | default(0.0) }},
-                            {{ user_data.transport_expenses | default(0.0) }},
-                            {{ user_data.other_expenses | default(0.0) }}
-                        ],
-                        backgroundColor: [
-                            '#2E7D32',
-                            '#0288D1',
-                            '#FBC02D',
-                            '#D32F2F'
-                        ],
-                        borderColor: '#FFFFFF',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Poppins', size: 14 },
-                                color: '#0288D1'
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: '#555',
-                            titleFont: { family: 'Poppins' },
-                            bodyFont: { family: 'Poppins' },
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    return `${context.label}: ₦${value.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        const chartTranslations = {
+            'en': {
+                'Income': 'Income',
+                'Expenses': 'Expenses',
+                'Debt': 'Debt',
+                'Amount': 'Amount (₦)',
+                'Your Score': 'Your Score',
+                'Average Peer Score': 'Average Peer Score',
+                'Financial Health Score': 'Financial Health Score'
+            },
+            'ha': {
+                'Income': 'Kuɗin Shiga',
+                'Expenses': 'Kashe Kuɗi',
+                'Debt': 'Bashi',
+                'Amount': 'Adadin (₦)',
+                'Your Score': 'Makin Ku',
+                'Average Peer Score': 'Matsakaicin Makin Sauran Mutane',
+                'Financial Health Score': 'Makin Lafiyar Kuɗi'
+            }
+        };
+        const labels = chartTranslations[language] || chartTranslations['en'];
 
-            // Tooltip click support
-            const infoIcons = document.querySelectorAll('.info-icon');
-            infoIcons.forEach(icon => {
-                icon.addEventListener('click', () => {
-                    const tooltip = icon.querySelector('.tooltip-text');
-                    const isVisible = tooltip.style.visibility === 'visible';
-                    tooltip.style.visibility = isVisible ? 'hidden' : 'visible';
-                    tooltip.style.opacity = isVisible ? '0' : '1';
-                    icon.classList.toggle('active', !isVisible);
-                });
-            });
-        });
+        // Score Breakdown Chart
+        {% if breakdown_plot %}
+            const scoreBreakdownData = [{
+                x: [userData['income_revenue'] || 0, userData['expenses_costs'] || 0, userData['debt_loan'] || 0],
+                y: [labels['Income'], labels['Expenses'], labels['Debt']],
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: ['#2E7D32', '#0288D1', '#DC3545'] },
+                text: [userData['income_revenue'] || 0, userData['expenses_costs'] || 0, userData['debt_loan'] || 0].map(v => `₦${v.toLocaleString()}`),
+                textposition: 'auto',
+                hoverinfo: 'text+x'
+            }];
+            Plotly.newPlot('score-breakdown-chart', scoreBreakdownData, {
+                xaxis: { title: labels['Amount'] },
+                yaxis: { title: '' },
+                height: 300,
+                margin: { l: 80, r: 20, t: 20, b: 50 },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            }, { responsive: true });
+        {% endif %}
+
+        // Compare Others Chart
+        {% if comparison_plot %}
+            const compareOthersData = [{
+                x: [labels['Your Score'], labels['Average Peer Score']],
+                y: [healthScore || 0, peerData.averageScore || 50],
+                type: 'bar',
+                marker: { color: ['#2E7D32', '#6C757D'] },
+                text: [healthScore || 0, peerData.averageScore || 50].map(v => `${v.toFixed(1)}/100`),
+                textposition: 'auto',
+                hoverinfo: 'text+y'
+            }];
+            Plotly.newPlot('compare-others-chart', compareOthersData, {
+                xaxis: { title: '' },
+                yaxis: { title: labels['Financial Health Score'], range: [0, 100] },
+                height: 300,
+                margin: { l: 50, r: 20, t: 20, b: 50 },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            }, { responsive: true });
+        {% endif %}
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4c8cfc99a1379',t:'MTc0Njk5OTA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
