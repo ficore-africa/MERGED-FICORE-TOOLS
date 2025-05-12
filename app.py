@@ -1557,11 +1557,11 @@ def health_score_form():
                 'debt_interest_rate': float(form.debt_interest_rate.data or 0.0),
                 'auto_email': form.auto_email.data.lower().strip() if form.auto_email.data else '',
                 'phone_number': form.phone_number.data.strip() if form.phone_number.data else '',
-                'first_name': form.first_name.data.strip() else '',
+                'first_name': form.first_name.data.strip() if form.first_name.data else '',
                 'last_name': form.last_name.data.strip() if form.last_name.data else '',
                 'user_type': form.user_type.data,
                 'email': form.email.data.lower().strip() if form.email.data else '',
-                'language': form.language.data in ['en', 'ha'] else 'en',
+                'language': form.language.data if form.language.data in ['en', 'ha'] else 'en',
             }
 
             data_row = [
