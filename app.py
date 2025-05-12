@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
-mail = Mail(app)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+mail = Mail(app)
 if not app.config['SECRET_KEY']:
     logger.critical("FLASK_SECRET_KEY not set. Application will not start.")
     raise RuntimeError("FLASK_SECRET_KEY environment variable not set.")
@@ -947,53 +947,6 @@ def assign_badges_health(user_df, all_users_df):
     except Exception as e:
         logger.error(f"Error in assign_badges_health: {e}")
         return badges
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def send_budget_email(data, total_expenses, savings, surplus_deficit, chart_data, bar_data):
-    try:
-        msg = MIMEMultipart('alternative')
-        language = data.get('language', 'en')
-        if language not in translations:
-            language = 'en'
-        msg['Subject'] = translations[language]['Budget Report Subject']
-        msg['From'] = os.getenv('SMTP_USER')
-        msg['To'] = data['email']
-        html = render_template(
-            'budget_email.html',
-            trans=translations[language],
-            language=language,
-            user_name=sanitize_input(data.get('first_name', 'User')),
-            monthly_income=data.get('monthly_income', 0),
-            housing_expenses=data.get('housing_expenses', 0),
-            food_expenses=data.get('food_expenses', 0),
-            transport_expenses=data.get('transport_expenses', 0),
-            other_expenses=data.get('other_expenses', 0),
-            total_expenses=total_expenses,
-            savings=savings,
-            surplus_deficit=surplus_deficit,
-            chart_data=chart_data,
-            advice=data.get('advice', []),  # Pass advice explicitly
-            badges=data.get('badges', []),  # Pass badges explicitly
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            course_url=COURSE_URL,
-            linkedin_url=LINKEDIN_URL,
-            twitter_url=TWITTER_URL
-        )
-        part = MIMEText(html, 'html')
-        msg.attach(part)
-        with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as server:
-            server.starttls()
-            server.login(os.getenv('SMTP_USER'), os.getenv('SMTP_PASSWORD'))
-            server.sendmail(msg['From'], msg['To'], msg.as_string())
-        logger.info(f"Email sent to {data['email']}")
-        flash(translations[language]['Check Inbox'], 'info')
-        return True
-    except Exception as e:
-        logger.error(f"Error sending budget email to {data.get('email', 'unknown')}: {e}")
-        flash("Error sending email notification. Dashboard will still display.", 'warning')
-        return False
         
 def send_health_email(to_email, user_name, health_score, score_description, rank, total_users, course_title, course_url, language):
     try:
