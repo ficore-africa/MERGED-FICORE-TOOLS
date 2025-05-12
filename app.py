@@ -1336,7 +1336,6 @@ def budget_dashboard():
         rank = sum(all_users_df['surplus_deficit'].astype(float) > user_row['surplus_deficit']) + 1
         total_users = len(all_users_df)
         badges = assign_badges_budget(user_df)
-        # Generate plots
         budget_breakdown = {
             'Housing': user_row['housing_expenses'],
             'Food': user_row['food_expenses'],
@@ -1355,32 +1354,27 @@ def budget_dashboard():
             title=translations[language]['Income vs Expenses']
         )
         comparison_plot = comparison_fig.to_html(full_html=False, include_plotlyjs=False)
-        # Define results as a summary dictionary
-        results = {
-            'monthly_income': user_row['monthly_income'],
-            'total_expenses': user_row['total_expenses'],
-            'savings': user_row['savings'],
-            'surplus_deficit': user_row['surplus_deficit'],
-            'outcome_status': user_row['outcome_status'],
-            'advice': user_row['advice']
+        # Log template variables for debugging
+        template_vars = {
+            'trans': translations[language],
+            'user_data': user_row.to_dict(),
+            'badges': badges,
+            'rank': rank,
+            'total_users': total_users,
+            'breakdown_plot': breakdown_plot[:50] + '...' if breakdown_plot else None,
+            'comparison_plot': comparison_plot[:50] + '...' if comparison_plot else None,
+            'FEEDBACK_FORM_URL': FEEDBACK_FORM_URL,
+            'WAITLIST_FORM_URL': WAITLIST_FORM_URL,
+            'CONSULTANCY_FORM_URL': CONSULTANCY_FORM_URL,
+            'linkedin_url': LINKEDIN_URL,
+            'twitter_url': TWITTER_URL,
+            'course_url': COURSE_URL,
+            'course_title': COURSE_TITLE
         }
+        logger.debug(f"Template variables for budget_dashboard: {template_vars}")
         return render_template(
             'budget_dashboard.html',
-            trans=translations[language],
-            user_data=user_row,
-            badges=badges,
-            rank=rank,
-            total_users=total_users,
-            breakdown_plot=breakdown_plot,
-            comparison_plot=comparison_plot,
-            results=results,  # Add results to the template context
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            linkedin_url=LINKEDIN_URL,
-            twitter_url=TWITTER_URL,
-            course_url=COURSE_URL,
-            course_title=COURSE_TITLE
+            **template_vars
         )
     except Exception as e:
         logger.error(f"Error in budget_dashboard: {e}\n{traceback.format_exc()}")
