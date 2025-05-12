@@ -1473,7 +1473,7 @@ def health_score():
 
                 flash(translations[language]['Submission Success'], 'success')
                 return render_template(
-                    'health_score_dashboard.html',
+                    'health_dashboard.html',
                     trans=translations[language],
                     user_data=df.iloc[0],
                     badges=badges,
