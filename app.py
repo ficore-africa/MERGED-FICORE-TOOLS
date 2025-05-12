@@ -1125,7 +1125,7 @@ class Step4Form(FlaskForm):
     submit = SubmitField()
 
     def __init__(self, language='en', *args, **kwargs):
-        super(Step4Form, self).init__(*args, **kwargs)
+        super(Step4Form, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translation(language, 'Continue to Dashboard')
 
 class HealthScoreForm(FlaskForm):
