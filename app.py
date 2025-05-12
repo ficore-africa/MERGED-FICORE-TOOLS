@@ -1802,6 +1802,7 @@ def health_dashboard():
             'health_dashboard.html',
             trans=translations[language],
             results=results,
+            total_users=total_users,  # Explicitly pass total_users
             breakdown_plot=breakdown_plot,
             comparison_plot=comparison_plot,
             FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
@@ -1816,9 +1817,14 @@ def health_dashboard():
             health_score=results.get('health_score', 0),
             user_data=user_df.to_dict('records')[0] if not user_df.empty else {},
             all_users_df=all_users_df,
-            course_url='https://example.com/course',  # Replace with actual course URL
+            course_url='https://www.youtube.com/@FICORE.AFRICA',  # Replace with actual course URL
             course_title=translations[language].get('Financial Health Course', 'Financial Health Course')
         )
+    except Exception as e:
+        logger.error(f"Error rendering health dashboard: {e}", exc_info=True)
+        flash(translations[language]['Error retrieving data. Please try again.'], 'error')
+        return redirect(url_for('health_score_form'))
+        
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}", exc_info=True)
         flash(translations[language]['Error retrieving data. Please try again.'], 'error')
