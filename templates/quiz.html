@@ -1,0 +1,170 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trans['Financial Personality Quiz'] }} - Ficore Africa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .progress {
+            height: 20px;
+            background: linear-gradient(to right, #28a745, #007bff);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .radio-group {
+            margin-bottom: 20px;
+        }
+        .submit-btn {
+            background: linear-gradient(to right, #28a745, #007bff);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ trans['Financial Personality Quiz'] }}</h1>
+        <p>{{ trans['Discover Your Financial Personality'] }}</p>
+    </header>
+    <main>
+        <div class="progress-bar">
+            <div class="progress" id="progress" style="width: 20%;"></div>
+        </div>
+        <form method="POST" id="quiz-form">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <label for="{{ form.first_name.id }}">{{ trans['First Name'] }}</label>
+                {{ form.first_name(placeholder=trans['Enter your first name'], class='form-control') }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.email.id }}">{{ trans['Email'] }}</label>
+                {{ form.email(placeholder=trans['Enter your email'], class='form-control') }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.language.id }}">{{ trans['Language'] }}</label>
+                {{ form.language(class='form-control') }}
+            </div>
+            {% for i, question in questions|enumerate %}
+                <div class="radio-group">
+                    <label class="tooltip">
+                        {{ trans['Question'] }} {{ i+1 }} {{ trans['of'] }} 5: {{ question.text }}
+                        <span class="tooltiptext">{{ question.tooltip }}</span>
+                    </label>
+                    {{ form['question_' + (i+1)|string](class='radio-options') }}
+                </div>
+            {% endfor %}
+            <button type="submit" class="submit-btn">{{ trans['Submit Quiz'] }}</button>
+        </form>
+        <footer>
+            <p><a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans['Provide Feedback'] }}</a></p>
+            <p><a href="{{ WAITLIST_FORM_URL }}" target="_blank">{{ trans['Join Waitlist'] }}</a></p>
+            <p><a href="{{ CONSULTANCY_FORM_URL }}" target="_blank">{{ trans['Book Consultancy'] }}</a></p>
+            <p><a href="{{ LINKEDIN_URL }}" target="_blank">{{ trans['Connect on LinkedIn'] }}</a></p>
+            <p> <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+            <p><a href="{{ TWITTER_URL }}" target="_blank">{{ trans['Follow on Twitter'] }}</a></p>
+        </footer>
+    </main>
+    <script>
+        $(document).ready(function() {
+            // Update progress bar based on form completion
+            $('#quiz-form input, #quiz-form select').on('change', function() {
+                let totalFields = $('#quiz-form input, #quiz-form select').length;
+                let filledFields = $('#quiz-form input:filled, #quiz-form select:valid').length;
+                let progress = (filledFields / totalFields) * 100;
+                $('#progress').css('width', progress + '%');
+            });
+            // Accessibility: Handle keyboard navigation
+            $('.radio-options input').on('keydown', function(e) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    let $inputs = $(this).closest('.radio-options').find('input');
+                    let index = $inputs.index(this);
+                    let nextIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
+                    if (nextIndex >= 0 && nextIndex < $inputs.length) {
+                        $inputs.eq(nextIndex).focus();
+                    }
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

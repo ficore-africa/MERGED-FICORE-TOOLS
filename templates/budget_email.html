@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ trans.get('Your Budget Report', 'Your Budget Report') }}</title>
-    <!-- Include Font Awesome for social media icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body { font-family: 'Poppins', Arial, sans-serif; background: #F5F7FA; margin: 0; padding: 20px; color: #333; }
@@ -16,7 +15,6 @@
         .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: left; }
         .section-header { color: #2E7D32; font-weight: 600; font-size: 18px; margin-bottom: 15px; }
         .deficit { color: #D32F2F; font-weight: 600; }
         .button { display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E7D32, #0288D1); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 10px 0; }
@@ -30,13 +28,11 @@
         ul { list-style: none; padding: 0; }
         li { margin-bottom: 10px; font-size: 16px; }
         li strong { color: #0288D1; }
-        .chart-text { font-size: 14px; }
-        .chart-text li { display: flex; justify-content: space-between; }
         @media only screen and (max-width: 600px) {
             body { padding: 10px; }
             .container { max-width: 100%; }
             .content { padding: 15px; }
-            .summary-box, .badges-box, .tips-box, .chart-box { padding: 15px; }
+            .summary-box, .badges-box, .tips-box { padding: 15px; }
             .button { padding: 10px 20px; font-size: 14px; }
         }
     </style>
@@ -53,40 +49,25 @@
             <div class="summary-box" role="region" aria-labelledby="summary-header">
                 <h3 id="summary-header" class="section-header">{{ trans.get('Summary with Emoji', 'Summary 📊') }}</h3>
                 <ul>
-                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ monthly_income | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ housing_expenses | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ food_expenses | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ transport_expenses | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ other_expenses | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ total_expenses | default(0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Savings', 'Savings') }}:</strong> {{ savings | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ user_data.monthly_income | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ user_data.housing_expenses | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ user_data.food_expenses | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ user_data.transport_expenses | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ user_data.other_expenses | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ user_data.total_expenses | default(0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Savings', 'Savings') }}:</strong> {{ user_data.savings | default(0) | format_currency('NGN') }}</li>
                     <li><strong>{{ trans.get('Surplus/Deficit', 'Surplus/Deficit') }}:</strong> 
-                        <span {% if surplus_deficit | default(0) < 0 %}class="deficit"{% endif %}>
-                            {{ surplus_deficit | default(0) | format_currency('NGN') }}
+                        <span {% if user_data.surplus_deficit | default(0) < 0 %}class="deficit"{% endif %}>
+                            {{ user_data.surplus_deficit | default(0) | format_currency('NGN') }}
                         </span>
                     </li>
                 </ul>
             </div>
-            <div class="chart-box" role="region" aria-labelledby="chart-header">
-                <h3 id="chart-header" class="section-header">{{ trans.get('Budget Breakdown', 'Budget Breakdown') }}</h3>
-                {% if chart_data and chart_data.labels and chart_data.values %}
-                    <ul class="chart-text">
-                        {% for label, value in chart_data.labels | zip(chart_data.values) %}
-                            <li>
-                                <span>{{ trans.get(label, label) }}</span>
-                                <span>{{ value | default(0) | format_currency('NGN') }}</span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>{{ trans.get('Chart Unavailable', 'Chart unavailable at this time.') }}</p>
-                {% endif %}
-            </div>
             <div class="badges-box" role="region" aria-labelledby="badges-header">
                 <h3 id="badges-header" class="section-header">{{ trans.get('Badges with Emoji', 'Badges 🏅') }}</h3>
-                {% if badges %}
+                {% if user_data.badges %}
                     <ul>
-                        {% for badge in badges %}
+                        {% for badge in user_data.badges.split(', ') %}
                             <li aria-label="{{ trans.get(badge, badge) }}">{{ trans.get(badge, badge) }}</li>
                         {% endfor %}
                     </ul>
@@ -96,18 +77,16 @@
             </div>
             <div class="tips-box" role="region" aria-labelledby="tips-header">
                 <h3 id="tips-header" class="section-header">{{ trans.get('Tips with Emoji', 'Tips 💡') }}</h3>
-                {% if advice %}
+                {% if user_data.advice %}
                     <ul>
-                        {% for tip in advice %}
-                            <li aria-describedby="tip-{{ loop.index }}">{{ trans.get(tip, tip) }}</li>
-                        {% endfor %}
+                        <li aria-describedby="tip-1">{{ trans.get(user_data.advice, user_data.advice) }}</li>
                     </ul>
                 {% else %}
                     <p>{{ trans.get('No tips available.', 'No tips available.') }}</p>
                 {% endif %}
             </div>
             <div style="text-align: center;">
-                <a href="{{ course_url | default('https://example.com/course') }}" class="button" role="button" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">
+                <a href="{{ SAVINGS_COURSE_URL }}" class="button" role="button" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">
                     {{ trans.get('Join Course', 'Join Course') }}
                 </a>
             </div>
@@ -116,15 +95,17 @@
         <div class="footer">
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="footer-links">
-                <a href="{{ FEEDBACK_FORM_URL | default('https://forms.gle/1g1FVulyf7ZvvXr7G0q7hAKwbGJMxV4blpjBuqrSjKzQ') }}" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
-                <a href="{{ WAITLIST_FORM_URL | default('https://forms.gle/17e0XYcp-z3hCl0I-j2JkHoKKJrp4PfgujsK8D7uqNxo') }}" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
-                <a href="{{ CONSULTANCY_FORM_URL | default('https://forms.gle/1TKvlT7OTvNS70YNd8DaPpswvqd9y7hKydxKr07gpK9A') }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+                <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
             </div>
             <div class="social-icons">
-                <a href="{{ linkedin_url | default('https://www.linkedin.com/in/ficore-africa-58913a363/') }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ twitter_url | default('https://x.com/Hassanahm4d') }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="{{ LINKEDIN_URL }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+                <a href="{{ TWITTER_URL }}" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
             </div>
         </div>
     </div>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eaf0dd0943bd02',t:'MTc0NzA2MzY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

@@ -3,84 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% set fallback_translations = {
-        'en': {
-            '500 Error': 'Server Error',
-            'An unexpected error occurred on the server.': 'An unexpected error occurred on the server.',
-            'Error Details': 'Error Details',
-            'Return to Home': 'Return to Home'
-        },
-        'ha': {
-            '500 Error': 'Kuskuren Sabar',
-            'An unexpected error occurred on the server.': 'Kuskuren da ba a zata ba ya faru a sabar.',
-            'Error Details': 'Bayanin Kuskure',
-            'Return to Home': 'Koma zuwa Gida'
-        }
-    } %}
-    <title>{{ fallback_translations[language | default('en')].get('500 Error', 'Server Error') }}</title>
-    <!-- Tailwind CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Custom styles -->
+    <title>{{ trans.get('500 Error', 'Server Error') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <!-- JavaScript for handling XLSX file data -->
-    <script type="text/javascript">
-        // Global variables for XLSX file processing
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-
-        // Utility function to check if a cell is filled
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
-        }
-
-        // Load and process file data (XLSX or other formats)
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    // Read XLSX file from base64 data
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-
-                    // Convert sheet to JSON, excluding blank rows
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    // Filter out rows where all cells are empty
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                    // Heuristic to find header row (row with fewer or equal filled cells compared to next row)
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    // Fallback to first row if heuristic fails or exceeds 25 rows
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-
-                    // Convert filtered data back to CSV
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error('Error processing XLSX file:', e);
-                    return "";
-                }
-            }
-            // Return raw file data or empty string if not XLSX or file not found
-            return gk_fileData[filename] || "";
-        }
-    </script>
-    <div class="container mx-auto px-4 py-8 max-w-lg bg-white rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold text-red-600 mb-4">{{ fallback_translations[language | default('en')].get('500 Error', 'Server Error') }}</h1>
-        <p class="text-gray-700 mb-4">{{ fallback_translations[language | default('en')].get('An unexpected error occurred on the server.', 'An unexpected error occurred on the server.') }}</p>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100">
+    <div class="container text-center py-5">
+        <h1 class="display-4 text-danger">{{ trans.get('500 Error', 'Server Error') }}</h1>
+        <p class="lead">{{ trans.get('An unexpected error occurred on the server.', 'An unexpected error occurred on the server.') }}</p>
         {% if error_message %}
-            <p class="text-gray-700 mb-4"><strong>{{ fallback_translations[language | default('en')].get('Error Details', 'Error Details') }}:</strong> {{ error_message }}</p>
+            <p><strong>{{ trans.get('Error Details', 'Error Details') }}:</strong> {{ error_message }}</p>
         {% endif %}
-        <a href="{{ url_for('index') }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition duration-300">
-            {{ fallback_translations[language | default('en')].get('Return to Home', 'Return to Home') }}
-        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">{{ trans.get('Return to Home', 'Return to Home') }}</a>
+        <div class="mt-4">
+            <p><a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a></p>
+            <p><a href="{{ WAITLIST_FORM_URL }}" target="_blank">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a></p>
+            <p><a href="{{ CONSULTANCY_FORM_URL }}" target="_blank">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a></p>
+        </div>
+        <div class="mt-3">
+            <a href="{{ LINKEDIN_URL }}" target="_blank">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a> |
+            <a href="{{ TWITTER_URL }}" target="_blank">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a>
+            <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eaf0dd0a8a452c',t:'MTc0NzA2MzY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

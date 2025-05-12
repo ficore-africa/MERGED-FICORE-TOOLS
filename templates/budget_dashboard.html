@@ -24,8 +24,8 @@
         .btn-secondary:hover { transform: scale(1.05); background: #5a6268; }
         .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
         .badges-box { border: 2px solid #FBC02D; background: #FFFDE7; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
-        .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom 20px; transition: transform 0.2s ease; }
-        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom 20px; }
+        .tips-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s ease; }
+        .chart-box { border: 2px solid #0288D1; background: #E3F2FD; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         .summary-box:hover, .badges-box:hover, .tips-box:hover, .chart-box:hover { transform: scale(1.02); }
         .section-header { color: #2E7D32; font-weight: 600; margin-bottom: 15px; }
         .badge-item, .tip-item { margin-bottom: 10px; }
@@ -72,18 +72,18 @@
             <div class="summary-box" aria-labelledby="summary-header">
                 <h3 id="summary-header" class="section-header">{{ trans.get('Summary with Emoji', 'Summary with Emoji') }}</h3>
                 <ul>
-                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ results.monthly_income | default(0.0) | format_currency('NGN') }}
-                        {% if results.monthly_income | default(0.0) == 0.0 %}
-                            <span class="text-warning"> (Warning: No income recorded!)</span>
+                    <li><strong>{{ trans.get('Monthly Income', 'Monthly Income') }}:</strong> {{ user_data.monthly_income | default(0.0) | format_currency('NGN') }}
+                        {% if user_data.monthly_income | default(0.0) == 0.0 %}
+                            <span class="text-warning"> ({{ trans.get('Warning: No income recorded!', 'Warning: No income recorded!') }})</span>
                         {% endif %}
                     </li>
-                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ results.housing_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ results.food_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ results.transport_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ results.other_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ results.total_expenses | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Savings', 'Savings') }}:</strong> {{ results.savings | default(0.0) | format_currency('NGN') }}</li>
-                    <li><strong>{{ trans.get('Balance', 'Balance') }}:</strong> <span {% if results.surplus_deficit | default(0.0) < 0 %}class="deficit"{% endif %}>{{ results.surplus_deficit | default(0.0) | format_currency('NGN') }}</span>
+                    <li><strong>{{ trans.get('Housing', 'Housing') }}:</strong> {{ user_data.housing_expenses | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Food', 'Food') }}:</strong> {{ user_data.food_expenses | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Transport', 'Transport') }}:</strong> {{ user_data.transport_expenses | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Other', 'Other') }}:</strong> {{ user_data.other_expenses | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Total Expenses', 'Total Expenses') }}:</strong> {{ user_data.total_expenses | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Savings', 'Savings') }}:</strong> {{ user_data.savings | default(0.0) | format_currency('NGN') }}</li>
+                    <li><strong>{{ trans.get('Balance', 'Balance') }}:</strong> <span {% if user_data.surplus_deficit | default(0.0) < 0 %}class="deficit"{% endif %}>{{ user_data.surplus_deficit | default(0.0) | format_currency('NGN') }}</span>
                         <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Income minus expenses and savings goal.', 'Income minus expenses and savings goal.') }}</span></span>
                     </li>
                 </ul>
@@ -96,8 +96,8 @@
             </div>
             <div class="badges-box" aria-labelledby="badges-header">
                 <h3 id="badges-header" class="section-header">{{ trans.get('Badges', 'Badges') }}</h3>
-                {% if results.badges %}
-                    {% for badge in results.badges %}
+                {% if badges %}
+                    {% for badge in badges %}
                         <div class="badge-item" aria-label="{{ trans.get(badge, badge) }}">
                             <strong>{{ trans.get(badge, badge) }}</strong>
                             <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Earned for managing your budget effectively.', 'Earned for managing your budget effectively.') }}</span></span>
@@ -109,20 +109,18 @@
             </div>
             <div class="tips-box" aria-labelledby="tips-header">
                 <h3 id="tips-header" class="section-header">{{ trans.get('Tips', 'Tips') }}</h3>
-                {% if results.advice %}
-                    {% for tip in results.advice %}
-                        <div class="tip-item" aria-describedby="tip-{{ loop.index }}">
-                            <strong>{{ trans.get('Tip', 'Tip') }} {{ loop.index }}:</strong> {{ trans.get(tip, tip) }}
-                            <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Actionable advice to improve your budget.', 'Actionable advice to improve your budget.') }}</span></span>
-                        </div>
-                    {% endfor %}
+                {% if user_data.advice %}
+                    <div class="tip-item" aria-describedby="tip-1">
+                        <strong>{{ trans.get('Tip', 'Tip') }} 1:</strong> {{ trans.get(user_data.advice, user_data.advice) }}
+                        <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Actionable advice to improve your budget.', 'Actionable advice to improve your budget.') }}</span></span>
+                    </div>
                 {% else %}
                     <p>{{ trans.get('No tips available.', 'No tips available.') }}</p>
                 {% endif %}
             </div>
             <div class="text-center">
                 <a href="{{ url_for('budget_step4') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Savings & Review', 'Back to Savings & Review') }}">{{ trans.get('Back', 'Back') }}</a>
-                <a href="{{ results.course_url | default('') }}" class="btn btn-primary" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">{{ trans.get('Join Course', 'Join Course') }}</a>
+                <a href="{{ SAVINGS_COURSE_URL }}" class="btn btn-primary" aria-label="{{ trans.get('Join Financial Course', 'Join Financial Course') }}">{{ trans.get('Join Course', 'Join Course') }}</a>
             </div>
         </div>
         <footer class="footer">
@@ -133,9 +131,10 @@
                 <a href="{{ CONSULTANCY_FORM_URL }}" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Consultancy', 'Consultancy') }}</a>
             </div>
             <div class="social-icons">
-                <a href="{{ twitter_url | default('#') }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                <a href="{{ linkedin_url | default('#') }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                <a href="{{ FACEBOOK_URL }}" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+                <a href="{{ LINKEDIN_URL }}" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
             </div>
         </footer>
     </div>
@@ -143,11 +142,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Animation for dashboard card
             const dashboardCard = document.querySelector('.dashboard-card');
             setTimeout(() => dashboardCard.classList.add('slide-in'), 100);
 
-            // Pie chart for expenses
             const ctx = document.getElementById('expenseChart').getContext('2d');
             new Chart(ctx, {
                 type: 'pie',
@@ -160,10 +157,10 @@
                     ],
                     datasets: [{
                         data: [
-                            {{ results.housing_expenses | default(0.0) }},
-                            {{ results.food_expenses | default(0.0) }},
-                            {{ results.transport_expenses | default(0.0) }},
-                            {{ results.other_expenses | default(0.0) }}
+                            {{ user_data.housing_expenses | default(0.0) }},
+                            {{ user_data.food_expenses | default(0.0) }},
+                            {{ user_data.transport_expenses | default(0.0) }},
+                            {{ user_data.other_expenses | default(0.0) }}
                         ],
                         backgroundColor: [
                             '#2E7D32',
@@ -201,7 +198,6 @@
                 }
             });
 
-            // Tooltip click support
             const infoIcons = document.querySelectorAll('.info-icon');
             infoIcons.forEach(icon => {
                 icon.addEventListener('click', () => {
@@ -214,6 +210,6 @@
             });
         });
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e4c8cfc99a1379',t:'MTc0Njk5OTA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eaf0dd0fc86746',t:'MTc0NzA2MzY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

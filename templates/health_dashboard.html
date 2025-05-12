@@ -298,7 +298,7 @@
     <div class="container">
         <header class="my-4">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
+                <img src="{{ ('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
             </div>
             <h1>{{ trans.get('Your Financial Health Dashboard', 'Your Financial Health Dashboard') }}</h1>
         </header>
@@ -349,7 +349,7 @@
                     </div>
                     <div class="info-box">{{ trans.get('Check Inbox', 'Check your inbox for a detailed report.') }}</div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ ('health_dashboard', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -387,8 +387,8 @@
                         </p>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
-                        <a href="{{ url_for('health_score_submit', step=1) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=3) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=1) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -418,8 +418,8 @@
                         </div>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
-                        <a href="{{ url_for('health_score_submit', step=2) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=4) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=2) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -463,8 +463,8 @@
                         {% endif %}
                     </ul>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=5) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
-                        <a href="{{ url_for('health_score_submit', step=3) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=5) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=3) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -498,8 +498,8 @@
                         {{ trans.get('Regular Submissions', 'Regular submissions can improve your ranking.') }}
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_score_submit', step=6) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
-                        <a href="{{ url_for('health_score_submit', step=4) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=6) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=4) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -510,7 +510,7 @@
         <!-- Step 6: What’s Next? -->
         {% if step == 6 %}
             <div class="card">
-                <div class="card-header">🔓 {{ trans.get('Whats Next', 'What’s Next?') }}</div>
+                <div class="card-header">🔓 {{ trans.get('What\'s Next', 'What’s Next?') }}</div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
                         <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
@@ -553,7 +553,7 @@
         // Chart Data
         const userData = {{ user_data | tojson }};
         const healthScore = {{ health_score | tojson }};
-        const peerData = { averageScore: {{ (all_users_df['HealthScore'].mean() if 'all_users_df' in globals() else 50) if total_users > 0 else 50 | tojson }} };
+        const peerData = { averageScore: {{ all_users_df['HealthScore'].mean() if total_users > 0 else 50 | tojson }} };
         const language = '{{ language }}';
         const translations = {{ trans | tojson }};
 
@@ -580,27 +580,33 @@
         const labels = chartTranslations[language] || chartTranslations['en'];
 
         // Score Breakdown Chart
-        {% if breakdown_plot %}
-            const scoreBreakdownData = [{
-                x: [userData['income_revenue'] || 0, userData['expenses_costs'] || 0, userData['debt_loan'] || 0],
-                y: [labels['Income'], labels['Expenses'], labels['Debt']],
-                type: 'bar',
-                orientation: 'h',
-                marker: { color: ['#2E7D32', '#0288D1', '#DC3545'] },
-                text: [userData['income_revenue'] || 0, userData['expenses_costs'] || 0, userData['debt_loan'] || 0].map(v => `₦${v.toLocaleString()}`),
-                textposition: 'auto',
-                hoverinfo: 'text+x'
-            }];
-            Plotly.newPlot('score-breakdown-chart', scoreBreakdownData, {
-                xaxis: { title: labels['Amount'] },
-                yaxis: { title: '' },
-                height: 300,
-                margin: { l: 80, r: 20, t: 20, b: 50 },
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                paper_bgcolor: 'rgba(0,0,0,0)'
-            }, { responsive: true });
-        {% endif %}
-
+{% if breakdown_plot %}
+    const scoreBreakdownData = [{
+        x: ['{{ trans.get('Cash Flow', 'Cash Flow') }}', '{{ trans.get('Debt-to-Income', 'Debt-to-Income') }}', '{{ trans.get('Debt Interest', 'Debt Interest') }}'],
+        y: [
+            {{ user_data['NormCashFlow'] * 100 / 3 | tojson }},
+            {{ user_data['NormDebtToIncome'] * 100 / 3 | tojson }},
+            {{ user_data['NormDebtInterest'] * 100 / 3 | tojson }}
+        ],
+        type: 'bar',
+        marker: { color: ['#2E7D32', '#0288D1', '#DC3545'] },
+        text: [
+            {{ user_data['NormCashFlow'] * 100 / 3 | tojson }},
+            {{ user_data['NormDebtToIncome'] * 100 / 3 | tojson }},
+            {{ user_data['NormDebtInterest'] * 100 / 3 | tojson }}
+        ].map(v => `${v.toFixed(1)}`),
+        textposition: 'auto',
+        hoverinfo: 'text+y'
+    }];
+    Plotly.newPlot('score-breakdown-chart', scoreBreakdownData, {
+        xaxis: { title: '{{ trans.get('Component', 'Component') }}' },
+        yaxis: { title: '{{ trans.get('Score Contribution', 'Score Contribution') }}' },
+        height: 300,
+        margin: { l: 80, r: 20, t: 20, b: 50 },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)'
+    }, { responsive: true });
+{% endif %}
         // Compare Others Chart
         {% if comparison_plot %}
             const compareOthersData = [{

@@ -363,7 +363,9 @@
                             </div>
                             <div class="mb-3">
                                 {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
-                                {{ form.auto_email(class="form-control", placeholder=trans.get('Confirm your email', 'Confirm your email'), type="email", required=True, **{'data-error': trans.get('Invalid Email', 'Invalid Email'), 'aria-required': 'true'}) }}
+                                {{ form.auto_email(class="form-check-input", type="checkbox") }}
+                                <span class="form-check-label">{{ trans.get('Receive Email Report', 'Receive Email Report') }}</span>
+                            </div>
                             </div>
                             <div class="mb-3">
                                 {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
@@ -460,6 +462,7 @@
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="social-icons">
                 <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
@@ -520,19 +523,6 @@
                     input.setCustomValidity('');
                 }
             });
-
-            // Email confirmation validation
-            if (step === 1) {
-                const email = document.getElementById('email').value;
-                const autoEmail = document.getElementById('auto_email').value;
-                if (email !== autoEmail) {
-                    document.getElementById('auto_email').setCustomValidity("{{ trans.get('Email addresses must match.', 'Email addresses must match.') }}");
-                    document.getElementById('auto_email').reportValidity();
-                    isValid = false;
-                } else {
-                    document.getElementById('auto_email').setCustomValidity('');
-                }
-            }
 
             return isValid;
         }

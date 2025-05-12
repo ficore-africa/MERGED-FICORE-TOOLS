@@ -1,0 +1,114 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trans['Quiz Report Subject'] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(to right, #28a745, #007bff);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #28a745, #007bff);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ trans['Your Financial Personality'] }}</h1>
+        </div>
+        <div class="content">
+            <p>{{ trans['Dear'] }} {{ user_name }},</p>
+            <p>{{ trans['Here is your monthly budget summary.'] }}</p>
+            <h2>{{ trans['Your Financial Personality'] }}: {{ personality }}</h2>
+            <p>{{ personality_desc }}</p>
+            <h3>{{ trans['Personalized Tip'] }}</h3>
+            <p>{{ tip }}</p>
+            <p><a href="{{ url_for('quiz', _external=True) }}" class="button">{{ trans['Retake Quiz'] }}</a></p>
+            <p>{{ trans['Thank you for choosing Ficore Africa!'] }}</p>
+        </div>
+        <div class="footer">
+            <p><a href="{{ FEEDBACK_FORM_URL }}">{{ trans['Provide Feedback'] }}</a></p>
+            <p><a href="{{ WAITLIST_FORM_URL }}">{{ trans['Join Waitlist'] }}</a></p>
+            <p><a href="{{ CONSULTANCY_FORM_URL }}">{{ trans['Book Consultancy'] }}</a></p>
+            <p><a href="{{ LINKEDIN_URL }}">{{ trans['Connect on LinkedIn'] }}</a></p>
+            <p><a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+            <p><a href="{{ TWITTER_URL }}">{{ trans['Follow on Twitter'] }}</a></p>
+        </div>
+    </div>
+</body>
+</html>

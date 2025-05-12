@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ language }}">
+<html lang="{{ language | default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficore Africa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -18,7 +18,7 @@
         .navbar {
             background: linear-gradient(45deg, rgba(46, 125, 50, 0.8), rgba(2, 136, 209, 0.8));
             background-size: 200% 200%;
-            padding: 15px 30px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -45,7 +45,7 @@
         .navbar form {
             display: flex;
             align-items: center;
-            margin-right: 20px;
+            margin-right: 10px;
         }
         .navbar select {
             padding: 8px;
@@ -64,6 +64,7 @@
             display: flex;
             align-items: center;
             white-space: nowrap;
+            margin-right: 10px;
         }
         .navbar .refresh-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -170,19 +171,6 @@
         }
         .tool-card a:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
-        }
-        .tool-card .coming-soon {
-            padding: 12px 25px;
-            background: #B0BEC5;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            display: inline-block;
-            cursor: not-allowed;
-        }
-        .tool-card .coming-soon:hover {
-            background: #90A4AE;
         }
         .tool-card .notify-me {
             padding: 12px 25px;
@@ -360,7 +348,7 @@
             .navbar select {
                 margin-bottom: 10px;
             }
-            .tool-card a, .tool-card .coming-soon, .tool-card .notify-me {
+            .tool-card a, .tool-card .notify-me {
                 font-size: 1.1rem;
                 padding: 15px 30px;
             }
@@ -380,115 +368,116 @@
     <nav class="navbar">
         <h1>Ficore Africa</h1>
         <div style="display: flex; align-items: center;">
-            <form action="{{ url_for('change_language') }}" method="POST" style="margin-right: 20px;">
-                <select name="language" onchange="this.form.submit()" aria-label="{{ trans['Choose your language'] or 'Choose your language' }}">
+            <form action="{{ url_for('index') }}" method="GET" style="margin-right: 10px;">
+                <input type="hidden" name="tool" value="{{ tool | default('') }}">
+                <label for="language-select" class="visually-hidden">{{ trans.get('Choose your language', 'Choose your language') }}</label>
+                <select id="language-select" name="language" onchange="this.form.submit()" aria-label="{{ trans.get('Choose your language', 'Choose your language') }}">
                     <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
                     <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
                 </select>
             </form>
-            <button class="refresh-button" onclick="window.location.reload()" title="Reload the page">
-                <i class="fas fa-sync-alt"></i> {{ trans['Refresh'] or 'Refresh' }}
+            <button class="refresh-button" onclick="window.location.reload()" title="{{ trans.get('Reload the page', 'Reload the page') }}">
+                <i class="fas fa-sync-alt"></i> {{ trans.get('Refresh', 'Refresh') }}
             </button>
         </div>
     </nav>
 
     <section class="hero">
-        <h2>Your All-in-One Toolkit for Personal & SME Financial Health Across Africa</h2>
-        <p>Track income, calculate net worth, plan budgets, and grow with confidence.</p>
-        <a href="{{ url_for('health_score') }}" class="cta-button">Get Your Free Financial Health Score</a>
+        <h2>{{ trans.get('Your All-in-One Toolkit for Personal & SME Financial Health Across Africa', 'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa') }}</h2>
+        <p>{{ trans.get('Track income, calculate net worth, plan budgets, and grow with confidence.', 'Track income, calculate net worth, plan budgets, and grow with confidence.') }}</p>
+        <a href="{{ url_for('health_score') }}" class="cta-button">{{ trans.get('Get Your Free Financial Health Score', 'Get Your Free Financial Health Score') }}</a>
     </section>
 
     <section class="tools-section">
-        <h2>{{ trans['Choose a Tool'] or 'Choose a Tool' }}</h2>
+        <h2>{{ trans.get('Choose a Tool', 'Choose a Tool') }}</h2>
         <div class="tools-grid">
             <div class="tool-card">
-                <h3>{{ trans['Financial Health Score'] or 'Financial Health Score' }}</h3>
-                <p>{{ trans['Your Financial Health Summary'] or 'Evaluates income, expenses, and debt for a health score' }}</p>
-                <a href="{{ url_for('health_score') }}" aria-label="{{ trans['Start Financial Health Score Assessment'] or 'Start Financial Health Score Assessment' }}">{{ trans['Start'] or 'Start' }}</a>
+                <h3>{{ trans.get('Financial Health Score', 'Financial Health Score') }}</h3>
+                <p>{{ trans.get('Your Financial Health Summary', 'Evaluates income, expenses, and debt for a health score') }}</p>
+                <a href="{{ url_for('health_score') }}" aria-label="{{ trans.get('Start Financial Health Score Assessment', 'Start Financial Health Score Assessment') }}">{{ trans.get('Start', 'Start') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Monthly Budget Planner'] or 'Monthly Budget Planner' }}</h3>
-                <p>{{ trans['Monthly Budget Planner'] or 'Allocate income across expense categories' }}</p>
-                <a href="{{ url_for('budget_step1') }}" aria-label="{{ trans['Start Monthly Budget Planner'] or 'Start Monthly Budget Planner' }}">{{ trans['Start'] or 'Start' }}</a>
+                <h3>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</h3>
+                <p>{{ trans.get('Allocate income across expense categories', 'Allocate income across expense categories') }}</p>
+                <a href="{{ url_for('budget_step1') }}" aria-label="{{ trans.get('Start Monthly Budget Planner', 'Start Monthly Budget Planner') }}">{{ trans.get('Start', 'Start') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Net Worth Calculator'] or 'Net Worth Calculator' }}</h3>
-                <p>{{ trans['Net worth is assets minus liabilities'] or 'Net worth is assets minus liabilities' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
+                <h3>{{ trans.get('Personality Quiz', 'Personality Quiz') }}</h3>
+                <p>{{ trans.get('Answer questions to assess financial literacy', 'Answer questions to assess financial literacy') }}</p>
+                <a href="{{ url_for('quiz') }}" aria-label="{{ trans.get('Start Personality Quiz', 'Start Personality Quiz') }}">{{ trans.get('Start', 'Start') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Emergency Fund Calculator'] or 'Emergency Fund Calculator' }}</h3>
-                <p>{{ trans['Aims to cover 3-6 months of expenses for financial security'] or 'Aims to cover 3-6 months of expenses for financial security' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
+                <h3>{{ trans.get('Net Worth Calculator', 'Net Worth Calculator') }}</h3>
+                <p>{{ trans.get('Net worth is assets minus liabilities', 'Net worth is assets minus liabilities') }}</p>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Expense Tracker'] or 'Expense Tracker' }}</h3>
-                <p>{{ trans['Log and edit expenses for spending insights'] or 'Log and edit expenses for spending insights' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
+                <h3>{{ trans.get('Emergency Fund Calculator', 'Emergency Fund Calculator') }}</h3>
+                <p>{{ trans.get('Aims to cover 3-6 months of expenses for financial security', 'Aims to cover 3-6 months of expenses for financial security') }}</p>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Bill Planner'] or 'Bill Planner' }}</h3>
-                <p>{{ trans['Manage and mark bills as paid'] or 'Manage and mark bills as paid' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
+                <h3>{{ trans.get('Expense Tracker', 'Expense Tracker') }}</h3>
+                <p>{{ trans.get('Log and edit expenses for spending insights', 'Log and edit expenses for spending insights') }}</p>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans['Personality Quiz'] or 'Personality Quiz' }}</h3>
-                <p>{{ trans['Answer questions to assess financial literacy'] or 'Answer questions to assess financial literacy' }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans['Coming Soon'] or 'Coming Soon' }}">Coming Soon</a>
+                <h3>{{ trans.get('Bill Planner', 'Bill Planner') }}</h3>
+                <p>{{ trans.get('Manage and mark bills as paid', 'Manage and mark bills as paid') }}</p>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
         </div>
         <div class="testimonials-section">
-            <strong><i class="fas fa-quote-left"></i> {{ trans['What people are saying about Us'] or 'What people are saying about Us' }}</strong>
+            <strong><i class="fas fa-quote-left"></i> {{ trans.get('What people are saying about Us', 'What people are saying about Us') }}</strong>
             <div class="testimonial">
-                <span class="initials">MU</span> <span>“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — <span class="name">Maisarata Uqubatu</span></span>
+                <span class="initials">MU</span> <span>{{ trans.get('Testimonial 1', '“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — <span class="name">Maisarata Uqubatu</span>') }}</span>
             </div>
             <div class="testimonial">
-                <span class="initials">AA</span> <span>“🔥 Ficore 🔥🔥🔥🔥🔥” — <span class="name">Abubakar Abdulkadir</span>, Software Engineer for Sustainable Solutions</span>
+                <span class="initials">AA</span> <span>{{ trans.get('Testimonial 2', '“🔥 Ficore 🔥🔥🔥🔥🔥” — <span class="name">Abubakar Abdulkadir</span>, Software Engineer for Sustainable Solutions') }}</span>
             </div>
             <div class="testimonial">
-                <span class="initials">ASU</span> <span>“I’ve been following the Ficore project and I’m impressed. It’s clear there's potential, and I’m curious to know more—especially if there's a customer support channel included. I'd love to contribute if needed!” — <span class="name">Aminu Sani Usman</span></span>
+                <span class="initials">ASU</span> <span>{{ trans.get('Testimonial 3', '“I’ve been following the Ficore project and I’m impressed. It’s clear there\'s potential, and I’m curious to know more—especially if there\'s a customer support channel included. I\'d love to contribute if needed!” — <span class="name">Aminu Sani Usman</span>') }}</span>
             </div>
         </div>
         <div class="recommended-learning">
-            <strong><i class="fas fa-book"></i> {{ trans['Recommended Learning'] or 'Recommended Learning' }}</strong>
-            <p>{{ trans['Learn more about budgeting!'] or 'Learn more about budgeting!' }}</p>
+            <strong><i class="fas fa-book"></i> {{ trans.get('Recommended Learning', 'Recommended Learning') }}</strong>
+            <p>{{ trans.get('Learn more about budgeting!', 'Learn more about budgeting!') }}</p>
         </div>
     </section>
 
     <section class="why-section">
-        <h2>{{ trans['Why Ficore Africa?'] or 'Why Ficore Africa?' }}</h2>
+        <h2>{{ trans.get('Why Ficore Africa?', 'Why Ficore Africa?') }}</h2>
         <ul class="why-list">
-            <li><i class="fas fa-check-circle"></i>{{ trans['Localized for Africa with support for Naira and regional financial contexts'] or 'Localized for Africa with support for Naira and regional financial contexts' }}</li>
-            <li><i class="fas fa-check-circle"></i>{{ trans['Empowers financial literacy with easy-to-use tools'] or 'Empowers financial literacy with easy-to-use tools' }}</li>
-            <li><i class="fas fa-check-circle"></i>{{ trans['Provides actionable insights for better financial decisions'] or 'Provides actionable insights for better financial decisions' }}</li>
+            <li><i class="fas fa-check-circle"></i>{{ trans.get('Localized for Africa with support for Naira and regional financial contexts', 'Localized for Africa with support for Naira and regional financial contexts') }}</li>
+            <li><i class="fas fa-check-circle"></i>{{ trans.get('Empowers financial literacy with easy-to-use tools', 'Empowers financial literacy with easy-to-use tools') }}</li>
+            <li><i class="fas fa-check-circle"></i>{{ trans.get('Provides actionable insights for better financial decisions', 'Provides actionable insights for better financial decisions') }}</li>
         </ul>
     </section>
 
     <section class="about-section">
-        <p>{{ trans['About Ficore Africa: Empowering financial growth across Africa since 2023'] or 'About Ficore Africa: Empowering financial growth across Africa since 2023' }}</p>
+        <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
     </section>
 
     <footer class="footer">
-        <p>{{ trans['Contact Us'] or 'Contact Us' }}: {{ trans['Click to Email'] or 'Click to Email' }} ficoreafrica@gmail.com {{ trans['for support'] or 'for support' }}</p>
+        <p>{{ trans.get('Contact Us', 'Contact Us') }}: <a href="mailto:ficoreafrica@gmail.com">{{ trans.get('Click to Email', 'Click to Email') }}</a> ficoreafrica@gmail.com {{ trans.get('for support', 'for support') }}</p>
         <div class="social-icons">
-            <a href="https://www.linkedin.com/in/ficore-africa-58913a363/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            <a href="https://x.com/Ficore_Africa?t=H6sVdRgUYf2GHHG8X5hKbg&s=09" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-            <a href="https://www.facebook.com/profile.php?id=61575627944628&mibextid=ZbWKwL" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}"><i class="fab fa-linkedin"></i></a>
+            <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-x-twitter"></i></a>
+            <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
         </div>
         <div class="footer-buttons">
-            <a href="mailto:ficoreafrica@gmail.com"><i class="fas fa-envelope"></i> {{ trans['Click to Email'] or 'Click to Email' }}</a>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfyJIHmGpAvUQV71UnryeWmdGqOMFQC6UMltZ7dC2ZlofVNHg/viewform?usp=header" target="_blank"><i class="fas fa-comment"></i> {{ trans['Provide Feedback'] or 'Provide Feedback' }}</a>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSeebEf9BZEEzia1EP0S3Q8Wixw_Gqh8qhNhsxCpHIUW8YfyWg/viewform?usp=header" target="_blank"><i class="fas fa-users"></i> {{ trans['Join Waitlist'] or 'Join Waitlist' }}</a>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScsa7rhfhz73dmwbxCFz2E3sBecxExjRxBE8X6e9TxbUgPjZg/viewform?usp=header" target="_blank"><i class="fas fa-briefcase"></i> {{ trans['Book Consultancy'] or 'Book Consultancy' }}</a>
+            <a href="mailto:ficoreafrica@gmail.com"><i class="fas fa-envelope"></i> {{ trans.get('Click to Email', 'Click to Email') }}</a>
+            <a href="{{ FEEDBACK_FORM_URL }}" target="_blank"><i class="fas fa-comment"></i> {{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+            <a href="{{ WAITLIST_FORM_URL }}" target="_blank"><i class="fas fa-users"></i> {{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
+            <a href="{{ CONSULTANCY_FORM_URL }}" target="_blank"><i class="fas fa-briefcase"></i> {{ trans.get('Book Consultancy', 'Book Consultancy') }}</a>
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.8.3/plotly.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tips = [
-                "{{ trans['Quick Tips'] or 'Quick Tips' }}: {{ trans['Spend less on non-essentials to balance your budget'] or 'Spend less on non-essentials to balance your budget' }}",
-                "{{ trans['Recommended Platform'] or 'For Learning' }}: {{ trans['Ficore Learning Hub'] or 'Learn more at Ficore Learning Hub!' }}"
+                "{{ trans.get('Quick Tips', 'Quick Tips') }}: {{ trans.get('Spend less on non-essentials to balance your budget', 'Spend less on non-essentials to balance your budget') }}",
+                "{{ trans.get('Recommended Platform', 'Recommended Platform') }}: {{ trans.get('Ficore Learning Hub', 'Learn more at Ficore Learning Hub!') }}"
             ];
             const randomTip = tips[Math.floor(Math.random() * tips.length)];
             const tipElement = document.createElement('p');
