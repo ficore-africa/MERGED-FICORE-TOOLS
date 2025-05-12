@@ -170,17 +170,17 @@ sheets = None
 sheets_lock = threading.Lock()
 
 # Define URL constants
-FEEDBACK_FORM_URL = os.getenv('FEEDBACK_FORM_URL', 'https://forms.gle/1g1FVulyf7ZvvXr7G0q7hAKwbGJMxV4blpjBuqrSjKzQ')
-WAITLIST_FORM_URL = os.getenv('WAITLIST_FORM_URL', 'https://forms.gle/17e0XYcp-z3hCl0I-j2JkHoKKJrp4PfgujsK8D7uqNxo')
-CONSULTANCY_FORM_URL = os.getenv('CONSULTANCY_FORM_URL', 'https://forms.gle/1TKvlT7OTvNS70YNd8DaPpswvqd9y7hKydxKr07gpK9A')
+FEEDBACK_FORM_URL = os.getenv('FEEDBACK_FORM_URL', 'https://docs.google.com/forms/d/e/1FAIpQLSfyJIHmGpAvUQV71UnryeWmdGqOMFQC6UMltZ7dC2ZlofVNHg/viewform?usp=header')
+WAITLIST_FORM_URL = os.getenv('WAITLIST_FORM_URL', 'https://docs.google.com/forms/d/e/1FAIpQLSeebEf9BZEEzia1EP0S3Q8Wixw_Gqh8qhNhsxCpHIUW8YfyWg/viewform?usp=header')
+CONSULTANCY_FORM_URL = os.getenv('CONSULTANCY_FORM_URL', 'https://docs.google.com/forms/d/e/1FAIpQLScsa7rhfhz73dmwbxCFz2E3sBecxExjRxBE8X6e9TxbUgPjZg/viewform?usp=header')
 COURSE_URL = os.getenv('COURSE_URL', 'https://example.com/course')
 COURSE_TITLE = os.getenv('COURSE_TITLE', 'Learn Budgeting')
 LINKEDIN_URL = os.getenv('LINKEDIN_URL', 'https://www.linkedin.com/in/ficore-africa-58913a363/')
-TWITTER_URL = os.getenv('TWITTER_URL', 'https://x.com/Hassanahm4d')
+TWITTER_URL = os.getenv('TWITTER_URL', 'https://x.com/Ficore_Africa?t=H6sVdRgUYf2GHHG8X5hKbg&s=09')
 INVESTING_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
-SAVINGS_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
-DEBT_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
-RECOVERY_COURSE_URL = 'https://youtube.com/@ficore.africa?si=myoEpotNALfGK4eI'
+SAVINGS_COURSE_URL = 'https://www.youtube.com/@FICORE.AFRICA'
+DEBT_COURSE_URL = 'https://www.youtube.com/@FICORE.AFRICA'
+RECOVERY_COURSE_URL = 'https://www.youtube.com/@FICORE.AFRICA'
 
 # Define headers and translations
 PREDETERMINED_HEADERS_BUDGET = [
