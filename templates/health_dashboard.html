@@ -298,7 +298,7 @@
     <div class="container">
         <header class="my-4">
             <div class="logo-container">
-                <img src="{{ ('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="img-fluid">
             </div>
             <h1>{{ trans.get('Your Financial Health Dashboard', 'Your Financial Health Dashboard') }}</h1>
         </header>
@@ -349,7 +349,7 @@
                     </div>
                     <div class="info-box">{{ trans.get('Check Inbox', 'Check your inbox for a detailed report.') }}</div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ ('health_dashboard', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
@@ -372,8 +372,8 @@
                     <div class="score-box">
                         <h4>{{ trans.get('Score Composition', 'Score Composition') }}:</h4>
                         <ul>
-                            <li><strong>{{ trans.get('Cash Flow', 'Cash Flow') }}</strong>: {{ (user_data['income_revenue'] - user_data['expenses_costs'])|round(2) }} ₦</li>
-                            <li><strong>{{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}</strong>: {{ ((user_data['debt_loan'] / user_data['income_revenue'] * 100) if user_data['income_revenue'] > 0 else 0)|round(1) }}%</li>
+                            <li><strong>{{ trans.get('Cash Flow', 'Cash Flow') }}</strong>: {{ ((user_data['income_revenue']|float(0) - user_data['expenses_costs']|float(0))|round(2)) }} ₦</li>
+                            <li><strong>{{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}</strong>: {{ ((user_data['debt_loan']|float(0) / user_data['income_revenue']|float(1) * 100)|round(1) if user_data['income_revenue']|float(0) > 0 else 0) }}%</li>
                             <li><strong>{{ trans.get('Debt Interest Burden', 'Debt Interest Burden') }}</strong>: {{ trans.get('Debt Interest Description', 'Based on your debt interest rate.') }}</li>
                         </ul>
                         <p>
@@ -477,12 +477,12 @@
             <div class="card">
                 <div class="card-header">⚖️ {{ trans.get('How You Compare', 'How You Compare') }}</div>
                 <div class="card-body light-blue">
-                    {% if comparison_plot %}
+                    {% if comparison_plot and all_users_df['HealthScore']|length > 0 %}
                         <div class="chart-container">
                             <div id="compare-others-chart"></div>
                         </div>
                     {% else %}
-                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
+                        <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to insufficient data or data issues.') }}</div>
                     {% endif %}
                     <div class="info-box">
                         {{ trans.get('Your Rank', 'Your Rank') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }} {{ trans.get('places you', 'places you') }}:
@@ -510,7 +510,7 @@
         <!-- Step 6: What’s Next? -->
         {% if step == 6 %}
             <div class="card">
-                <div class="card-header">🔓 {{ trans.get('What\'s Next', 'What’s Next?') }}</div>
+                <div class="card-header">🔓 {{ trans.get('What’s Next?', 'What’s Next?') }}</div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
                         <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
@@ -519,7 +519,7 @@
                     </div>
                     <div class="info-box">
                         {{ trans.get('Contact Us', 'Contact Us') }} 
-                        <a href="mailto:support@ficoreafrica.com" class="email-btn" aria-label="{{ trans.get('Email Support', 'Email Support') }}">{{ trans.get('Email Us', 'Email Us') }}</a> 
+                        <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c" class="email-btn" aria-label="{{ trans.get('Email Support', 'Email Support') }}">{{ trans.get('Email Us', 'Email Us') }}</a> 
                         {{ trans.get('for support', 'for support') }} | 
                         {{ trans.get('Follow us on', 'Follow us on') }} 
                         <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a> 
@@ -533,7 +533,7 @@
                 </div>
             </div>
         {% endif %}
-
+        
         <!-- Footer -->
         <footer class="footer">
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
@@ -542,91 +542,81 @@
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
                 <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
             </p>
         </footer>
     </div>
 
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Chart Data
-        const userData = {{ user_data | tojson }};
-        const healthScore = {{ health_score | tojson }};
-        const peerData = { averageScore: {{ all_users_df['HealthScore'].mean() if total_users > 0 else 50 | tojson }} };
-        const language = '{{ language }}';
-        const translations = {{ trans | tojson }};
+        document.addEventListener('DOMContentLoaded', function () {
+            // Score Breakdown Chart
+            {% if breakdown_plot and step == 2 %}
+                const breakdownData = [{
+                    type: 'bar',
+                    x: [
+                        '{{ trans.get('Income', 'Income') }}',
+                        '{{ trans.get('Expenses', 'Expenses') }}',
+                        '{{ trans.get('Debt', 'Debt') }}'
+                    ],
+                    y: [
+                        {{ user_data['income_revenue']|float(0) }},
+                        {{ user_data['expenses_costs']|float(0) }},
+                        {{ user_data['debt_loan']|float(0) }}
+                    ],
+                    marker: { color: ['#2E7D32', '#0288D1', '#D81B60'] }
+                }];
+                const breakdownLayout = {
+                    title: '{{ trans.get('Financial Breakdown', 'Financial Breakdown') }}',
+                    yaxis: { title: '{{ trans.get('Amount (₦)', 'Amount (₦)') }}' },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    height: 300,
+                    margin: { t: 50, b: 50, l: 50, r: 50 }
+                };
+                Plotly.newPlot('score-breakdown-chart', breakdownData, breakdownLayout);
+            {% endif %}
 
-        const chartTranslations = {
-            'en': {
-                'Income': 'Income',
-                'Expenses': 'Expenses',
-                'Debt': 'Debt',
-                'Amount': 'Amount (₦)',
-                'Your Score': 'Your Score',
-                'Average Peer Score': 'Average Peer Score',
-                'Financial Health Score': 'Financial Health Score'
-            },
-            'ha': {
-                'Income': 'Kuɗin Shiga',
-                'Expenses': 'Kashe Kuɗi',
-                'Debt': 'Bashi',
-                'Amount': 'Adadin (₦)',
-                'Your Score': 'Makin Ku',
-                'Average Peer Score': 'Matsakaicin Makin Sauran Mutane',
-                'Financial Health Score': 'Makin Lafiyar Kuɗi'
-            }
-        };
-        const labels = chartTranslations[language] || chartTranslations['en'];
-
-        // Score Breakdown Chart
-{% if breakdown_plot %}
-    const scoreBreakdownData = [{
-        x: ['{{ trans.get('Cash Flow', 'Cash Flow') }}', '{{ trans.get('Debt-to-Income', 'Debt-to-Income') }}', '{{ trans.get('Debt Interest', 'Debt Interest') }}'],
-        y: [
-            {{ user_data['NormCashFlow'] * 100 / 3 | tojson }},
-            {{ user_data['NormDebtToIncome'] * 100 / 3 | tojson }},
-            {{ user_data['NormDebtInterest'] * 100 / 3 | tojson }}
-        ],
-        type: 'bar',
-        marker: { color: ['#2E7D32', '#0288D1', '#DC3545'] },
-        text: [
-            {{ user_data['NormCashFlow'] * 100 / 3 | tojson }},
-            {{ user_data['NormDebtToIncome'] * 100 / 3 | tojson }},
-            {{ user_data['NormDebtInterest'] * 100 / 3 | tojson }}
-        ].map(v => `${v.toFixed(1)}`),
-        textposition: 'auto',
-        hoverinfo: 'text+y'
-    }];
-    Plotly.newPlot('score-breakdown-chart', scoreBreakdownData, {
-        xaxis: { title: '{{ trans.get('Component', 'Component') }}' },
-        yaxis: { title: '{{ trans.get('Score Contribution', 'Score Contribution') }}' },
-        height: 300,
-        margin: { l: 80, r: 20, t: 20, b: 50 },
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        paper_bgcolor: 'rgba(0,0,0,0)'
-    }, { responsive: true });
-{% endif %}
-        // Compare Others Chart
-        {% if comparison_plot %}
-            const compareOthersData = [{
-                x: [labels['Your Score'], labels['Average Peer Score']],
-                y: [healthScore || 0, peerData.averageScore || 50],
-                type: 'bar',
-                marker: { color: ['#2E7D32', '#6C757D'] },
-                text: [healthScore || 0, peerData.averageScore || 50].map(v => `${v.toFixed(1)}/100`),
-                textposition: 'auto',
-                hoverinfo: 'text+y'
-            }];
-            Plotly.newPlot('compare-others-chart', compareOthersData, {
-                xaxis: { title: '' },
-                yaxis: { title: labels['Financial Health Score'], range: [0, 100] },
-                height: 300,
-                margin: { l: 50, r: 20, t: 20, b: 50 },
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                paper_bgcolor: 'rgba(0,0,0,0)'
-            }, { responsive: true });
-        {% endif %}
+            // Compare to Others Chart
+            {% if comparison_plot and step == 5 and all_users_df['HealthScore']|length > 0 %}
+                const compareData = [{
+                    type: 'histogram',
+                    x: {{ all_users_df['HealthScore'].to_list()|tojson }},
+                    name: '{{ trans.get('All Users', 'All Users') }}',
+                    marker: { color: '#0288D1' },
+                    opacity: 0.6
+                }, {
+                    type: 'histogram',
+                    x: [{{ health_score }}],
+                    name: '{{ trans.get('Your Score', 'Your Score') }}',
+                    marker: { color: '#2E7D32' },
+                    opacity: 0.8
+                }];
+                const compareLayout = {
+                    title: '{{ trans.get('Score Distribution', 'Score Distribution') }}',
+                    xaxis: { title: '{{ trans.get('Health Score', 'Health Score') }}' },
+                    yaxis: { title: '{{ trans.get('Number of Users', 'Number of Users') }}' },
+                    barmode: 'overlay',
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    height: 300,
+                    margin: { t: 50, b: 50, l: 50, r: 50 },
+                    annotations: [{
+                        x: {{ all_users_df['HealthScore'].mean()|float(0) }},
+                        y: 0.9,
+                        yref: 'paper',
+                        text: '{{ trans.get('Average', 'Average') }}: {{ all_users_df['HealthScore'].mean()|round(1) }}',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 20,
+                        ay: -30
+                    }]
+                };
+                Plotly.newPlot('compare-others-chart', compareData, compareLayout);
+            {% endif %}
+        });
     </script>
 </body>
 </html>
