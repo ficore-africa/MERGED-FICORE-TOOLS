@@ -157,10 +157,6 @@
             <div class="progress-bar">
                 <div class="progress" id="progress" style="width: 20%;"></div>
             </div>
-            <!-- Debug Output -->
-            <div class="col-12">
-                <p style="color: blue;">Debug - Questions Data: {{ questions }}</p>
-            </div>
             <form method="POST" id="quiz-form" class="row g-3">
                 <div class="col-md-6 form-group">
                     <label for="first_name">{{ trans.get('First Name', 'First Name') }}</label>
@@ -177,39 +173,187 @@
                         <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
                     </select>
                 </div>
-                {% if questions %}
-                    {% for i in range(questions|length) %}
-                        <div class="col-12 radio-group">
-                            <label class="tooltip">
-                                Question {{ i + 1 }} of {{ questions|length }}: {{ questions[i]['text'] }}
-                                <span class="tooltiptext">{{ questions[i]['tooltip'] }}</span>
-                            </label>
-                            <div class="radio-options-container">
-                                {% if questions[i]['type'] == 'yes_no' %}
-                                    <div class="form-check">
-                                        <input type="radio" name="question_{{ i + 1 }}" value="Yes" class="form-check-input radio-options" required> 
-                                        <label class="form-check-label">Yes</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="radio" name="question_{{ i + 1 }}" value="No" class="form-check-input radio-options" required> 
-                                        <label class="form-check-label">No</label>
-                                    </div>
-                                {% else %}
-                                    {% for option in questions[i]['options'] %}
-                                        <div class="form-check">
-                                            <input type="radio" name="question_{{ i + 1 }}" value="{{ option }}" class="form-check-input radio-options" required> 
-                                            <label class="form-check-label">{{ option }}</label>
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
+                <!-- Hardcoded Questions -->
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 1 of 10: Do you track your expenses weekly?
+                        <span class="tooltiptext">Tracking: Recording all money spent daily.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_1" value="Yes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Yes</label>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-12">
-                        <p style="color: red;">No questions available. Please check the questions.json file.</p>
+                        <div class="form-check">
+                            <input type="radio" name="question_1" value="No" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">No</label>
+                        </div>
                     </div>
-                {% endif %}
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 2 of 10: Do you avoid budgeting?
+                        <span class="tooltiptext">Budgeting: Planning how to spend your money.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_2" value="Yes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_2" value="No" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 3 of 10: Do you save a portion of your income monthly?
+                        <span class="tooltiptext">Saving: Setting aside money for future use.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_3" value="Yes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_3" value="No" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 4 of 10: Do you often spend on non-essentials like entertainment?
+                        <span class="tooltiptext">Non-essentials: Items or activities not critical to daily needs.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_4" value="Yes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_4" value="No" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 5 of 10: Do you plan your purchases in advance?
+                        <span class="tooltiptext">Planning: Deciding what to buy before spending.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_5" value="Yes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_5" value="No" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 6 of 10: How often do you save?
+                        <span class="tooltiptext">Saving frequency: How regularly you set aside money.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_6" value="Never" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Never</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_6" value="Sometimes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Sometimes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_6" value="Always" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Always</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 7 of 10: How often do you overspend at the market?
+                        <span class="tooltiptext">Overspending: Spending more than planned.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_7" value="Never" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Never</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_7" value="Sometimes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Sometimes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_7" value="Always" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Always</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 8 of 10: How often do you review your finances?
+                        <span class="tooltiptext">Reviewing: Checking your income and expenses.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_8" value="Never" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Never</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_8" value="Sometimes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Sometimes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_8" value="Always" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Always</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 9 of 10: How often do you buy on impulse?
+                        <span class="tooltiptext">Impulse buying: Purchasing without planning.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_9" value="Never" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Never</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_9" value="Sometimes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Sometimes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_9" value="Always" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Always</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 radio-group">
+                    <label class="tooltip">
+                        Question 10 of 10: How often do you join savings groups?
+                        <span class="tooltiptext">Savings groups: Local groups for collective saving.</span>
+                    </label>
+                    <div class="radio-options-container">
+                        <div class="form-check">
+                            <input type="radio" name="question_10" value="Never" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Never</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_10" value="Sometimes" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Sometimes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="question_10" value="Always" class="form-check-input radio-options" required> 
+                            <label class="form-check-label">Always</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-12 d-flex justify-content-center gap-2">
                     <button type="submit" class="submit-btn" aria-label="{{ trans.get('Submit Quiz', 'Submit Quiz') }}">{{ trans.get('Submit Quiz', 'Submit Quiz') }}</button>
                     <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
