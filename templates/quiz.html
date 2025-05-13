@@ -168,9 +168,16 @@
                 {% for question in questions %}
                     <div class="col-12 radio-group">
                         <label class="tooltip">
-                            {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(question.text, question.text) }}
-                            <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip) }}</span>
+                            {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(question.text, question.text if question.text else 'Question text missing') }}
+                            <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip if question.tooltip else 'Tooltip missing') }}</span>
                         </label>
+                        {% if question.type == 'yes_no' %}
+                            {% set choices = [('Yes', 'Yes'), ('No', 'No')] %}
+                        {% elif question.type == 'multiple_choice' %}
+                            {% set choices = [(opt, opt) for opt in question.options] %}
+                        {% else %}
+                            {% set choices = [('Unknown', 'Unknown')] %}
+                        {% endif %}
                         {% for option in form['question_' + loop.index|string].choices %}
                             <div class="form-check">
                                 <input class="form-check-input radio-options" type="radio" name="{{ 'question_' + loop.index|string }}" id="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}" value="{{ option[0] }}" {% if form['question_' + loop.index|string].data == option[0] %}checked{% endif %}>
@@ -180,7 +187,7 @@
                     </div>
                 {% else %}
                     <div class="col-12">
-                        <p style="color: red;">No questions available. Please check the quiz setup.</p>
+                        <p style="color: red;">No questions available. Please check the questions.json file.</p>
                     </div>
                 {% endfor %}
                 <div class="col-12 d-flex justify-content-center gap-2">
@@ -194,8 +201,8 @@
             <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2023', 'About Ficore Africa: Empowering financial growth across Africa since 2023') }}</p>
             <div class="social-icons">
                 <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="{{ trans.get('Follow on LinkedIn', 'Follow on LinkedIn') }}"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
                 <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
