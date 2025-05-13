@@ -1158,12 +1158,13 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    form = QuizForm()
+    # Bind the form with request.form on POST, or None on GET
+    form = QuizForm(formdata=request.form if request.method == 'POST' else None)
     
     selected_questions = QUIZ_QUESTIONS
     logger.debug(f"Selected questions: {selected_questions}")
 
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate():
         quiz_data = {
             'first_name': sanitize_input(form.first_name.data or ''),
             'email': sanitize_input(form.email.data or ''),
