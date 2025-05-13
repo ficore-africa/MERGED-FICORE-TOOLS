@@ -572,12 +572,17 @@ class HealthScoreForm(FlaskForm):
         super(HealthScoreForm, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translations(language)['Submit']
 
-def load_questions():
+try:
     with open('questions.json', 'r') as f:
-        return json.load(f)
-
-QUIZ_QUESTIONS = load_questions()
-
+        QUIZ_QUESTIONS = json.load(f)
+    logger.debug(f"Successfully loaded QUIZ_QUESTIONS: {QUIZ_QUESTIONS}")
+except FileNotFoundError:
+    logger.error("questions.json file not found. Ensure it exists in the project root directory.")
+    QUIZ_QUESTIONS = []  # Fallback to empty list to prevent crashes
+except json.JSONDecodeError as e:
+    logger.error(f"Error decoding questions.json: {e}")
+    QUIZ_QUESTIONS = []  # Fallback to empty list to prevent crashes
+    
 class QuizForm(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
@@ -1167,25 +1172,30 @@ def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
     questions = QUIZ_QUESTIONS
-    logger.debug(f"QUIZ_QUESTIONS loaded: {QUIZ_QUESTIONS}")  # Debug the source data
     logger.debug(f"Questions passed to template: {questions}")  # Debug the passed variable
     answers = {}
 
     if request.method == 'POST':
-        for i, q in enumerate(questions, 1):
+        # Since we're using hardcoded questions in the template, we need to match the expected structure
+        # We'll iterate over the expected question indices (1 to 10) to collect answers
+        for i in range(1, 11):  # Hardcoded to match the 10 questions in quiz.html
             answer = request.form.get(f'question_{i}')
             if answer:
-                answers[q['text']] = answer
+                # Since questions are hardcoded, we can use a placeholder question text
+                # When we switch to dynamic loading, this will use questions[i-1]['text']
+                question_text = f"Question {i}"
+                answers[question_text] = answer
 
         if answers:
-            personality, personality_desc, tip = assign_personality([(q['text'], a) for q, a in answers.items()], language)
+            # Assign personality based on answers
+            personality, personality_desc, tip = assign_personality([(q, a) for q, a in answers.items()], language)
             quiz_data = {
                 'first_name': sanitize_input(request.form.get('first_name', '')),
                 'email': sanitize_input(request.form.get('email', '')),
                 'language': language,
                 'auto_email': bool(request.form.get('email')),
                 'personality': personality,
-                'badges': trans['Personality Unlocked!']
+                'badges': trans.get('Personality Unlocked!', 'Personality Unlocked!')
             }
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -1197,10 +1207,12 @@ def quiz():
                 data.extend([q, a])
             data.extend([personality, quiz_data['badges'], str(quiz_data['auto_email']).lower()])
 
+            # Append to Google Sheets (assuming this function exists)
             if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
-                flash(trans['Google Sheets Error'], 'error')
+                flash(trans.get('Google Sheets Error', 'Error saving to Google Sheets'), 'error')
                 return redirect(url_for('quiz'))
 
+            # Generate summary chart (assuming this function exists)
             summary_chart = generate_quiz_summary_chart(list(answers.items()), language)
             session['quiz_results'] = {
                 'first_name': quiz_data['first_name'],
@@ -1215,18 +1227,19 @@ def quiz():
             }
             session.modified = True
 
+            # Send email if auto_email is enabled
             if quiz_data['auto_email'] and quiz_data['email']:
                 try:
                     threading.Thread(
                         target=send_quiz_email_async,
                         args=(quiz_data['email'], quiz_data['first_name'] or 'User', personality, personality_desc, tip, language)
                     ).start()
-                    flash(trans['Check Inbox'], 'success')
+                    flash(trans.get('Check Inbox', 'Check your inbox for results'), 'success')
                 except Exception as e:
                     logger.error(f"Failed to send quiz email: {e}")
-                    flash(trans['Email Send Error'], 'error')
+                    flash(trans.get('Email Send Error', 'Failed to send email'), 'error')
 
-            flash(trans['Submission Success'], 'success')
+            flash(trans.get('Submission Success', 'Quiz submitted successfully'), 'success')
             return redirect(url_for('quiz_results'))
 
     return render_template('quiz.html', 
