@@ -180,7 +180,12 @@
                             {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
                             <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
                         </label>
-                        {{ form['question_' ~ (i + 1)](class='form-check-input radio-options') }}
+                        {% for choice in form['question_' ~ (i + 1)] %}
+                            <div class="form-check">
+                                {{ choice(class='form-check-input radio-options') }}
+                                {{ choice.label(class='form-check-label') }}
+                            </div>
+                        {% endfor %}
                         {% for error in form['question_' ~ (i + 1)].errors %}
                             <span style="color: red;">{{ error }}</span>
                         {% endfor %}
