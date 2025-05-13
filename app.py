@@ -494,6 +494,12 @@ def generate_comparison_plot(user_df, all_users_df):
     except Exception as e:
         logger.error(f"Error generating comparison plot: {e}")
         return None
+class DynamicQuizForm(QuizForm):
+    pass
+for i, q in enumerate(selected_questions, 1):
+    choices = [(trans['Yes'], trans['Yes']), (trans['No'], trans['No'])] if q['type'] == 'yes_no' else [(opt, opt) for opt in q['options']]
+    setattr(DynamicQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
+form = DynamicQuizForm()
 
 # Form definitions
 class Step1Form(FlaskForm):
