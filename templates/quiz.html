@@ -160,7 +160,7 @@
                 <div class="progress" id="progress" style="width: 20%;"></div>
             </div>
             <!-- Debug Output -->
-            <div class="col-12">
+            <div class="col-12 mb-3">
                 <p style="color: blue;">Debug - Questions Data: {{ questions }}</p>
             </div>
             <form method="POST" id="quiz-form" class="row g-3">
@@ -179,11 +179,11 @@
                         <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
                     </select>
                 </div>
-                <!-- Hardcoded Questions with Proper Arrangement -->
+                <!-- Hardcoded Questions with Explicit Numbering -->
                 {% set total_questions = 10 %}
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 1 {{ trans.get('of', 'of') }} {{ total_questions }}: Do you track your expenses weekly?
+                        Question 1 of {{ total_questions }}: Do you track your expenses weekly?
                         <span class="tooltiptext">Tracking: Recording all money spent daily.</span>
                     </label>
                     <div class="radio-options-container">
@@ -199,7 +199,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 2 {{ trans.get('of', 'of') }} {{ total_questions }}: Do you avoid budgeting?
+                        Question 2 of {{ total_questions }}: Do you avoid budgeting?
                         <span class="tooltiptext">Budgeting: Planning how to spend your money.</span>
                     </label>
                     <div class="radio-options-container">
@@ -215,7 +215,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 3 {{ trans.get('of', 'of') }} {{ total_questions }}: Do you save a portion of your income monthly?
+                        Question 3 of {{ total_questions }}: Do you save a portion of your income monthly?
                         <span class="tooltiptext">Saving: Setting aside money for future use.</span>
                     </label>
                     <div class="radio-options-container">
@@ -231,7 +231,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 4 {{ trans.get('of', 'of') }} {{ total_questions }}: Do you often spend on non-essentials like entertainment?
+                        Question 4 of {{ total_questions }}: Do you often spend on non-essentials like entertainment?
                         <span class="tooltiptext">Non-essentials: Items or activities not critical to daily needs.</span>
                     </label>
                     <div class="radio-options-container">
@@ -247,7 +247,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 5 {{ trans.get('of', 'of') }} {{ total_questions }}: Do you plan your purchases in advance?
+                        Question 5 of {{ total_questions }}: Do you plan your purchases in advance?
                         <span class="tooltiptext">Planning: Deciding what to buy before spending.</span>
                     </label>
                     <div class="radio-options-container">
@@ -263,7 +263,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 6 {{ trans.get('of', 'of') }} {{ total_questions }}: How often do you save?
+                        Question 6 of {{ total_questions }}: How often do you save?
                         <span class="tooltiptext">Saving frequency: How regularly you set aside money.</span>
                     </label>
                     <div class="radio-options-container">
@@ -283,7 +283,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 7 {{ trans.get('of', 'of') }} {{ total_questions }}: How often do you overspend at the market?
+                        Question 7 of {{ total_questions }}: How often do you overspend at the market?
                         <span class="tooltiptext">Overspending: Spending more than planned.</span>
                     </label>
                     <div class="radio-options-container">
@@ -303,7 +303,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 8 {{ trans.get('of', 'of') }} {{ total_questions }}: How often do you review your finances?
+                        Question 8 of {{ total_questions }}: How often do you review your finances?
                         <span class="tooltiptext">Reviewing: Checking your income and expenses.</span>
                     </label>
                     <div class="radio-options-container">
@@ -323,7 +323,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 9 {{ trans.get('of', 'of') }} {{ total_questions }}: How often do you buy on impulse?
+                        Question 9 of {{ total_questions }}: How often do you buy on impulse?
                         <span class="tooltiptext">Impulse buying: Purchasing without planning.</span>
                     </label>
                     <div class="radio-options-container">
@@ -343,7 +343,7 @@
                 </div>
                 <div class="col-12 radio-group">
                     <label class="tooltip">
-                        {{ trans.get('Question', 'Question') }} 10 {{ trans.get('of', 'of') }} {{ total_questions }}: How often do you join savings groups?
+                        Question 10 of {{ total_questions }}: How often do you join savings groups?
                         <span class="tooltiptext">Savings groups: Local groups for collective saving.</span>
                     </label>
                     <div class="radio-options-container">
