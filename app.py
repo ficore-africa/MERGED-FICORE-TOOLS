@@ -585,13 +585,18 @@ class QuizForm(FlaskForm):
     submit = SubmitField('Submit Quiz')
 
     def __init__(self, *args, **kwargs):
-        super(QuizForm, self).__init__(*args, **kwargs)
+        # Add dynamic fields before calling super().__init__()
         for i, question in enumerate(QUIZ_QUESTIONS, 1):
             choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
             field = RadioField(f'Question {i}', choices=choices, validators=[DataRequired()])
             setattr(self, f'question_{i}', field)
-            self._fields[f'question_{i}'] = field  # Explicitly register the field in _fields
-            
+            if not hasattr(self, '_fields'):
+                self._fields = {}
+            self._fields[f'question_{i}'] = field  # Ensure the field is in _fields
+
+        # Now call the parent __init__ to bind all fields
+        super(QuizForm, self).__init__(*args, **kwargs)
+        
 def assign_personality(answers, language='en'):
     score = 0
     for question, answer in answers:
@@ -1160,12 +1165,8 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    # Instantiate and process the form
-    form = QuizForm()
-    if request.method == 'GET':
-        form.process()  # Bind the form with no data on GET
-    elif request.method == 'POST':
-        form.process(formdata=request.form)  # Bind the form with submitted data on POST
+    # Instantiate the form with formdata to handle binding
+    form = QuizForm(formdata=request.form if request.method == 'POST' else None)
 
     selected_questions = QUIZ_QUESTIONS
     logger.debug(f"Selected questions: {selected_questions}")
