@@ -1109,12 +1109,19 @@ def quiz():
         session.modified = True
     else:
         selected_questions = session['quiz_questions']
-    form = DynamicQuizForm()
+    
+    # Create a new class for this request to avoid thread-safety issues
+    class RequestQuizForm(DynamicQuizForm):
+        pass
+    
+    # Add dynamic fields
     for i, q in enumerate(selected_questions, 1):
         choices = [(trans['Yes'], trans['Yes']), (trans['No'], trans['No'])] if q['type'] == 'yes_no' else [(opt, opt) for opt in q['options']]
-        setattr(DynamicQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
-    form.process()
+        setattr(RequestQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
+    
+    form = RequestQuizForm()
     logger.debug(f"Quiz form fields: {list(form._fields.keys())}")
+    
     if form.validate_on_submit():
         quiz_data = {
             'first_name': sanitize_input(form.first_name.data or ''),
