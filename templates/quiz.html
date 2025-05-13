@@ -157,6 +157,10 @@
             <div class="progress-bar">
                 <div class="progress" id="progress" style="width: 20%;"></div>
             </div>
+            <!-- Debug Output -->
+            <div class="col-12">
+                <p style="color: blue;">Debug - Questions Data: {{ questions }}</p>
+            </div>
             <form method="POST" id="quiz-form" class="row g-3">
                 <div class="col-md-6 form-group">
                     <label for="first_name">{{ trans.get('First Name', 'First Name') }}</label>
@@ -177,7 +181,7 @@
                     {% for i in range(questions|length) %}
                         <div class="col-12 radio-group">
                             <label class="tooltip">
-                                {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ questions[i]['text'] }}
+                                Question {{ i + 1 }} of {{ questions|length }}: {{ questions[i]['text'] }}
                                 <span class="tooltiptext">{{ questions[i]['tooltip'] }}</span>
                             </label>
                             <div class="radio-options-container">
@@ -203,7 +207,7 @@
                     {% endfor %}
                 {% else %}
                     <div class="col-12">
-                        <p style="color: red;">{{ trans.get('No questions available. Please check the questions.json file.', 'No questions available. Please check the questions.json file.') }}</p>
+                        <p style="color: red;">No questions available. Please check the questions.json file.</p>
                     </div>
                 {% endif %}
                 <div class="col-12 d-flex justify-content-center gap-2">
@@ -221,7 +225,7 @@
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'support') }}</a> |
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
                 <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
                 <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
             </p>
