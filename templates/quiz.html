@@ -171,13 +171,6 @@
                             {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(question.text, question.text if question.text else 'Question text missing') }}
                             <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip if question.tooltip else 'Tooltip missing') }}</span>
                         </label>
-                        {% if question.type == 'yes_no' %}
-                            {% set choices = [('Yes', 'Yes'), ('No', 'No')] %}
-                        {% elif question.type == 'multiple_choice' %}
-                            {% set choices = [(opt, opt) for opt in question.options] %}
-                        {% else %}
-                            {% set choices = [('Unknown', 'Unknown')] %}
-                        {% endif %}
                         {% for option in form['question_' + loop.index|string].choices %}
                             <div class="form-check">
                                 <input class="form-check-input radio-options" type="radio" name="{{ 'question_' + loop.index|string }}" id="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}" value="{{ option[0] }}" {% if form['question_' + loop.index|string].data == option[0] %}checked{% endif %}>
