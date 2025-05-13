@@ -494,13 +494,6 @@ def generate_comparison_plot(user_df, all_users_df):
     except Exception as e:
         logger.error(f"Error generating comparison plot: {e}")
         return None
-class DynamicQuizForm(QuizForm):
-    pass
-for i, q in enumerate(selected_questions, 1):
-    choices = [(trans['Yes'], trans['Yes']), (trans['No'], trans['No'])] if q['type'] == 'yes_no' else [(opt, opt) for opt in q['options']]
-    setattr(DynamicQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
-form = DynamicQuizForm()
-
 # Form definitions
 class Step1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -563,6 +556,8 @@ class QuizForm(FlaskForm):
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
     submit = SubmitField('Submit Quiz')
 
+class DynamicQuizForm(QuizForm):
+    pass
 # Quiz questions
 QUIZ_QUESTIONS = [
     {"text": "Do you track your expenses weekly?", "type": "yes_no", "tooltip": "Tracking: Recording all money spent daily."},
@@ -1108,17 +1103,18 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    form = QuizForm()
     if 'quiz_questions' not in session:
         selected_questions = random.sample(QUIZ_QUESTIONS, 5)
         session['quiz_questions'] = selected_questions
         session.modified = True
     else:
         selected_questions = session['quiz_questions']
+    form = DynamicQuizForm()
     for i, q in enumerate(selected_questions, 1):
         choices = [(trans['Yes'], trans['Yes']), (trans['No'], trans['No'])] if q['type'] == 'yes_no' else [(opt, opt) for opt in q['options']]
-        setattr(QuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
+        setattr(DynamicQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
     form.process()
+    logger.debug(f"Quiz form fields: {list(form._fields.keys())}")
     if form.validate_on_submit():
         quiz_data = {
             'first_name': sanitize_input(form.first_name.data or ''),
@@ -1199,7 +1195,7 @@ def quiz():
         FACEBOOK_URL=FACEBOOK_URL,
         language=language
     )
-
+    
 @app.route('/quiz_results', methods=['GET', 'POST'])
 def quiz_results():
     language = session.get('language', 'en')
