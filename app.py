@@ -49,6 +49,14 @@ for var in required_env_vars:
         logger.critical(f"{var} not set.")
         raise RuntimeError(f"{var} not set.")
 
+# Configure SMTP for email
+app.config['MAIL_SERVER'] = os.getenv('SMTP_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('SMTP_PORT'))
+app.config['MAIL_USERNAME'] = os.getenv('SMTP_USER')
+app.config['MAIL_PASSWORD'] = os.getenv('SMTP_PASSWORD')
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
 # Configure server-side session
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = os.path.join(app.root_path, 'flask_session')
@@ -74,7 +82,6 @@ class CompressedSession(SessionInterface):
             compressed_data = bytes.fromhex(session_data)
             decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
             session = SecureCookieSession(json.loads(decompressed_data))
-            # Only restore if session has no budget_data, health_data, or quiz_results
             if ('budget_data' not in session and 'health_data' not in session and 'quiz_results' not in session) and session.get('email'):
                 session = self.restore_from_backup(session.get('email'), session)
             return session
@@ -202,7 +209,9 @@ PREDETERMINED_HEADERS_HEALTH = [
 PREDETERMINED_HEADERS_QUIZ = [
     'Timestamp', 'first_name', 'email', 'language', 'question_1', 'answer_1',
     'question_2', 'answer_2', 'question_3', 'answer_3', 'question_4', 'answer_4',
-    'question_5', 'answer_5', 'personality', 'badges', 'auto_email'
+    'question_5', 'answer_5', 'question_6', 'answer_6', 'question_7', 'answer_7',
+    'question_8', 'answer_8', 'question_9', 'answer_9', 'question_10', 'answer_10',
+    'personality', 'badges', 'auto_email'
 ]
 
 def sanitize_input(text):
@@ -498,6 +507,7 @@ def generate_comparison_plot(user_df, all_users_df):
     except Exception as e:
         logger.error(f"Error generating comparison plot: {e}")
         return None
+
 # Form definitions
 class Step1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -564,55 +574,13 @@ class QuizForm(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
-    question_1 = RadioField('Question 1', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
-    question_2 = RadioField('Question 2', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])  # Fixed typo
-    question_3 = RadioField('Question 3', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
-    question_4 = RadioField('Question 4', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
-    question_5 = RadioField('Question 5', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
-    question_6 = RadioField('Question 6', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
-    question_7 = RadioField('Question 7', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
-    question_8 = RadioField('Question 8', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
-    question_9 = RadioField('Question 9', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
-    question_10 = RadioField('Question 10', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     submit = SubmitField('Submit Quiz')
 
-# Placeholder functions (to be defined elsewhere)
-def sanitize_input(data):
-    return data.strip() if data else ''
-
-def get_translations(language):
-    # Placeholder for translation logic
-    return {'Personality Unlocked!': 'Personality Unlocked!', 'Submission Success': 'Quiz submitted successfully!', 'Check Inbox': 'Check your inbox!', 'Email Send Error': 'Failed to send email.', 'Google Sheets Error': 'Error saving to Google Sheets.'}
-
-def assign_personality(answers, language):
-    # Placeholder for personality assignment logic
-    return 'Planner', 'You plan your finances well.', 'Save regularly.'
-
-def append_to_sheet(data, headers, sheet_name):
-    # Placeholder for Google Sheets append logic
-    return True
-
-def generate_quiz_summary_chart(answers, language):
-    # Placeholder for chart generation logic
-    return None
-
-def send_quiz_email_async(email, first_name, personality, personality_desc, tip, language):
-    # Placeholder for email sending logic
-    pass
-    
-# Quiz questions
-QUIZ_QUESTIONS = [
-    {"text": "Do you track your expenses weekly?", "type": "yes_no", "tooltip": "Tracking: Recording all money spent daily."},
-    {"text": "Do you avoid budgeting?", "type": "yes_no", "tooltip": "Budgeting: Planning how to spend your money."},
-    {"text": "Do you save a portion of your income monthly?", "type": "yes_no", "tooltip": "Saving: Setting aside money for future use."},
-    {"text": "Do you often spend on non-essentials like entertainment?", "type": "yes_no", "tooltip": "Non-essentials: Items or activities not critical to daily needs."},
-    {"text": "Do you plan your purchases in advance?", "type": "yes_no", "tooltip": "Planning: Deciding what to buy before spending."},
-    {"text": "How often do you save?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Saving frequency: How regularly you set aside money."},
-    {"text": "How often do you overspend at the market?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Overspending: Spending more than planned."},
-    {"text": "How often do you review your finances?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Reviewing: Checking your income and expenses."},
-    {"text": "How often do you buy on impulse?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Impulse buying: Purchasing without planning."},
-    {"text": "How often do you join savings groups?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Savings groups: Local groups for collective saving."}
-]
+    def __init__(self, *args, **kwargs):
+        super(QuizForm, self).__init__(*args, **kwargs)
+        for i, question in enumerate(QUIZ_QUESTIONS, 1):
+            choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
+            setattr(self, f'question_{i}', RadioField(f'Question {i}', choices=choices, validators=[DataRequired()]))
 
 def assign_personality(answers, language='en'):
     score = 0
@@ -632,15 +600,15 @@ def assign_personality(answers, language='en'):
                 score -= 1 if q['text'] in ["How often do you save?", "How often do you review your finances?", "How often do you join savings groups?"] else 1
     trans = get_translations(language)
     if score >= 3:
-        return 'Planner', trans['Planner'], trans['Planner Tip']
+        return 'Planner', trans.get('Planner', 'You plan your finances well.'), trans.get('Planner Tip', 'Save regularly.')
     elif score >= 1:
-        return 'Saver', trans['Saver'], trans['Saver Tip']
+        return 'Saver', trans.get('Saver', 'You save consistently.'), trans.get('Saver Tip', 'Increase your savings rate.')
     elif score == 0:
-        return 'Minimalist', trans['Minimalist'], trans['Minimalist Tip']
+        return 'Minimalist', trans.get('Minimalist', 'You maintain a balanced approach.'), trans.get('Minimalist Tip', 'Consider a budget.')
     elif score >= -2:
-        return 'Spender', trans['Spender'], trans['Spender Tip']
+        return 'Spender', trans.get('Spender', 'You enjoy spending.'), trans.get('Spender Tip', 'Track your expenses.')
     else:
-        return 'Avoider', trans['Avoider'], trans['Avoider Tip']
+        return 'Avoider', trans.get('Avoider', 'You avoid financial planning.'), trans.get('Avoider Tip', 'Start with a simple plan.')
 
 def generate_quiz_summary_chart(answers, language='en'):
     try:
@@ -650,7 +618,7 @@ def generate_quiz_summary_chart(answers, language='en'):
                 answer_counts[answer] += 1
         labels = list(answer_counts.keys())
         values = list(answer_counts.values())
-        fig = px.bar(x=labels, y=values, title=get_translations(language)['Quiz Summary'], labels={'x': 'Answer', 'y': 'Count'})
+        fig = px.bar(x=labels, y=values, title=get_translations(language).get('Quiz Summary', 'Quiz Summary'), labels={'x': 'Answer', 'y': 'Count'})
         fig.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         return fig.to_html(full_html=False, include_plotlyjs=False)
     except Exception as e:
@@ -661,7 +629,7 @@ def send_quiz_email(to_email, user_name, personality, personality_desc, tip, lan
     try:
         trans = get_translations(language)
         msg = Message(
-            subject=trans['Quiz Report Subject'],
+            subject=trans.get('Quiz Report Subject', 'Your Quiz Report'),
             recipients=[to_email],
             html=render_template(
                 'quiz_email.html',
@@ -693,7 +661,7 @@ def send_budget_email(to_email, user_name, user_data, language):
     try:
         trans = get_translations(language)
         msg = Message(
-            subject=trans['Budget Report Subject'],
+            subject=trans.get('Budget Report Subject', 'Your Budget Report'),
             recipients=[to_email],
             html=render_template(
                 'budget_email.html',
