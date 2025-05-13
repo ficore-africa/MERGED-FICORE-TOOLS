@@ -188,7 +188,15 @@
                                 <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
                             </label>
                             <div class="radio-options-container">
-                                {{ form['question_' ~ (i + 1)](class_='form-check-input radio-options') }}
+                                {% with field = form['question_' ~ (i + 1)] %}
+                                    {{ field.label(class_='form-check-label') }}
+                                    {% for subfield in field %}
+                                        <div class="form-check">
+                                            {{ subfield(class_='form-check-input radio-options') }}
+                                            {{ subfield.label(class_='form-check-label') }}
+                                        </div>
+                                    {% endfor %}
+                                {% endwith %}
                             </div>
                             {% for error in form['question_' ~ (i + 1)].errors %}
                                 <span style="color: red;">{{ error }}</span>
