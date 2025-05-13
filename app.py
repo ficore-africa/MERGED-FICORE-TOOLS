@@ -1158,9 +1158,15 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    # Bind the form with request.form on POST, or None on GET
-    form = QuizForm(formdata=request.form if request.method == 'POST' else None)
+    # Instantiate the form
+    form = QuizForm()
     
+    # Explicitly process the form to bind fields, even on GET
+    if request.method == 'GET':
+        form.process()  # Bind the form with no data on GET
+    elif request.method == 'POST':
+        form.process(formdata=request.form)  # Bind the form with submitted data on POST
+
     selected_questions = QUIZ_QUESTIONS
     logger.debug(f"Selected questions: {selected_questions}")
 
