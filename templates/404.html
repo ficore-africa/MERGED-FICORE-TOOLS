@@ -21,6 +21,7 @@
             <a href="{{ LINKEDIN_URL }}" target="_blank">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a> |
             <a href="{{ TWITTER_URL }}" target="_blank">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a>
             <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+            <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
