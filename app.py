@@ -236,13 +236,21 @@ def set_sheet_headers(headers, worksheet_name):
         except gspread.exceptions.WorksheetNotFound:
             client.add_worksheet(worksheet_name, rows=100, cols=len(headers))
             worksheet = client.worksheet(worksheet_name)
-        worksheet.update('A1:' + chr(64 + len(headers)) + '1', [headers])
+        
+        # Calculate the correct column letter for the range (e.g., 'A' to 'AA' for 27 columns)
+        col_num = len(headers)
+        col_letter = ''
+        while col_num > 0:
+            col_num, remainder = divmod(col_num - 1, 26)
+            col_letter = chr(65 + remainder) + col_letter
+        range_end = col_letter + '1'
+        worksheet.update(f'A1:{range_end}', [headers])
         logger.info(f"Headers set in worksheet '{worksheet_name}'.")
         return True
     except Exception as e:
         logger.error(f"Error setting headers in '{worksheet_name}': {e}")
         return False
-
+        
 def initialize_sheets(max_retries=5, backoff_factor=2):
     global sheets
     if not SPREADSHEET_ID:
