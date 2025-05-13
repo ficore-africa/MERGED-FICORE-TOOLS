@@ -71,9 +71,9 @@
             <form method="POST" id="step2-form" action="{{ url_for('budget_step2') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    <label for="income" class="form-label"><span class="visual-icon">💰</span> {{ trans.get('Monthly Income', 'Monthly Income') }}</label>
+                    <label for="monthly_income" class="form-label"><span class="visual-icon">💰</span> {{ trans.get('Monthly Income', 'Monthly Income') }}</label>
                     <div style="position: relative;">
-                        {{ form.income(class="form-control", type="number", step="0.01", min="0", placeholder=trans.get('e.g. ₦150,000', 'e.g. ₦150,000'), **{'aria-required': 'true', 'aria-label': trans.get('Monthly Income', 'Monthly Income')}) }}
+                        {{ form.monthly_income(class="form-control", type="number", step="0.01", min="0", placeholder=trans.get('e.g. ₦150,000', 'e.g. ₦150,000'), **{'aria-required': 'true', 'aria-label': trans.get('Monthly Income', 'Monthly Income')}) }}
                         <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Your monthly pay or income.', 'Your monthly pay or income.') }}</span></span>
                     </div>
                     <div class="valid-feedback">{{ trans.get('Valid amount!', 'Valid amount!') }}</div>
