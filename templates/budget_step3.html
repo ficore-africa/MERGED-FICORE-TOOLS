@@ -73,7 +73,7 @@
                 <div class="form-group">
                     <label for="housing_expenses" class="form-label"><span class="visual-icon">🏠</span> {{ trans.get('Housing Expenses', 'Housing Expenses') }}</label>
                     <div style="position: relative;">
-                        {{ form.housing_expenes(class="form-control", type="number", step="0.01", min="0", placeholder=trans.get('e.g. ₦30,000', 'e.g. ₦30,000'), **{'aria-required': 'true', 'aria-label': trans.get('Housing Expenses', 'Housing Expenses')}) }}
+                        {{ form.housing_expenses(class="form-control", type="number", step="0.01", min="0", placeholder=trans.get('e.g. ₦30,000', 'e.g. ₦30,000'), **{'aria-required': 'true', 'aria-label': trans.get('Housing Expenses', 'Housing Expenses')}) }}
                         <span class="info-icon"><i class="fas fa-info-circle"></i><span class="tooltip-text">{{ trans.get('Rent, electricity, or water bills.', 'Rent, electricity, or water bills.') }}</span></span>
                     </div>
                     <div class="valid-feedback">{{ trans.get('Valid amount!', 'Valid amount!') }}</div>
