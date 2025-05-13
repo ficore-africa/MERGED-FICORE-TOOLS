@@ -167,13 +167,13 @@
                 {% for question in questions %}
                     <div class="col-12 radio-group">
                         <label class="tooltip">
-                            {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} 5: {{ trans.get(question.text, question.text) }}
+                            {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(question.text, question.text) }}
                             <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip) }}</span>
                         </label>
                         {% for option in form['question_' + loop.index|string].choices %}
                             <div class="form-check">
                                 <input class="form-check-input radio-options" type="radio" name="{{ 'question_' + loop.index|string }}" id="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}" value="{{ option[0] }}" {% if form['question_' + loop.index|string].data == option[0] %}checked{% endif %}>
-                                <label class="form-check-label" for="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}">{{ option[1] }}</label>
+                                <label class="form-check-label" for="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}">{{ trans.get(option[1], option[1]) }}</label>
                             </div>
                         {% endfor %}
                     </div>
