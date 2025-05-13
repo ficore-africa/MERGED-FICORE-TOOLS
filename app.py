@@ -554,10 +554,17 @@ class QuizForm(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
+    question_1 = RadioField('Question 1', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
+    question_2 = RadioField('Question 2', choices=[('Yes', 'No', 'No')], validators=[DataRequired()])
+    question_3 = RadioField('Question 3', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
+    question_4 = RadioField('Question 4', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
+    question_5 = RadioField('Question 5', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
+    question_6 = RadioField('Question 6', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
+    question_7 = RadioField('Question 7', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
+    question_8 = RadioField('Question 8', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
+    question_9 = RadioField('Question 9', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
+    question_10 = RadioField('Question 10', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     submit = SubmitField('Submit Quiz')
-
-class DynamicQuizForm(QuizForm):
-    pass
 # Quiz questions
 QUIZ_QUESTIONS = [
     {"text": "Do you track your expenses weekly?", "type": "yes_no", "tooltip": "Tracking: Recording all money spent daily."},
@@ -1103,24 +1110,10 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    if 'quiz_questions' not in session:
-        selected_questions = random.sample(QUIZ_QUESTIONS, 5)
-        session['quiz_questions'] = selected_questions
-        session.modified = True
-    else:
-        selected_questions = session['quiz_questions']
+    form = QuizForm()
     
-    # Create a new class for this request to avoid thread-safety issues
-    class RequestQuizForm(DynamicQuizForm):
-        pass
-    
-    # Add dynamic fields
-    for i, q in enumerate(selected_questions, 1):
-        choices = [(trans['Yes'], trans['Yes']), (trans['No'], trans['No'])] if q['type'] == 'yes_no' else [(opt, opt) for opt in q['options']]
-        setattr(RequestQuizForm, f'question_{i}', RadioField(q['text'], choices=choices, validators=[DataRequired()]))
-    
-    form = RequestQuizForm()
-    logger.debug(f"Quiz form fields: {list(form._fields.keys())}")
+    # Use all questions from QUIZ_QUESTIONS
+    selected_questions = QUIZ_QUESTIONS
     
     if form.validate_on_submit():
         quiz_data = {
@@ -1172,7 +1165,6 @@ def quiz():
             'badges': [quiz_data['badges']],
             'summary_chart': summary_chart
         }
-        session.pop('quiz_questions', None)
         session.modified = True
         if quiz_data.get('auto_email') and quiz_data.get('email'):
             threading.Thread(
