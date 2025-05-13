@@ -1114,6 +1114,7 @@ def quiz():
     
     # Use all questions from QUIZ_QUESTIONS
     selected_questions = QUIZ_QUESTIONS
+    logger.debug(f"Selected questions: {selected_questions}")  # Debug log to confirm questions
     
     if form.validate_on_submit():
         quiz_data = {
