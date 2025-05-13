@@ -1167,6 +1167,8 @@ def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
     questions = QUIZ_QUESTIONS
+    logger.debug(f"QUIZ_QUESTIONS loaded: {QUIZ_QUESTIONS}")  # Debug the source data
+    logger.debug(f"Questions passed to template: {questions}")  # Debug the passed variable
     answers = {}
 
     if request.method == 'POST':
