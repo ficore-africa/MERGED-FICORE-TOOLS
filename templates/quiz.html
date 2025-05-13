@@ -153,7 +153,7 @@
             <form method="POST" id="quiz-form" class="row g-3">
                 {{ form.hidden_tag() }}
                 <div class="col-md-6 form-group">
-                    <label for="{{ form.first_name.id }}">{{ trans.get('First Name', 'Firstfaculty_name') }}</label>
+                    <label for="{{ form.first_name.id }}">{{ trans.get('First Name', 'First Name') }}</label>
                     {{ form.first_name(placeholder=trans.get('Enter your first name', 'Enter your first name'), class='form-control') }}
                 </div>
                 <div class="col-md-6 form-group">
@@ -170,7 +170,7 @@
                             {{ trans.get('Question', 'Question') }} {{ loop.index }} {{ trans.get('of', 'of') }} 5: {{ trans.get(question.text, question.text) }}
                             <span class="tooltiptext">{{ trans.get(question.tooltip, question.tooltip) }}</span>
                         </label>
-                        {% for option in getattr(form, 'question_' + loop.index|string).choices %}
+                        {% for option in form['question_' + loop.index|string].choices %}
                             <div class="form-check">
                                 <input class="form-check-input radio-options" type="radio" name="{{ 'question_' + loop.index|string }}" id="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}" value="{{ option[0] }}" {% if form['question_' + loop.index|string].data == option[0] %}checked{% endif %}>
                                 <label class="form-check-label" for="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}">{{ option[1] }}</label>
