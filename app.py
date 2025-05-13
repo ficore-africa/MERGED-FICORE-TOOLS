@@ -63,7 +63,8 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 SESSION_BACKUP_DIR = os.path.join(app.root_path, 'session_backup')
 os.makedirs(SESSION_BACKUP_DIR, exist_ok=True)
 
-# Custom session interface for compressionclass CompressedSession(SessionInterface):
+# Custom session interface for compression
+class CompressedSession(SessionInterface):
     def open_session(self, app, request):
         session_data = request.cookies.get(self.get_cookie_name(app))
         if not session_data:
