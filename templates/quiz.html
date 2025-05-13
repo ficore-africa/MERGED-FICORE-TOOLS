@@ -188,10 +188,9 @@
                                 <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
                             </label>
                             <div class="radio-options-container">
-                                {% set field = getattr(form, 'question_' ~ (i + 1)) %}
-                                {{ field(class_='form-check-input radio-options', render_kw={'class': 'form-check-input radio-options'}) }}
+                                {{ form['question_' ~ (i + 1)](class_='form-check-input radio-options') }}
                             </div>
-                            {% for error in field.errors %}
+                            {% for error in form['question_' ~ (i + 1)].errors %}
                                 <span style="color: red;">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -231,7 +230,7 @@
             function updateProgress() {
                 let totalFields = $('#quiz-form input:radio, #quiz-form select').not('[type=hidden]').length;
                 let filledFields = $('#quiz-form input:radio:checked, #quiz-form select:valid').not('[type=hidden]').length;
-                let progress = (filledFields / totalFields) * 100 || 0;
+                let progress = totalFields > 0 ? (filledFields / totalFields) * 100 : 0;
                 $('#progress').css('width', Math.min(progress, 100) + '%');
             }
 
