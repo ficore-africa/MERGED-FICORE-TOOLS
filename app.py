@@ -1227,7 +1227,7 @@ def quiz():
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('quiz_results'))
 
-    return render_template('quiz_alt.html', 
+    return render_template('quiz.html', 
                            questions=questions, 
                            trans=trans,
                            language=language,
