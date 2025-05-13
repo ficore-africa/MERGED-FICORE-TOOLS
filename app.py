@@ -575,6 +575,30 @@ class QuizForm(FlaskForm):
     question_9 = RadioField('Question 9', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     question_10 = RadioField('Question 10', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     submit = SubmitField('Submit Quiz')
+
+# Placeholder functions (to be defined elsewhere)
+def sanitize_input(data):
+    return data.strip() if data else ''
+
+def get_translations(language):
+    # Placeholder for translation logic
+    return {'Personality Unlocked!': 'Personality Unlocked!', 'Submission Success': 'Quiz submitted successfully!', 'Check Inbox': 'Check your inbox!', 'Email Send Error': 'Failed to send email.', 'Google Sheets Error': 'Error saving to Google Sheets.'}
+
+def assign_personality(answers, language):
+    # Placeholder for personality assignment logic
+    return 'Planner', 'You plan your finances well.', 'Save regularly.'
+
+def append_to_sheet(data, headers, sheet_name):
+    # Placeholder for Google Sheets append logic
+    return True
+
+def generate_quiz_summary_chart(answers, language):
+    # Placeholder for chart generation logic
+    return None
+
+def send_quiz_email_async(email, first_name, personality, personality_desc, tip, language):
+    # Placeholder for email sending logic
+    pass
     
 # Quiz questions
 QUIZ_QUESTIONS = [
@@ -1160,7 +1184,6 @@ def quiz():
     trans = get_translations(language)
     form = QuizForm()
     
-    # Load questions dynamically from QUIZ_QUESTIONS (sourced from questions.json)
     selected_questions = QUIZ_QUESTIONS
     logger.debug(f"Selected questions: {selected_questions}")
 
@@ -1172,42 +1195,36 @@ def quiz():
             'auto_email': bool(form.email.data)
         }
         answers = []
-        # Dynamically process each question based on the number of questions in QUIZ_QUESTIONS
         for i, q in enumerate(selected_questions, 1):
             answer = getattr(form, f'question_{i}').data
             quiz_data[f'question_{i}'] = q['text']
             quiz_data[f'answer_{i}'] = answer
             answers.append((q['text'], answer))
 
-        # Assign personality based on answers
         personality, personality_desc, tip = assign_personality(answers, form.language.data)
         quiz_data['personality'] = personality
         quiz_data['badges'] = trans['Personality Unlocked!']
 
-        # Prepare data for Google Sheets dynamically
         data = [
             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             quiz_data.get('first_name', ''),
             quiz_data.get('email', ''),
             quiz_data.get('language', 'en')
         ]
-        # Append question and answer pairs dynamically
         for i in range(1, len(selected_questions) + 1):
             data.append(quiz_data.get(f'question_{i}', ''))
             data.append(quiz_data.get(f'answer_{i}', ''))
-        # Append personality, badges, and auto_email
+
         data.extend([
             quiz_data.get('personality', ''),
             quiz_data.get('badges', ''),
             str(quiz_data.get('auto_email', False)).lower()
         ])
 
-        # Append to Google Sheets
         if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
             flash(trans['Google Sheets Error'], 'error')
             return redirect(url_for('quiz'))
 
-        # Generate summary chart and store results in session
         summary_chart = generate_quiz_summary_chart(answers, form.language.data)
         session['quiz_results'] = {
             'first_name': quiz_data.get('first_name', ''),
@@ -1222,7 +1239,6 @@ def quiz():
         }
         session.modified = True
 
-        # Send email asynchronously if auto_email is enabled
         if quiz_data.get('auto_email') and quiz_data.get('email'):
             try:
                 threading.Thread(
