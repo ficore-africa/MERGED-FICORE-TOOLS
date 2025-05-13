@@ -63,8 +63,7 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 SESSION_BACKUP_DIR = os.path.join(app.root_path, 'session_backup')
 os.makedirs(SESSION_BACKUP_DIR, exist_ok=True)
 
-# Custom session interface for compression
-class CompressedSession(SessionInterface):
+# Custom session interface for compressionclass CompressedSession(SessionInterface):
     def open_session(self, app, request):
         session_data = request.cookies.get(self.get_cookie_name(app))
         if not session_data:
@@ -74,7 +73,8 @@ class CompressedSession(SessionInterface):
             compressed_data = bytes.fromhex(session_data)
             decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
             session = SecureCookieSession(json.loads(decompressed_data))
-            if 'budget_data' not in session and session.get('email'):
+            # Only restore if session has no budget_data, health_data, or quiz_results
+            if ('budget_data' not in session and 'health_data' not in session and 'quiz_results' not in session) and session.get('email'):
                 session = self.restore_from_backup(session.get('email'), session)
             return session
         except Exception as e:
@@ -104,8 +104,11 @@ class CompressedSession(SessionInterface):
                 domain=domain,
                 path=path
             )
-            if session.get('budget_data', {}).get('email'):
-                self.backup_session(session.get('budget_data', {}).get('email'), session)
+            if session.get('budget_data', {}).get('email') or session.get('health_data', {}).get('email') or session.get('quiz_results', {}).get('email'):
+                email = (session.get('budget_data', {}).get('email') or 
+                         session.get('health_data', {}).get('email') or 
+                         session.get('quiz_results', {}).get('email'))
+                self.backup_session(email, session)
         except Exception as e:
             logger.error(f"Error saving session: {e}")
 
@@ -811,14 +814,19 @@ def budget_step4():
         session.modified = True
         budget_data = session['budget_data']
         try:
+            # Prepare DataFrame from session data
             df = pd.DataFrame([budget_data], columns=PREDETERMINED_HEADERS_BUDGET)
             df = calculate_budget_metrics(df)
             if df.empty:
                 flash(trans['Error retrieving data. Please try again.'], 'error')
                 return redirect(url_for('budget_step1'))
             user_df = df
+
+            # Assign badges
             badges = assign_badges_budget(user_df)
             user_df['badges'] = ', '.join(badges)
+
+            # Prepare data to append to Google Sheets
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 budget_data.get('first_name', ''),
@@ -835,18 +843,23 @@ def budget_step4():
                 user_df['savings'].iloc[0],
                 user_df['surplus_deficit'].iloc[0],
                 user_df['badges'].iloc[0],
-                0,
-                0
+                0,  # rank (calculated in dashboard)
+                0   # total_users (calculated in dashboard)
             ]
+
+            # Append to Google Sheets
             if not append_to_sheet(data, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
                 flash(trans['Google Sheets Error'], 'error')
                 return redirect(url_for('budget_step1'))
+
+            # Send email if requested
             if budget_data.get('auto_email'):
                 threading.Thread(
                     target=send_budget_email_async,
                     args=(budget_data['email'], budget_data['first_name'], user_df.iloc[0], language)
                 ).start()
                 flash(trans['Check Inbox'], 'success')
+
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('budget_dashboard'))
         except Exception as e:
@@ -866,28 +879,50 @@ def budget_step4():
         step=4,
         language=language
     )
-
+    
 @app.route('/budget_dashboard', methods=['GET', 'POST'])
 def budget_dashboard():
     language = session.get('language', 'en')
     trans = get_translations(language)
+    
+    # Check if budget_data exists in session (fresh submission)
     if 'budget_data' not in session or not session['budget_data'].get('email'):
         flash(trans['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
+
     email = session['budget_data']['email']
     try:
-        user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
-        if user_df.empty:
-            flash(trans['Error retrieving data. Please try again.'], 'error')
-            return redirect(url_for('budget_step1'))
-        user_df = calculate_budget_metrics(user_df)
+        # If budget_data is in session, use it directly
+        if 'budget_data' in session:
+            budget_data = session['budget_data']
+            df = pd.DataFrame([budget_data], columns=PREDETERMINED_HEADERS_BUDGET)
+            user_df = calculate_budget_metrics(df)
+            user_df['Timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
+        else:
+            # Fallback to Google Sheets if session data is unavailable
+            user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
+            if user_df.empty:
+                flash(trans['Error retrieving data. Please try again.'], 'error')
+                return redirect(url_for('budget_step1'))
+            user_df = calculate_budget_metrics(user_df)
+            user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
+
+        # Fetch all users' data for ranking
         all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
+
+        # Sort user data by timestamp and get the latest entry
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
         user_row = user_df.iloc[0]
+
+        # Calculate rank
         rank = sum(all_users_df['surplus_deficit'].astype(float) > user_row['surplus_deficit']) + 1
         total_users = len(all_users_df)
+
+        # Assign badges
         badges = assign_badges_budget(user_df)
+
+        # Generate plots
         budget_breakdown = {
             'Housing': user_row['housing_expenses'],
             'Food': user_row['food_expenses'],
@@ -906,6 +941,11 @@ def budget_dashboard():
             title=trans['Income vs Expenses']
         )
         comparison_plot = comparison_fig.to_html(full_html=False, include_plotlyjs=False)
+
+        # Clear the session budget_data after rendering to prevent reuse
+        session.pop('budget_data', None)
+        session.modified = True
+
         return render_template(
             'budget_dashboard.html',
             trans=trans,
@@ -927,7 +967,7 @@ def budget_dashboard():
         logger.error(f"Error in budget_dashboard: {e}")
         flash(trans['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
-
+        
 @app.route('/health_score', methods=['GET', 'POST'])
 def health_score():
     language = session.get('language', 'en')
@@ -1217,6 +1257,29 @@ def quiz_results():
         language=language
     )
 
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    language = session.get('language', 'en')
+    trans = get_translations(language)
+    
+    # Clear session data
+    email = session.get('budget_data', {}).get('email') or session.get('health_data', {}).get('email') or session.get('quiz_results', {}).get('email')
+    session.clear()
+    session.modified = True
+    
+    # Delete session backup file if it exists
+    if email:
+        backup_file = os.path.join(SESSION_BACKUP_DIR, f"{sanitize_input(email)}.json")
+        if os.path.exists(backup_file):
+            try:
+                os.remove(backup_file)
+                logger.info(f"Deleted session backup for {email}")
+            except Exception as e:
+                logger.error(f"Failed to delete session backup for {email}: {e}")
+    
+    flash(trans['Logged Out Successfully'], 'success')
+    return redirect(url_for('index'))
+    
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/x-icon')
