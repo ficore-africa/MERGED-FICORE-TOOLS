@@ -173,33 +173,39 @@
                         <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
                     </select>
                 </div>
-                {% for i in range(questions|length) %}
-                    <div class="col-12 radio-group">
-                        <label class="tooltip">
-                            {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
-                            <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
-                        </label>
-                        <div class="radio-options-container">
-                            {% if questions[i].type == 'yes_no' %}
-                                <div class="form-check">
-                                    <input type="radio" name="question_{{ i + 1 }}" value="Yes" class="form-check-input radio-options" required> 
-                                    <label class="form-check-label">Yes</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" name="question_{{ i + 1 }}" value="No" class="form-check-input radio-options" required> 
-                                    <label class="form-check-label">No</label>
-                                </div>
-                            {% else %}
-                                {% for option in questions[i].options %}
+                {% if questions %}
+                    {% for i in range(questions|length) %}
+                        <div class="col-12 radio-group">
+                            <label class="tooltip">
+                                {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ questions[i]['text'] }}
+                                <span class="tooltiptext">{{ questions[i]['tooltip'] }}</span>
+                            </label>
+                            <div class="radio-options-container">
+                                {% if questions[i]['type'] == 'yes_no' %}
                                     <div class="form-check">
-                                        <input type="radio" name="question_{{ i + 1 }}" value="{{ option }}" class="form-check-input radio-options" required> 
-                                        <label class="form-check-label">{{ option }}</label>
+                                        <input type="radio" name="question_{{ i + 1 }}" value="Yes" class="form-check-input radio-options" required> 
+                                        <label class="form-check-label">Yes</label>
                                     </div>
-                                {% endfor %}
-                            {% endif %}
+                                    <div class="form-check">
+                                        <input type="radio" name="question_{{ i + 1 }}" value="No" class="form-check-input radio-options" required> 
+                                        <label class="form-check-label">No</label>
+                                    </div>
+                                {% else %}
+                                    {% for option in questions[i]['options'] %}
+                                        <div class="form-check">
+                                            <input type="radio" name="question_{{ i + 1 }}" value="{{ option }}" class="form-check-input radio-options" required> 
+                                            <label class="form-check-label">{{ option }}</label>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
                         </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <p style="color: red;">{{ trans.get('No questions available. Please check the questions.json file.', 'No questions available. Please check the questions.json file.') }}</p>
                     </div>
-                {% endfor %}
+                {% endif %}
                 <div class="col-12 d-flex justify-content-center gap-2">
                     <button type="submit" class="submit-btn" aria-label="{{ trans.get('Submit Quiz', 'Submit Quiz') }}">{{ trans.get('Submit Quiz', 'Submit Quiz') }}</button>
                     <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
@@ -215,7 +221,7 @@
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-twitter"></i></a>
             </div>
             <p>
-                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
+                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'support') }}</a> |
                 <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
                 <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
             </p>
