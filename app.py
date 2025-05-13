@@ -1166,97 +1166,77 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    # Instantiate the form
-    form = QuizForm(formdata=request.form if request.method == 'POST' else None)
+    questions = QUIZ_QUESTIONS
+    answers = {}
 
-    selected_questions = QUIZ_QUESTIONS
-    logger.debug(f"Selected questions: {selected_questions}")
+    if request.method == 'POST':
+        for i, q in enumerate(questions, 1):
+            answer = request.form.get(f'question_{i}')
+            if answer:
+                answers[q['text']] = answer
 
-    if request.method == 'POST' and form.validate():
-        quiz_data = {
-            'first_name': sanitize_input(form.first_name.data or ''),
-            'email': sanitize_input(form.email.data or ''),
-            'language': form.language.data,
-            'auto_email': bool(form.email.data)
-        }
-        answers = []
-        for i, q in enumerate(selected_questions, 1):
-            answer = getattr(form, f'question_{i}').data
-            quiz_data[f'question_{i}'] = q['text']
-            quiz_data[f'answer_{i}'] = answer
-            answers.append((q['text'], answer))
+        if answers:
+            personality, personality_desc, tip = assign_personality([(q['text'], a) for q, a in answers.items()], language)
+            quiz_data = {
+                'first_name': sanitize_input(request.form.get('first_name', '')),
+                'email': sanitize_input(request.form.get('email', '')),
+                'language': language,
+                'auto_email': bool(request.form.get('email')),
+                'personality': personality,
+                'badges': trans['Personality Unlocked!']
+            }
+            data = [
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                quiz_data['first_name'],
+                quiz_data['email'],
+                quiz_data['language']
+            ]
+            for q, a in answers.items():
+                data.extend([q, a])
+            data.extend([personality, quiz_data['badges'], str(quiz_data['auto_email']).lower()])
 
-        personality, personality_desc, tip = assign_personality(answers, form.language.data)
-        quiz_data['personality'] = personality
-        quiz_data['badges'] = trans['Personality Unlocked!']
+            if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
+                flash(trans['Google Sheets Error'], 'error')
+                return redirect(url_for('quiz'))
 
-        data = [
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            quiz_data.get('first_name', ''),
-            quiz_data.get('email', ''),
-            quiz_data.get('language', 'en')
-        ]
-        for i in range(1, len(selected_questions) + 1):
-            data.append(quiz_data.get(f'question_{i}', ''))
-            data.append(quiz_data.get(f'answer_{i}', ''))
+            summary_chart = generate_quiz_summary_chart(list(answers.items()), language)
+            session['quiz_results'] = {
+                'first_name': quiz_data['first_name'],
+                'email': quiz_data['email'],
+                'language': language,
+                'personality': personality,
+                'personality_desc': personality_desc,
+                'tip': tip,
+                'answers': list(answers.items()),
+                'badges': [quiz_data['badges']],
+                'summary_chart': summary_chart
+            }
+            session.modified = True
 
-        data.extend([
-            quiz_data.get('personality', ''),
-            quiz_data.get('badges', ''),
-            str(quiz_data.get('auto_email', False)).lower()
-        ])
+            if quiz_data['auto_email'] and quiz_data['email']:
+                try:
+                    threading.Thread(
+                        target=send_quiz_email_async,
+                        args=(quiz_data['email'], quiz_data['first_name'] or 'User', personality, personality_desc, tip, language)
+                    ).start()
+                    flash(trans['Check Inbox'], 'success')
+                except Exception as e:
+                    logger.error(f"Failed to send quiz email: {e}")
+                    flash(trans['Email Send Error'], 'error')
 
-        if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
-            flash(trans['Google Sheets Error'], 'error')
-            return redirect(url_for('quiz'))
+            flash(trans['Submission Success'], 'success')
+            return redirect(url_for('quiz_results'))
 
-        summary_chart = generate_quiz_summary_chart(answers, form.language.data)
-        session['quiz_results'] = {
-            'first_name': quiz_data.get('first_name', ''),
-            'email': quiz_data.get('email', ''),
-            'language': quiz_data.get('language', 'en'),
-            'personality': personality,
-            'personality_desc': personality_desc,
-            'tip': tip,
-            'answers': answers,
-            'badges': [quiz_data['badges']],
-            'summary_chart': summary_chart
-        }
-        session.modified = True
-
-        if quiz_data.get('auto_email') and quiz_data.get('email'):
-            try:
-                threading.Thread(
-                    target=send_quiz_email_async,
-                    args=(
-                        quiz_data.get('email'),
-                        quiz_data.get('first_name', 'User'),
-                        personality,
-                        personality_desc,
-                        tip,
-                        form.language.data
-                    )
-                ).start()
-                flash(trans['Check Inbox'], 'success')
-            except Exception as e:
-                logger.error(f"Failed to send quiz email: {e}")
-                flash(trans['Email Send Error'], 'error')
-
-        flash(trans['Submission Success'], 'success')
-        return redirect(url_for('quiz_results'))
-
-    return render_template(
-        'quiz.html',
-        form=form,
-        questions=selected_questions,
-        trans=trans,
-        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-        LINKEDIN_URL=LINKEDIN_URL,
-        TWITTER_URL=TWITTER_URL,
-        FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+    return render_template('quiz_alt.html', 
+                           questions=questions, 
+                           trans=trans,
+                           language=language,
+                           FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+                           WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+                           CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+                           LINKEDIN_URL=LINKEDIN_URL,
+                           TWITTER_URL=TWITTER_URL,
+                           FACEBOOK_URL=FACEBOOK_URL,
     )
     
 @app.route('/quiz_results', methods=['GET', 'POST'])
