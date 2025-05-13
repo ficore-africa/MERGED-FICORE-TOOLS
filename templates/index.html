@@ -20,6 +20,7 @@
             background-size: 200% 200%;
             padding: 15px 20px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             color: white;
@@ -28,6 +29,7 @@
             top: 0;
             z-index: 1000;
             animation: gradientShift 5s ease infinite;
+            box-sizing: border-box;
         }
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
@@ -42,17 +44,23 @@
             -webkit-text-fill-color: transparent;
             animation: textShine 3s ease infinite;
         }
+        .navbar .nav-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
         .navbar form {
             display: flex;
             align-items: center;
-            margin-right: 10px;
         }
         .navbar select {
             padding: 8px;
             border-radius: 5px;
             border: 2px solid #0288D1;
-            margin-right: 10px;
+            max-width: 120px;
             min-width: 100px;
+            font-size: 0.9rem;
         }
         .navbar .refresh-button {
             padding: 8px 15px;
@@ -64,7 +72,7 @@
             display: flex;
             align-items: center;
             white-space: nowrap;
-            margin-right: 10px;
+            font-size: 0.9rem;
         }
         .navbar .refresh-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -73,7 +81,7 @@
             margin-right: 5px;
         }
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/images/hero-bg.jpg');
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/static/images/hero-bg.jpg');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -84,9 +92,11 @@
             text-align: center;
             color: white;
             padding: 20px;
+            box-sizing: border-box;
         }
         .hero h2 {
             font-size: 2.5rem;
+            font-weight: bold;
             margin-bottom: 20px;
             background: linear-gradient(45deg, #2E7D32, #0288D1);
             -webkit-background-clip: text;
@@ -103,6 +113,7 @@
             font-size: 1.2rem;
             margin-bottom: 20px;
             max-width: 600px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
         .hero .cta-button {
             padding: 15px 35px;
@@ -111,8 +122,8 @@
             text-decoration: none;
             border-radius: 5px;
             font-weight: 600;
-            font-size: 1.3rem;
-            display: inline-block;
+            font-size: 1.2rem;
+            white-space: nowrap;
         }
         .hero .cta-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -168,6 +179,7 @@
             border-radius: 5px;
             font-size: 1rem;
             display: inline-block;
+            white-space: nowrap;
         }
         .tool-card a:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -181,6 +193,7 @@
             font-size: 1rem;
             display: inline-block;
             cursor: pointer;
+            white-space: nowrap;
         }
         .tool-card .notify-me:hover {
             background: #90A4AE;
@@ -188,10 +201,11 @@
         .testimonials-section {
             margin-top: 40px;
             padding: 20px;
-            background: rgba(227, 242, 253, 0.8);
+            background: #F5F7FA;
             border: 2px solid #0288D1;
             border-radius: 10px;
             text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .testimonials-section strong {
             font-size: 1.2rem;
@@ -199,11 +213,12 @@
         }
         .testimonials-section .testimonial {
             margin: 15px 0;
-            padding: 10px;
+            padding: 15px;
             background: white;
             border-radius: 5px;
             display: inline-block;
             max-width: 400px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .testimonials-section .testimonial .initials {
             width: 40px;
@@ -218,14 +233,20 @@
             margin-right: 10px;
             vertical-align: middle;
         }
-        .testimonials-section .testimonial span.name {
+        .testimonials-section .testimonial .quote {
+            color: #2E7D32;
+            font-size: 1.5rem;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .testimonials-section .testimonial .name {
             color: #2E7D32;
             font-weight: bold;
         }
         .recommended-learning {
             margin-top: 40px;
             padding: 20px;
-            background: rgba(227, 242, 253, 0.8);
+            background: #F5F7FA;
             border: 2px solid #0288D1;
             border-radius: 10px;
             text-align: center;
@@ -310,6 +331,7 @@
             border-radius: 5px;
             font-size: 1rem;
             margin: 0 10px;
+            white-space: nowrap;
         }
         .footer .footer-buttons a:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -329,37 +351,82 @@
             color: #E0F7FA;
         }
         @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            .navbar h1 {
+                font-size: 1.2rem;
+            }
+            .navbar .nav-right {
+                flex-direction: column;
+                align-items: flex-end;
+                width: auto;
+            }
+            .navbar form {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            .navbar select {
+                width: 100%;
+                max-width: 150px;
+            }
+            .navbar .refresh-button {
+                width: auto;
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            .hero {
+                padding: 15px;
+            }
             .hero h2 {
                 font-size: 1.8rem;
             }
             .hero p {
                 font-size: 1rem;
-            }
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-            .navbar h1 {
-                font-size: 1.2rem;
-            }
-            .navbar form {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-            .navbar select {
-                margin-bottom: 10px;
-            }
-            .tool-card a, .tool-card .notify-me {
-                font-size: 1.1rem;
-                padding: 15px 30px;
-            }
-            .footer .footer-buttons a {
-                display: block;
-                margin: 10px 0;
-                font-size: 1.1rem;
+                text-align: center;
             }
             .hero .cta-button {
                 font-size: 1.1rem;
                 padding: 12px 25px;
+            }
+            .tools-section {
+                text-align: center;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            .tool-card a, .tool-card .notify-me {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+            .testimonials-section {
+                text-align: center;
+            }
+            .footer .footer-buttons a {
+                display: block;
+                margin: 10px 0;
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero h2 {
+                font-size: 1.5rem;
+            }
+            .hero p {
+                font-size: 0.9rem;
+            }
+            .hero .cta-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            .tools-section h2 {
+                font-size: 1.8rem;
+            }
+            .tool-card h3 {
+                font-size: 1.2rem;
+            }
+            .testimonials-section .testimonial {
+                max-width: 100%;
             }
         }
     </style>
@@ -367,8 +434,8 @@
 <body>
     <nav class="navbar">
         <h1>Ficore Africa</h1>
-        <div style="display: flex; align-items: center;">
-            <form action="{{ url_for('index') }}" method="GET" style="margin-right: 10px;">
+        <div class="nav-right">
+            <form action="{{ url_for('index') }}" method="GET">
                 <input type="hidden" name="tool" value="{{ tool | default('') }}">
                 <label for="language-select" class="visually-hidden">{{ trans.get('Choose your language', 'Choose your language') }}</label>
                 <select id="language-select" name="language" onchange="this.form.submit()" aria-label="{{ trans.get('Choose your language', 'Choose your language') }}">
@@ -385,7 +452,7 @@
     <section class="hero">
         <h2>{{ trans.get('Your All-in-One Toolkit for Personal & SME Financial Health Across Africa', 'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa') }}</h2>
         <p>{{ trans.get('Track income, calculate net worth, plan budgets, and grow with confidence.', 'Track income, calculate net worth, plan budgets, and grow with confidence.') }}</p>
-        <a href="{{ url_for('health_score') }}" class="cta-button">{{ trans.get('Get Your Free Financial Health Score', 'Get Your Free Financial Health Score') }}</a>
+        <a href="{{ url_for('health_score') }}" class="cta-button">{{ trans.get('Where to Start? Start With Your Free Financial Health Score', 'Where to Start? Start With Your Free Financial Health Score') }}</a>
     </section>
 
     <section class="tools-section">
@@ -419,24 +486,24 @@
             <div class="tool-card">
                 <h3>{{ trans.get('Expense Tracker', 'Expense Tracker') }}</h3>
                 <p>{{ trans.get('Log and edit expenses for spending insights', 'Log and edit expenses for spending insights') }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
             <div class="tool-card">
                 <h3>{{ trans.get('Bill Planner', 'Bill Planner') }}</h3>
                 <p>{{ trans.get('Manage and mark bills as paid', 'Manage and mark bills as paid') }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}" title="{{ trans.get('track_bills_tip', 'Track your bill payments easily') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
         </div>
         <div class="testimonials-section">
             <strong><i class="fas fa-quote-left"></i> {{ trans.get('What people are saying about Us', 'What people are saying about Us') }}</strong>
             <div class="testimonial">
-                <span class="initials">MU</span> <span>{{ trans.get('Testimonial 1', '“I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level.” — <span class="name">Maisarata Uqubatu</span>') }}</span>
+                <span class="quote">“</span><span class="initials">MU</span> {{ trans.get('Testimonial 1', 'I explored the features earlier today and was impressed... I thought it was only for SMEs, but even individuals can benefit. The learning section is on another level. — <span class="name">Maisarata Uqubatu</span>') | safe }}
             </div>
             <div class="testimonial">
-                <span class="initials">AA</span> <span>{{ trans.get('Testimonial 2', '“🔥 Ficore 🔥🔥🔥🔥🔥” — <span class="name">Abubakar Abdulkadir</span>, Software Engineer for Sustainable Solutions') }}</span>
+                <span class="quote">“</span><span class="initials">AA</span> {{ trans.get('Testimonial 2', '🔥 Ficore 🔥🔥🔥🔥🔥 — <span class="name">Abubakar Abdulkadir</span>, Software Engineer for Sustainable Solutions') | safe }}
             </div>
             <div class="testimonial">
-                <span class="initials">ASU</span> <span>{{ trans.get('Testimonial 3', '“I’ve been following the Ficore project and I’m impressed. It’s clear there\'s potential, and I’m curious to know more—especially if there\'s a customer support channel included. I\'d love to contribute if needed!” — <span class="name">Aminu Sani Usman</span>') }}</span>
+                <span class="quote">“</span><span class="initials">ASU</span> {{ trans.get('Testimonial 3', 'I’ve been following the Ficore project and I’m impressed. It’s clear there\'s potential, and I’m curious to know more—especially if there\'s a customer support channel included. I\'d love to contribute if needed! — <span class="name">Aminu Sani Usman</span>') | safe }}
             </div>
         </div>
         <div class="recommended-learning">
