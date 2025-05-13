@@ -188,9 +188,10 @@
                                 <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
                             </label>
                             <div class="radio-options-container">
-                                {{ form['question_' ~ (i + 1)](class='form-check-input radio-options') }}
+                                {% set field = getattr(form, 'question_' ~ (i + 1)) %}
+                                {{ field(class_='form-check-input radio-options', render_kw={'class': 'form-check-input radio-options'}) }}
                             </div>
-                            {% for error in form['question_' ~ (i + 1)].errors %}
+                            {% for error in field.errors %}
                                 <span style="color: red;">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -227,15 +228,16 @@
     <script>
         $(document).ready(function() {
             // Update progress bar based on form completion
-            $('#quiz-form input, #quiz-form select').on('change input', function() {
+            function updateProgress() {
                 let totalFields = $('#quiz-form input:radio, #quiz-form select').not('[type=hidden]').length;
                 let filledFields = $('#quiz-form input:radio:checked, #quiz-form select:valid').not('[type=hidden]').length;
-                let progress = (filledFields / totalFields) * 100;
+                let progress = (filledFields / totalFields) * 100 || 0;
                 $('#progress').css('width', Math.min(progress, 100) + '%');
-            });
+            }
 
-            // Trigger initial progress calculation
-            $('#quiz-form input, #quiz-form select').trigger('change');
+            // Initial progress calculation and bind change event
+            updateProgress();
+            $('#quiz-form input:radio, #quiz-form select').on('change', updateProgress);
 
             // Accessibility: Handle keyboard navigation for radio buttons
             $('.radio-options').on('keydown', function(e) {
@@ -244,7 +246,7 @@
                     let index = $inputs.index(this);
                     let nextIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
                     if (nextIndex >= 0 && nextIndex < $inputs.length) {
-                        $inputs.eq(nextIndex).focus();
+                        $inputs.eq(nextIndex).focus().prop('checked', true);
                     }
                     e.preventDefault();
                 }
