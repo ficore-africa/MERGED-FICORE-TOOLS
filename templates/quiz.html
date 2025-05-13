@@ -189,12 +189,16 @@
                             </label>
                             <div class="radio-options-container">
                                 {% set field_name = 'question_' ~ (i + 1) %}
-                                {% for choice in form[field_name] %}
-                                    <div class="form-check">
-                                        {{ choice(class='form-check-input radio-options') }}
-                                        {{ choice.label(class='form-check-label') }}
-                                    </div>
-                                {% endfor %}
+                                {% if form[field_name] and form[field_name].choices %}
+                                    {% for choice in form[field_name] %}
+                                        <div class="form-check">
+                                            {{ choice(class='form-check-input radio-options') }}
+                                            {{ choice.label(class='form-check-label') }}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p style="color: red;">{{ trans.get('Error rendering question. Please try again.', 'Error rendering question. Please try again.') }}</p>
+                                {% endif %}
                             </div>
                             {% for error in form[field_name].errors %}
                                 <span style="color: red;">{{ error }}</span>
