@@ -588,8 +588,10 @@ class QuizForm(FlaskForm):
         super(QuizForm, self).__init__(*args, **kwargs)
         for i, question in enumerate(QUIZ_QUESTIONS, 1):
             choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
-            setattr(self, f'question_{i}', RadioField(f'Question {i}', choices=choices, validators=[DataRequired()]))
-
+            field = RadioField(f'Question {i}', choices=choices, validators=[DataRequired()])
+            setattr(self, f'question_{i}', field)
+            self._fields[f'question_{i}'] = field  # Explicitly register the field in _fields
+            
 def assign_personality(answers, language='en'):
     score = 0
     for question, answer in answers:
@@ -1158,10 +1160,8 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    # Instantiate the form
+    # Instantiate and process the form
     form = QuizForm()
-    
-    # Explicitly process the form to bind fields, even on GET
     if request.method == 'GET':
         form.process()  # Bind the form with no data on GET
     elif request.method == 'POST':
