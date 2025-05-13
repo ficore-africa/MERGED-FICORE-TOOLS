@@ -158,62 +158,50 @@
                 <div class="progress" id="progress" style="width: 20%;"></div>
             </div>
             <form method="POST" id="quiz-form" class="row g-3">
-                {{ form.hidden_tag() }}
                 <div class="col-md-6 form-group">
-                    <label for="{{ form.first_name.id }}">{{ trans.get('First Name', 'First Name') }}</label>
-                    {{ form.first_name(placeholder=trans.get('Enter your first name', 'Enter your first name'), class='form-control') }}
-                    {% for error in form.first_name.errors %}
-                        <span style="color: red;">{{ error }}</span>
-                    {% endfor %}
+                    <label for="first_name">{{ trans.get('First Name', 'First Name') }}</label>
+                    <input type="text" name="first_name" id="first_name" class="form-control" placeholder="{{ trans.get('Enter your first name', 'Enter your first name') }}">
                 </div>
                 <div class="col-md-6 form-group">
-                    <label for="{{ form.email.id }}">{{ trans.get('Email', 'Email') }}</label>
-                    {{ form.email(placeholder=trans.get('Enter your email', 'Enter your email'), class='form-control') }}
-                    {% for error in form.email.errors %}
-                        <span style="color: red;">{{ error }}</span>
-                    {% endfor %}
+                    <label for="email">{{ trans.get('Email', 'Email') }}</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="{{ trans.get('Enter your email', 'Enter your email') }}">
                 </div>
                 <div class="col-md-6 form-group">
-                    <label for="{{ form.language.id }}">{{ trans.get('Language', 'Language') }}</label>
-                    {{ form.language(class='form-control') }}
-                    {% for error in form.language.errors %}
-                        <span style="color: red;">{{ error }}</span>
-                    {% endfor %}
+                    <label for="language">{{ trans.get('Language', 'Language') }}</label>
+                    <select name="language" id="language" class="form-control">
+                        <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
+                        <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
+                    </select>
                 </div>
-                {% if questions %}
-                    {% for i in range(questions|length) %}
-                        <div class="col-12 radio-group">
-                            <label class="tooltip">
-                                {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
-                                <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
-                            </label>
-                            <div class="radio-options-container">
-                                {% set field_name = 'question_' ~ (i + 1) %}
-                                {% if field_name in form and form[field_name].choices %}
-                                    {% for choice in form[field_name] %}
-                                        <div class="form-check">
-                                            {{ choice(class='form-check-input radio-options') }}
-                                            {{ choice.label(class='form-check-label') }}
-                                        </div>
-                                    {% endfor %}
-                                    <!-- Debug output -->
-                                    <small style="color: gray;">Debug: Field {{ field_name }} has {{ form[field_name].choices|length }} choices.</small>
-                                {% else %}
-                                    <p style="color: red;">Error rendering question {{ i + 1 }}. Field {{ field_name }} not found or has no choices. Please try again.</p>
-                                {% endif %}
-                            </div>
-                            {% for error in form[field_name].errors %}
-                                <span style="color: red;">{{ error }}</span>
-                            {% endfor %}
+                {% for i in range(questions|length) %}
+                    <div class="col-12 radio-group">
+                        <label class="tooltip">
+                            {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
+                            <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
+                        </label>
+                        <div class="radio-options-container">
+                            {% if questions[i].type == 'yes_no' %}
+                                <div class="form-check">
+                                    <input type="radio" name="question_{{ i + 1 }}" value="Yes" class="form-check-input radio-options" required> 
+                                    <label class="form-check-label">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="question_{{ i + 1 }}" value="No" class="form-check-input radio-options" required> 
+                                    <label class="form-check-label">No</label>
+                                </div>
+                            {% else %}
+                                {% for option in questions[i].options %}
+                                    <div class="form-check">
+                                        <input type="radio" name="question_{{ i + 1 }}" value="{{ option }}" class="form-check-input radio-options" required> 
+                                        <label class="form-check-label">{{ option }}</label>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-12">
-                        <p style="color: red;">{{ trans.get('No questions available. Please check the questions.json file.', 'No questions available. Please check the questions.json file.') }}</p>
                     </div>
-                {% endif %}
+                {% endfor %}
                 <div class="col-12 d-flex justify-content-center gap-2">
-                    {{ form.submit(class='submit-btn', aria_label=trans.get('Submit Quiz', 'Submit Quiz')) }}
+                    <button type="submit" class="submit-btn" aria-label="{{ trans.get('Submit Quiz', 'Submit Quiz') }}">{{ trans.get('Submit Quiz', 'Submit Quiz') }}</button>
                     <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
                 </div>
             </form>
