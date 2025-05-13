@@ -121,6 +121,12 @@
             .radio-group { padding: 10px; }
             .submit-btn { padding: 8px 16px; font-size: 0.9rem; }
         }
+        .form-check {
+            margin-bottom: 5px;
+        }
+        .form-check-input.radio-options {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -174,27 +180,26 @@
                         <span style="color: red;">{{ error }}</span>
                     {% endfor %}
                 </div>
-                {% for i in range(questions|length) %}
-                    <div class="col-12 radio-group">
-                        <label class="tooltip">
-                            {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
-                            <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
-                        </label>
-                        {% for choice in form['question_' ~ (i + 1)] %}
-                            <div class="form-check">
-                                {{ choice(class='form-check-input radio-options') }}
-                                {{ choice.label(class='form-check-label') }}
+                {% if questions %}
+                    {% for i in range(questions|length) %}
+                        <div class="col-12 radio-group">
+                            <label class="tooltip">
+                                {{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ questions|length }}: {{ trans.get(questions[i].text, questions[i].text if questions[i].text else 'Question text missing') }}
+                                <span class="tooltiptext">{{ trans.get(questions[i].tooltip, questions[i].tooltip if questions[i].tooltip else 'Tooltip missing') }}</span>
+                            </label>
+                            <div class="radio-options-container">
+                                {{ form['question_' ~ (i + 1)](class='form-check-input radio-options') }}
                             </div>
-                        {% endfor %}
-                        {% for error in form['question_' ~ (i + 1)].errors %}
-                            <span style="color: red;">{{ error }}</span>
-                        {% endfor %}
-                    </div>
+                            {% for error in form['question_' ~ (i + 1)].errors %}
+                                <span style="color: red;">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
                 {% else %}
                     <div class="col-12">
-                        <p style="color: red;">No questions available. Please check the questions.json file.</p>
+                        <p style="color: red;">{{ trans.get('No questions available. Please check the questions.json file.', 'No questions available. Please check the questions.json file.') }}</p>
                     </div>
-                {% endfor %}
+                {% endif %}
                 <div class="col-12 d-flex justify-content-center gap-2">
                     {{ form.submit(class='submit-btn', aria_label=trans.get('Submit Quiz', 'Submit Quiz')) }}
                     <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
@@ -223,15 +228,19 @@
         $(document).ready(function() {
             // Update progress bar based on form completion
             $('#quiz-form input, #quiz-form select').on('change input', function() {
-                let totalFields = $('#quiz-form input, #quiz-form select').not('[type=hidden]').length;
-                let filledFields = $('#quiz-form input:valid, #quiz-form select:valid').not('[type=hidden]').length;
+                let totalFields = $('#quiz-form input:radio, #quiz-form select').not('[type=hidden]').length;
+                let filledFields = $('#quiz-form input:radio:checked, #quiz-form select:valid').not('[type=hidden]').length;
                 let progress = (filledFields / totalFields) * 100;
-                $('#progress').css('width', progress + '%');
+                $('#progress').css('width', Math.min(progress, 100) + '%');
             });
-            // Accessibility: Handle keyboard navigation
+
+            // Trigger initial progress calculation
+            $('#quiz-form input, #quiz-form select').trigger('change');
+
+            // Accessibility: Handle keyboard navigation for radio buttons
             $('.radio-options').on('keydown', function(e) {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    let $inputs = $(this).closest('.radio-group').find('.radio-options');
+                    let $inputs = $(this).closest('.radio-options-container').find('.radio-options');
                     let index = $inputs.index(this);
                     let nextIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
                     if (nextIndex >= 0 && nextIndex < $inputs.length) {
