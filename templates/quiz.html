@@ -157,6 +157,10 @@
             <div class="progress-bar">
                 <div class="progress" id="progress" style="width: 20%;"></div>
             </div>
+            <!-- Debug Output -->
+            <div class="col-12">
+                <p style="color: blue;">Debug - Questions Data: {{ questions }}</p>
+            </div>
             <form method="POST" id="quiz-form" class="row g-3">
                 <div class="col-md-6 form-group">
                     <label for="first_name">{{ trans.get('First Name', 'First Name') }}</label>
@@ -173,7 +177,7 @@
                         <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
                     </select>
                 </div>
-                <!-- Hardcoded Questions -->
+                <!-- Forced Hardcoded Questions -->
                 <div class="col-12 radio-group">
                     <label class="tooltip">
                         Question 1 of 10: Do you track your expenses weekly?
