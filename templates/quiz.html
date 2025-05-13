@@ -53,8 +53,9 @@
         }
         .tooltip {
             position: relative;
-            display: inline-block;
+            display: block; /* Changed to block to ensure visibility */
             cursor: help;
+            margin-bottom: 10px; /* Added spacing */
         }
         .tooltip .tooltiptext {
             visibility: hidden;
@@ -164,6 +165,10 @@
                     <label for="{{ form.language.id }}">{{ trans.get('Language', 'Language') }}</label>
                     {{ form.language(class='form-control') }}
                 </div>
+                <!-- Debug: Print questions list -->
+                <div class="debug" style="background: #f0f0f0; padding: 10px; margin-bottom: 10px;">
+                    <p>Debug - Questions List: {{ questions }}</p>
+                </div>
                 {% for question in questions %}
                     <div class="col-12 radio-group">
                         <label class="tooltip">
@@ -176,6 +181,10 @@
                                 <label class="form-check-label" for="{{ 'question_' + loop.index|string + '_' + loop.index0|string }}">{{ trans.get(option[1], option[1]) }}</label>
                             </div>
                         {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="col-12">
+                        <p style="color: red;">No questions available. Please check the quiz setup.</p>
                     </div>
                 {% endfor %}
                 <div class="col-12 d-flex justify-content-center gap-2">
