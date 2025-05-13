@@ -585,14 +585,19 @@ class QuizForm(FlaskForm):
     submit = SubmitField('Submit Quiz')
 
     def __init__(self, *args, **kwargs):
-        super(QuizForm, self).__init__(*args, **kwargs)  # Initialize the base form first
+        super(QuizForm, self).__init__(*args, **kwargs)  # Initialize the base form
         for i, question in enumerate(QUIZ_QUESTIONS, 1):
             choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
             field = RadioField(f'Question {i}', choices=choices, validators=[DataRequired()])
             setattr(self, f'question_{i}', field)
             self._fields[f'question_{i}'] = field  # Register the field
-            logger.debug(f"Added field: {f'question_{i}'} with choices: {choices}")
-        
+            # Explicitly bind the field to the form
+            if request.method == 'POST':
+                field.process(formdata=request.form)
+            else:
+                field.process(formdata=None)
+            logger.debug(f"Bound field: {f'question_{i}'} with choices: {choices}")
+            
 def assign_personality(answers, language='en'):
     score = 0
     for question, answer in answers:
@@ -1161,7 +1166,7 @@ def health_dashboard(step=1):
 def quiz():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    # Instantiate the form with formdata to handle binding
+    # Instantiate the form
     form = QuizForm(formdata=request.form if request.method == 'POST' else None)
 
     selected_questions = QUIZ_QUESTIONS
