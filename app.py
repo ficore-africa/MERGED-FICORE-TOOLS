@@ -554,12 +554,18 @@ class HealthScoreForm(FlaskForm):
         super(HealthScoreForm, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translations(language)['Submit']
 
+def load_questions():
+    with open('questions.json', 'r') as f:
+        return json.load(f)
+
+QUIZ_QUESTIONS = load_questions()
+
 class QuizForm(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
     question_1 = RadioField('Question 1', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
-    question_2 = RadioField('Question 2', choices=[('Yes', 'No', 'No')], validators=[DataRequired()])
+    question_2 = RadioField('Question 2', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])  # Fixed typo
     question_3 = RadioField('Question 3', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
     question_4 = RadioField('Question 4', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
     question_5 = RadioField('Question 5', choices=[('Yes', 'Yes'), ('No', 'No')], validators=[DataRequired()])
@@ -569,6 +575,7 @@ class QuizForm(FlaskForm):
     question_9 = RadioField('Question 9', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     question_10 = RadioField('Question 10', choices=[('Never', 'Never'), ('Sometimes', 'Sometimes'), ('Always', 'Always')], validators=[DataRequired()])
     submit = SubmitField('Submit Quiz')
+    
 # Quiz questions
 QUIZ_QUESTIONS = [
     {"text": "Do you track your expenses weekly?", "type": "yes_no", "tooltip": "Tracking: Recording all money spent daily."},
@@ -1153,10 +1160,10 @@ def quiz():
     trans = get_translations(language)
     form = QuizForm()
     
-    # Use all questions from QUIZ_QUESTIONS
+    # Load questions dynamically from QUIZ_QUESTIONS (sourced from questions.json)
     selected_questions = QUIZ_QUESTIONS
-    logger.debug(f"Selected questions: {selected_questions}")  # Debug log to confirm questions
-    
+    logger.debug(f"Selected questions: {selected_questions}")
+
     if form.validate_on_submit():
         quiz_data = {
             'first_name': sanitize_input(form.first_name.data or ''),
@@ -1165,36 +1172,42 @@ def quiz():
             'auto_email': bool(form.email.data)
         }
         answers = []
+        # Dynamically process each question based on the number of questions in QUIZ_QUESTIONS
         for i, q in enumerate(selected_questions, 1):
             answer = getattr(form, f'question_{i}').data
             quiz_data[f'question_{i}'] = q['text']
             quiz_data[f'answer_{i}'] = answer
             answers.append((q['text'], answer))
+
+        # Assign personality based on answers
         personality, personality_desc, tip = assign_personality(answers, form.language.data)
         quiz_data['personality'] = personality
         quiz_data['badges'] = trans['Personality Unlocked!']
+
+        # Prepare data for Google Sheets dynamically
         data = [
             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             quiz_data.get('first_name', ''),
             quiz_data.get('email', ''),
-            quiz_data.get('language', 'en'),
-            quiz_data.get('question_1', ''),
-            quiz_data.get('answer_1', ''),
-            quiz_data.get('question_2', ''),
-            quiz_data.get('answer_2', ''),
-            quiz_data.get('question_3', ''),
-            quiz_data.get('answer_3', ''),
-            quiz_data.get('question_4', ''),
-            quiz_data.get('answer_4', ''),
-            quiz_data.get('question_5', ''),
-            quiz_data.get('answer_5', ''),
+            quiz_data.get('language', 'en')
+        ]
+        # Append question and answer pairs dynamically
+        for i in range(1, len(selected_questions) + 1):
+            data.append(quiz_data.get(f'question_{i}', ''))
+            data.append(quiz_data.get(f'answer_{i}', ''))
+        # Append personality, badges, and auto_email
+        data.extend([
             quiz_data.get('personality', ''),
             quiz_data.get('badges', ''),
-            quiz_data.get('auto_email', False)
-        ]
+            str(quiz_data.get('auto_email', False)).lower()
+        ])
+
+        # Append to Google Sheets
         if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
             flash(trans['Google Sheets Error'], 'error')
             return redirect(url_for('quiz'))
+
+        # Generate summary chart and store results in session
         summary_chart = generate_quiz_summary_chart(answers, form.language.data)
         session['quiz_results'] = {
             'first_name': quiz_data.get('first_name', ''),
@@ -1208,21 +1221,29 @@ def quiz():
             'summary_chart': summary_chart
         }
         session.modified = True
+
+        # Send email asynchronously if auto_email is enabled
         if quiz_data.get('auto_email') and quiz_data.get('email'):
-            threading.Thread(
-                target=send_quiz_email_async,
-                args=(
-                    quiz_data.get('email'),
-                    quiz_data.get('first_name', 'User'),
-                    personality,
-                    personality_desc,
-                    tip,
-                    form.language.data
-                )
-            ).start()
-            flash(trans['Check Inbox'], 'success')
+            try:
+                threading.Thread(
+                    target=send_quiz_email_async,
+                    args=(
+                        quiz_data.get('email'),
+                        quiz_data.get('first_name', 'User'),
+                        personality,
+                        personality_desc,
+                        tip,
+                        form.language.data
+                    )
+                ).start()
+                flash(trans['Check Inbox'], 'success')
+            except Exception as e:
+                logger.error(f"Failed to send quiz email: {e}")
+                flash(trans['Email Send Error'], 'error')
+
         flash(trans['Submission Success'], 'success')
         return redirect(url_for('quiz_results'))
+
     return render_template(
         'quiz.html',
         form=form,
