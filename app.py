@@ -585,17 +585,13 @@ class QuizForm(FlaskForm):
     submit = SubmitField('Submit Quiz')
 
     def __init__(self, *args, **kwargs):
-        # Add dynamic fields before calling super().__init__()
+        super(QuizForm, self).__init__(*args, **kwargs)  # Initialize the base form first
         for i, question in enumerate(QUIZ_QUESTIONS, 1):
             choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
             field = RadioField(f'Question {i}', choices=choices, validators=[DataRequired()])
             setattr(self, f'question_{i}', field)
-            if not hasattr(self, '_fields'):
-                self._fields = {}
-            self._fields[f'question_{i}'] = field  # Ensure the field is in _fields
-
-        # Now call the parent __init__ to bind all fields
-        super(QuizForm, self).__init__(*args, **kwargs)
+            self._fields[f'question_{i}'] = field  # Register the field
+            logger.debug(f"Added field: {f'question_{i}'} with choices: {choices}")
         
 def assign_personality(answers, language='en'):
     score = 0
