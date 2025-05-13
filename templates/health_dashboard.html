@@ -114,6 +114,15 @@
             background: #E3F2FD;
             color: #2E7D32;
         }
+        .score-box ul li strong.cash-flow {
+            color: #2E7D32;
+        }
+        .score-box ul li strong.debt-to-income {
+            color: #0288D1;
+        }
+        .score-box ul li strong.debt-interest {
+            color: #D81B60;
+        }
         .badge-box {
             background: #E3F2FD;
             border: 2px solid #0288D1;
@@ -156,6 +165,10 @@
             transition: transform 0.3s ease;
             border: 1px solid #01579B;
             cursor: pointer;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .badge:hover {
             transform: scale(1.1);
@@ -166,6 +179,8 @@
             border-radius: 8px;
             font-size: 1rem;
             transition: transform 0.2s ease;
+            display: inline-block;
+            text-align: center;
         }
         .btn-primary {
             background: linear-gradient(135deg, #2E7D32, #0288D1);
@@ -179,6 +194,13 @@
         .btn-primary:not(.no-arrow)::after {
             content: '→';
             margin-left: 8px;
+        }
+        .btn-primary .btn-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 400;
+            margin-top: 5px;
+            color: #E3F2FD;
         }
         .btn-secondary {
             background: linear-gradient(135deg, #B0BEC5, #78909C);
@@ -253,6 +275,7 @@
         .chart-container {
             min-height: 300px;
             max-width: 100%;
+            overflow-x: auto;
         }
         #score-breakdown-chart, #compare-others-chart {
             width: 100%;
@@ -279,6 +302,43 @@
         .social-icons a:hover {
             color: #2E7D32;
         }
+        .tooltip-icon {
+            font-size: 0.9rem;
+            color: #0288D1;
+            margin-left: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            background: #333;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            position: absolute;
+            z-index: 1;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.85rem;
+            transition: opacity 0.3s ease;
+        }
+        .tooltip-text::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
         @media (max-width: 600px) {
             body { padding: 10px; }
             .card-header { font-size: 1.4rem; padding: 1rem; }
@@ -287,10 +347,22 @@
             .tips-list li { font-size: 0.9rem; padding: 8px; }
             .btn-primary, .btn-secondary, .btn-back { padding: 10px 20px; font-size: 0.9rem; }
             .badge { font-size: 0.8rem; padding: 6px 10px; }
-            #score-breakdown-chart, #compare-others-chart { height: 220px; }
+            #score-breakdown-chart, #compare-others-chart { 
+                height: 220px; 
+                min-width: 300px;
+            }
             .progress-tracker { gap: 10px; }
             .step { width: 30px; height: 30px; font-size: 1rem; }
             .email-btn { font-size: 0.85rem; padding: 6px 12px; }
+            .chart-container { 
+                overflow-x: auto; 
+                -webkit-overflow-scrolling: touch;
+            }
+            .tooltip-text {
+                white-space: normal;
+                width: 200px;
+                top: -60px;
+            }
         }
     </style>
 </head>
@@ -329,13 +401,17 @@
             <div class="card">
                 <div class="card-header">🎉 {{ trans.get('Welcome', 'Welcome') }}, {{ first_name }}!</div>
                 <div class="card-body light-blue">
-                    <div class="info-box">{{ trans.get('Submission Success', 'Your financial health data has been successfully submitted.') }}</div>
                     <div class="info-box">{{ trans.get('Email', 'Email') }}: {{ email }}</div>
                     <div class="score-box">
                         <h3>⭐ {{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}</h3>
                         <p>{{ health_score|round(1) }}/100</p>
                     </div>
-                    <div class="info-box">{{ trans.get('Ranked', 'Ranked') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}</div>
+                    <div class="info-box">
+                        {{ trans.get('Ranked', 'Ranked') }} #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}
+                        <i class="fas fa-info-circle tooltip-icon" aria-label="{{ trans.get('Ranking Info', 'Ranking Info') }}">
+                            <span class="tooltip-text">{{ trans.get('Ranking based on debt, expenses, and income balance.', 'Ranking based on debt, expenses, and income balance.') }}</span>
+                        </i>
+                    </div>
                     <div class="info-box">
                         {% if health_score >= 75 %}
                             {{ trans.get('Strong Financial Health', 'Strong Financial Health') }}
@@ -349,8 +425,11 @@
                     </div>
                     <div class="info-box">{{ trans.get('Check Inbox', 'Check your inbox for a detailed report.') }}</div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('health_dashboard', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('health_dashboard', step=2) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">
+                            {{ trans.get('Next', 'Next') }}
+                            <small class="btn-label">{{ trans.get('See your Income Breakdown', 'See your Income Breakdown') }}</small>
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -372,9 +451,31 @@
                     <div class="score-box">
                         <h4>{{ trans.get('Score Composition', 'Score Composition') }}:</h4>
                         <ul>
-                            <li><strong>{{ trans.get('Cash Flow', 'Cash Flow') }}</strong>: {{ ((user_data['income_revenue']|float(0) - user_data['expenses_costs']|float(0))|round(2)) }} ₦</li>
-                            <li><strong>{{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}</strong>: {{ ((user_data['debt_loan']|float(0) / user_data['income_revenue']|float(1) * 100)|round(1) if user_data['income_revenue']|float(0) > 0 else 0) }}%</li>
-                            <li><strong>{{ trans.get('Debt Interest Burden', 'Debt Interest Burden') }}</strong>: {{ trans.get('Debt Interest Description', 'Based on your debt interest rate.') }}</li>
+                            <li>
+                                <strong class="cash-flow">
+                                    🟢 {{ trans.get('Cash Flow', 'Cash Flow') }}
+                                    <i class="fas fa-info-circle tooltip-icon" aria-label="{{ trans.get('Cash Flow Info', 'Cash Flow Info') }}">
+                                        <span class="tooltip-text">{{ trans.get('What’s left after your spending.', 'What’s left after your spending.') }}</span>
+                                    </i>
+                                </strong>: {{ ((user_data['income_revenue']|float(0) - user_data['expenses_costs']|float(0))|round(2)) }} ₦
+                                <small class="d-block text-muted">{{ trans.get('This is your monthly surplus (Income minus Expenses).', 'This is your monthly surplus (Income minus Expenses).') }}</small>
+                            </li>
+                            <li>
+                                <strong class="debt-to-income">
+                                    🔵 {{ trans.get('Debt-to-Income Ratio', 'Debt-to-Income Ratio') }}
+                                    <i class="fas fa-info-circle tooltip-icon" aria-label="{{ trans.get('Debt-to-Income Info', 'Debt-to-Income Info') }}">
+                                        <span class="tooltip-text">{{ trans.get('Your debt as a percentage of income.', 'Your debt as a percentage of income.') }}</span>
+                                    </i>
+                                </strong>: {{ ((user_data['debt_loan']|float(0) / user_data['income_revenue']|float(1) * 100)|round(1) if user_data['income_revenue']|float(0) > 0 else 0) }}%
+                            </li>
+                            <li>
+                                <strong class="debt-interest">
+                                    🔴 {{ trans.get('Debt Interest Burden', 'Debt Interest Burden') }}
+                                    <i class="fas fa-info-circle tooltip-icon" aria-label="{{ trans.get('Debt Interest Info', 'Debt Interest Info') }}">
+                                        <span class="tooltip-text">{{ trans.get('Impact of your debt interest rate.', 'Impact of your debt interest rate.') }}</span>
+                                    </i>
+                                </strong>: {{ trans.get('Debt Interest Description', 'Based on your debt interest rate.') }}
+                            </li>
                         </ul>
                         <p>
                             {% if health_score >= 75 %}
@@ -389,7 +490,7 @@
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         <a href="{{ url_for('health_dashboard', step=3) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('health_dashboard', step=1) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -404,7 +505,20 @@
                     <div class="badge-box">
                         {% if badges %}
                             {% for badge in badges %}
-                                <span class="badge" onclick="alert('{{ trans.get(badge, badge) }}: {{ trans.get('Congratulations!', 'Congratulations!') }}')" aria-label="{{ trans.get(badge, badge) }}">{{ trans.get(badge, badge) }}</span>
+                                <span class="badge" onclick="alert('{{ trans.get(badge, badge) }}: {{ trans.get('Congratulations!', 'Congratulations!') }}')" aria-label="{{ trans.get(badge, badge) }}">
+                                    {{ trans.get(badge, badge) }}
+                                    <i class="fas fa-info-circle tooltip-icon">
+                                        <span class="tooltip-text">
+                                            {% if badge == 'Positive Cash Flow' %}
+                                                {{ trans.get('Earned by maintaining positive cash flow for this session.', 'Earned by maintaining positive cash flow for this session.') }}
+                                            {% elif badge == 'Low Debt Achiever' %}
+                                                {{ trans.get('Awarded for keeping debt below 20% of income.', 'Awarded for keeping debt below 20% of income.') }}
+                                            {% else %}
+                                                {{ trans.get('Earned for excellent financial habits.', 'Earned for excellent financial habits.') }}
+                                            {% endif %}
+                                        </span>
+                                    </i>
+                                </span>
                             {% endfor %}
                         {% else %}
                             <p>{{ trans.get('No Badges Yet', 'No badges earned yet. Keep improving!') }}</p>
@@ -420,7 +534,7 @@
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         <a href="{{ url_for('health_dashboard', step=4) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('health_dashboard', step=2) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -436,36 +550,36 @@
                         {% if health_score >= 75 %}
                             <li>
                                 <span><strong>{{ trans.get('Invest', 'Invest') }}</strong>: {{ trans.get('Invest Wisely', 'Consider investing surplus funds wisely.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Explore investment options.', 'Explore investment options.') }}')" aria-label="{{ trans.get('Try Investing', 'Try Investing') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Explore investment options.', 'Explore investment options.') }}')" aria-label="{{ trans.get('Explore Investments', 'Explore Investments') }}">{{ trans.get('Explore Investments', 'Explore Investments') }}</button>
                             </li>
                             <li>
                                 <span><strong>{{ trans.get('Scale', 'Scale') }}</strong>: {{ trans.get('Scale Smart', 'Scale your business or finances smartly.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Plan for scalable growth.', 'Plan for scalable growth.') }}')" aria-label="{{ trans.get('Try Scaling', 'Try Scaling') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Plan for scalable growth.', 'Plan for scalable growth.') }}')" aria-label="{{ trans.get('Plan Growth', 'Plan Growth') }}">{{ trans.get('Plan Growth', 'Plan Growth') }}</button>
                             </li>
                         {% elif health_score >= 50 %}
                             <li>
                                 <span><strong>{{ trans.get('Build', 'Build') }}</strong>: {{ trans.get('Build Savings', 'Focus on building your savings.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Start a savings plan.', 'Start a savings plan.') }}')" aria-label="{{ trans.get('Try Building Savings', 'Try Building Savings') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Start a savings plan.', 'Start a savings plan.') }}')" aria-label="{{ trans.get('Start Saving', 'Start Saving') }}">{{ trans.get('Start Saving', 'Start Saving') }}</button>
                             </li>
                             <li>
                                 <span><strong>{{ trans.get('Cut', 'Cut') }}</strong>: {{ trans.get('Cut Costs', 'Identify and cut unnecessary costs.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Review your expenses.', 'Review your expenses.') }}')" aria-label="{{ trans.get('Try Cutting Costs', 'Try Cutting Costs') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Review your expenses.', 'Review your expenses.') }}')" aria-label="{{ trans.get('Reduce Expenses', 'Reduce Expenses') }}">{{ trans.get('Reduce Expenses', 'Reduce Expenses') }}</button>
                             </li>
                         {% else %}
                             <li>
                                 <span><strong>{{ trans.get('Reduce', 'Reduce') }}</strong>: {{ trans.get('Reduce Debt', 'Prioritize reducing your debt.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Create a debt repayment plan.', 'Create a debt repayment plan.') }}')" aria-label="{{ trans.get('Try Reducing Debt', 'Try Reducing Debt') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Create a debt repayment plan.', 'Create a debt repayment plan.') }}')" aria-label="{{ trans.get('Pay Off Debt', 'Pay Off Debt') }}">{{ trans.get('Pay Off Debt', 'Pay Off Debt') }}</button>
                             </li>
                             <li>
                                 <span><strong>{{ trans.get('Boost', 'Boost') }}</strong>: {{ trans.get('Boost Income', 'Explore ways to boost your income.') }}</span>
-                                <button class="try-it-btn" onclick="alert('{{ trans.get('Consider side hustles or new revenue streams.', 'Consider side hustles or new revenue streams.') }}')" aria-label="{{ trans.get('Try Boosting Income', 'Try Boosting Income') }}">{{ trans.get('Try It', 'Try It') }}</button>
+                                <button class="try-it-btn" onclick="alert('{{ trans.get('Consider side hustles or new revenue streams.', 'Consider side hustles or new revenue streams.') }}')" aria-label="{{ trans.get('Increase Income', 'Increase Income') }}">{{ trans.get('Increase Income', 'Increase Income') }}</button>
                             </li>
                         {% endif %}
                     </ul>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         <a href="{{ url_for('health_dashboard', step=5) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('health_dashboard', step=3) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -477,6 +591,9 @@
             <div class="card">
                 <div class="card-header">⚖️ {{ trans.get('How You Compare', 'How You Compare') }}</div>
                 <div class="card-body light-blue">
+                    <div class="info-box">
+                        {{ trans.get("You're ahead of", "You're ahead of") }} {{ (((total_users - rank) / total_users * 100)|round(1)) }}% {{ trans.get('of users', 'of users') }}
+                    </div>
                     {% if comparison_plot and all_users_df['HealthScore']|length > 0 %}
                         <div class="chart-container">
                             <div id="compare-others-chart"></div>
@@ -500,7 +617,7 @@
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         <a href="{{ url_for('health_dashboard', step=6) }}" class="btn btn-primary" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</a>
                         <a href="{{ url_for('health_dashboard', step=4) }}" class="btn btn-secondary" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
-                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -512,6 +629,9 @@
             <div class="card">
                 <div class="card-header">🔓 {{ trans.get('What’s Next?', 'What’s Next?') }}</div>
                 <div class="card-body">
+                    <div class="info-box">
+                        {{ trans.get('Thanks again', 'Thanks again') }}, {{ first_name }}! {{ trans.get('Ready for your next financial win? Book Consultancy today!', 'Ready for your next financial win? Book Consultancy today!') }}
+                    </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
                         <a href="{{ FEEDBACK_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
                         <a href="{{ WAITLIST_FORM_URL }}" class="btn btn-secondary" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
@@ -528,7 +648,7 @@
                         <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i> Twitter</a>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="{{ url_for('index') }}" class="btn btn-primary no-arrow" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back to Home', 'Back to Home') }}</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary no-arrow" aria-label="{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}">{{ trans.get('Return to Main Menu', 'Return to Main Menu') }}</a>
                         <button class="voice-btn" onclick="alert('{{ trans.get('Voice guidance coming soon!', 'Voice guidance coming soon!') }}')" aria-label="{{ trans.get('Listen to Voice Guidance', 'Listen to Voice Guidance') }}">🎙️ {{ trans.get('Listen', 'Listen') }}</button>
                     </div>
                 </div>
@@ -544,7 +664,8 @@
             </div>
             <p>
                 <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a>
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+                <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
             </p>
         </footer>
     </div>
@@ -567,7 +688,14 @@
                         {{ user_data['expenses_costs']|float(0) }},
                         {{ user_data['debt_loan']|float(0) }}
                     ],
-                    marker: { color: ['#2E7D32', '#0288D1', '#D81B60'] }
+                    marker: { color: ['#2E7D32', '#0288D1', '#D81B60'] },
+                    text: [
+                        '{{ trans.get('Income', 'Income') }}: {{ user_data['income_revenue']|float(0) }} ₦',
+                        '{{ trans.get('Expenses', 'Expenses') }}: {{ user_data['expenses_costs']|float(0) }} ₦',
+                        '{{ trans.get('Debt', 'Debt') }}: {{ user_data['debt_loan']|float(0) }} ₦'
+                    ],
+                    textposition: 'auto',
+                    hoverinfo: 'text'
                 }];
                 const breakdownLayout = {
                     title: '{{ trans.get('Financial Breakdown', 'Financial Breakdown') }}',
@@ -575,35 +703,59 @@
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
                     height: 300,
-                    margin: { t: 50, b: 50, l: 50, r: 50 }
+                    margin: { t: 50, b: 50, l: 50, r: 50 },
+                    font: { size: 12 },
+                    bargap: 0.2
                 };
-                Plotly.newPlot('score-breakdown-chart', breakdownData, breakdownLayout);
+                Plotly.newPlot('score-breakdown-chart', breakdownData, breakdownLayout, { responsive: true });
             {% endif %}
 
             // Compare to Others Chart
             {% if comparison_plot and step == 5 and all_users_df['HealthScore']|length > 0 %}
+                const allScores = {{ all_users_df['HealthScore'].to_list()|tojson }};
+                const userScore = {{ health_score }};
+                
+                // Calculate frequencies for hover info
+                const scoreBins = Array(10).fill(0); // Bins for scores 0-10, 10-20, ..., 90-100
+                allScores.forEach(score => {
+                    const binIndex = Math.min(Math.floor(score / 10), 9);
+                    scoreBins[binIndex]++;
+                });
+
                 const compareData = [{
                     type: 'histogram',
-                    x: {{ all_users_df['HealthScore'].to_list()|tojson }},
+                    x: allScores,
                     name: '{{ trans.get('All Users', 'All Users') }}',
                     marker: { color: '#0288D1' },
-                    opacity: 0.6
+                    opacity: 0.6,
+                    xbins: { start: 0, end: 100, size: 10 },
+                    hovertemplate: '%{x}: %{y} {{ trans.get('users', 'users') }}<extra></extra>'
                 }, {
                     type: 'histogram',
-                    x: [{{ health_score }}],
+                    x: [userScore],
                     name: '{{ trans.get('Your Score', 'Your Score') }}',
                     marker: { color: '#2E7D32' },
-                    opacity: 0.8
+                    opacity: 0.8,
+                    xbins: { start: 0, end: 100, size: 10 },
+                    hovertemplate: '{{ trans.get('This is where you stand', 'This is where you stand') }}: %{x}<extra></extra>'
                 }];
                 const compareLayout = {
                     title: '{{ trans.get('Score Distribution', 'Score Distribution') }}',
-                    xaxis: { title: '{{ trans.get('Health Score', 'Health Score') }}' },
-                    yaxis: { title: '{{ trans.get('Number of Users', 'Number of Users') }}' },
+                    xaxis: { 
+                        title: '{{ trans.get('Health Score', 'Health Score') }}',
+                        range: [0, 100],
+                        tickfont: { size: 10 }
+                    },
+                    yaxis: { 
+                        title: '{{ trans.get('Number of Users', 'Number of Users') }}',
+                        tickfont: { size: 10 }
+                    },
                     barmode: 'overlay',
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
                     height: 300,
                     margin: { t: 50, b: 50, l: 50, r: 50 },
+                    font: { size: 12 },
                     annotations: [{
                         x: {{ all_users_df['HealthScore'].mean()|float(0) }},
                         y: 0.9,
@@ -615,7 +767,7 @@
                         ay: -30
                     }]
                 };
-                Plotly.newPlot('compare-others-chart', compareData, compareLayout);
+                Plotly.newPlot('compare-others-chart', compareData, compareLayout, { responsive: true });
             {% endif %}
         });
     </script>
