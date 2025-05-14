@@ -1,116 +1,119 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ trans.get('Your Financial Personality Revealed', 'Your Financial Personality Revealed') }}">
-    <meta name="keywords" content="ficore africa, financial quiz, Africa SME finance">
-    <meta name="author" content="Ficore Africa">
-    <title>{{ trans.get('Quiz Results', 'Quiz Results') }} - Ficore Africa</title>
+    <title>Financial Personality Quiz Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        .form-check {
+            margin-bottom: 0.75rem;
+        }
+        .form-check label {
+            margin-left: 0.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #0e8a3d, #0284c7);
+            border: none;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .card {
+            border-radius: 10px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="my-4">
-            <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" class="img-fluid">
-            <h1>{{ trans.get('Quiz Results', 'Quiz Results') }}</h1>
-            <p>{{ trans.get('Your Financial Personality Revealed', 'Your Financial Personality Revealed') }}</p>
-        </header>
+    <header class="container">
+        <div class="logo-container">
+            <img src="/static/img/logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
+        </div>
+        <h1 class="text-center">{{ trans.get('Financial Personality Quiz Results', 'Financial Personality Quiz Results') }}</h1>
+        <p class="text-center">{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</p>
+    </header>
 
-        <div class="content-container">
-            <h2><i class="fas fa-user me-2"></i>{{ trans.get('Hello', 'Hello') }}, {{ results.first_name or trans.get('User', 'User') }}!</h2>
-            <h3 style="color: #F4C430;"><i class="fas fa-star me-2"></i>{{ trans.get('Your financial personality is', 'Your financial personality is') }}: {{ results.personality }}</h3>
-            <p>{{ results.personality_desc }}</p>
-            <p><strong><i class="fas fa-lightbulb me-2"></i>{{ trans.get('Tip', 'Tip') }}:</strong> {{ results.tip }}</p>
-            <div class="section-divider"></div>
-            <h4><i class="fas fa-award me-2"></i>{{ trans.get('Your Badges', 'Your Badges') }}</h4>
-            {% if results.badges %}
-                {% for badge in results.badges %}
-                    <span class="badge bg-primary me-2">{{ badge }}</span>
-                {% endfor %}
-            {% else %}
-                <p>{{ trans.get('No badges earned yet. Keep exploring!', 'No badges earned yet. Keep exploring!') }}</p>
-            {% endif %}
-            <div class="section-divider"></div>
-            <h4><i class="fas fa-list-check me-2"></i>{{ trans.get('Your Answers', 'Your Answers') }}</h4>
-            <ul>
-                {% for question, answer in results.answers %}
-                    <li>{{ trans.get(question, question) }}: {{ trans.get(answer, answer) }}</li>
-                {% endfor %}
-            </ul>
-            {% if results.summary_chart %}
-                <div class="section-divider"></div>
-                <h4><i class="fas fa-chart-bar me-2"></i>{{ trans.get('Quiz Summary', 'Quiz Summary') }}</h4>
-                <div class="chart-container">
-                    {{ results.summary_chart|safe }}
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-4">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <div class="card mb-4 shadow-sm p-3">
+                    <h5 class="card-title">{{ trans.get('Your Results', 'Your Results') }}</h5>
+                    <p class="card-text">
+                        {% if results.first_name %}
+                            {{ trans.get('Hello', 'Hello') }} {{ results.first_name }},
+                        {% endif %}
+                        {{ trans.get('Your financial personality is', 'Your financial personality is') }} <strong>{{ results.personality }}</strong>.
+                    </p>
+                    <p class="card-text">{{ results.personality_desc }}</p>
+                    <h6>{{ trans.get('Financial Tip', 'Financial Tip') }}</h6>
+                    <p class="card-text">{{ results.tip }}</p>
+                    {% if results.badges %}
+                        <h6>{{ trans.get('Badges Earned', 'Badges Earned') }}</h6>
+                        <ul>
+                            {% for badge in results.badges %}
+                                <li>{{ badge }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
-            {% else %}
-                <p>{{ trans.get('No summary chart available.', 'No summary chart available.') }}</p>
-            {% endif %}
-            <div class="d-flex gap-2 mt-3 justify-content-center">
-                <a href="{{ url_for('quiz_step1') }}" class="btn btn-primary"><i class="fas fa-redo me-1"></i>{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary"><i class="fas fa-home me-1"></i>{{ trans.get('Back to Home', 'Back to Home') }}</a>
+
+                <div class="card mb-4 shadow-sm p-3">
+                    <h5 class="card-title">{{ trans.get('Your Answers', 'Your Answers') }}</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for question, answer in results.answers.items() %}
+                            <li class="list-group-item">
+                                <strong>{{ question }}</strong>: {{ answer }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                {% if results.summary_chart %}
+                    <div class="card mb-4 shadow-sm p-3">
+                        <h5 class="card-title">{{ trans.get('Summary Chart', 'Summary Chart') }}</h5>
+                        <img src="{{ results.summary_chart }}" alt="Summary Chart" class="img-fluid">
+                    </div>
+                {% endif %}
+
+                <a href="{{ url_for('quiz_step1') }}" class="btn btn-primary w-100 mt-3">{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a>
+
+                {% if debug_mode %}
+                    <p class="text-danger mt-3">Debug Info: Results Loaded</p>
+                {% endif %}
             </div>
         </div>
+    </main>
 
-        <footer class="footer mt-4">
-            <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
-            <div class="social-icons">
-                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="{{ trans.get('Follow on LinkedIn', 'Follow on LinkedIn') }}"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-twitter"></i></a>
-                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-            </div>
-            <p>
-                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
-                <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
-            </p>
-        </footer>
-    </div>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <footer class="container text-center mt-5">
+        <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
+        <div class="mb-2">
+            <a href="{{ LINKEDIN_URL }}" class="me-2">LinkedIn</a>
+            <a href="{{ TWITTER_URL }}" class="me-2">Twitter</a>
+            <a href="{{ FACEBOOK_URL }}">Facebook</a>
+        </div>
+        <div>
+            <a href="{{ CONSULTANCY_FORM_URL }}">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
+            <a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+            <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
+        </div>
+    </footer>
 </body>
 </html>
