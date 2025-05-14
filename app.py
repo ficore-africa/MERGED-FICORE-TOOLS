@@ -1372,6 +1372,7 @@ def quiz_step1():
         logger.info(f"Quiz step 1 validated successfully")
         return redirect(url_for('quiz_step2'))
 
+    progress = (4 / len(QUIZ_QUESTIONS)) * 100  # Progress for questions 1-4
     return render_template(
         'quiz_step1.html',
         form=form,
@@ -1384,7 +1385,9 @@ def quiz_step1():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+        language=language,
+        progress=progress,
+        debug_mode=False
     )
 
 @app.route('/quiz_step2', methods=['GET', 'POST'])
@@ -1406,6 +1409,7 @@ def quiz_step2():
         logger.info(f"Quiz step 2 validated successfully")
         return redirect(url_for('quiz_step3'))
 
+    progress = (7 / len(QUIZ_QUESTIONS)) * 100  # Progress for questions 5-7
     return render_template(
         'quiz_step2.html',
         form=form,
@@ -1418,7 +1422,9 @@ def quiz_step2():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+        language=language,
+        progress=progress,
+        debug_mode=False
     )
 
 @app.route('/quiz_step3', methods=['GET', 'POST'])
@@ -1509,6 +1515,7 @@ def quiz_step3():
             logger.error(f"Error processing quiz step 3: {e}")
             flash(trans['Error processing data. Please try again.'], 'error')
 
+    progress = (10 / len(QUIZ_QUESTIONS)) * 100  # Progress for questions 8-10
     return render_template(
         'quiz_step3.html',
         form=form,
@@ -1521,8 +1528,11 @@ def quiz_step3():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+        language=language,
+        progress=progress,
+        debug_mode=False
     )
+
 @app.route('/quiz_results', methods=['GET'])
 def quiz_results():
     language = session.get('language', 'en')
@@ -1548,7 +1558,8 @@ def quiz_results():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+        language=language,
+        debug_mode=False
     )
     
 @app.route('/logout', methods=['GET', 'POST'])
