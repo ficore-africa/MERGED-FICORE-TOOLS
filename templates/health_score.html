@@ -120,7 +120,7 @@
             transition: max-height 0.3s ease;
         }
         .guide-section.open {
-            max-height: 500px; /* Adjust based on content height */
+            max-height: 500px;
         }
         .guide-section ul {
             list-style-type: disc;
@@ -362,116 +362,134 @@
 
                     <!-- Step 1: Personal Information -->
                     {% if step == 1 %}
-                        <form method="POST" action="{{ url_for('health_score_step1') }}">
-                            {{ form.hidden_tag() }}
-                            <h3>{{ trans.get('Personal Information', 'Personal Information') }}</h3>
-                            <div class="mb-3">
-                                {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
-                                {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, value=session.get('health_score_step1', {}).get('first_name', '')) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form.last_name.label(class="form-label", **{'for': 'last_name'}) }}
-                                {{ form.last_name(class="form-control", placeholder=trans.get('Enter your last name (optional)', 'Enter your last name (optional)'), value=session.get('health_score_step1', {}).get('last_name', '')) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form.email.label(class="form-label", **{'for': 'email'}) }}
-                                {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, value=session.get('health_score_step1', {}).get('email', '')) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
+                    <form method="POST" action="{{ url_for('health_score_step1') }}">
+                        {{ form.hidden_tag() }}
+                        <h3>{{ trans.get('Personal Information', 'Personal Information') }}</h3>
+                        
+                        <div class="mb-3">
+                            {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
+                            {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, value=session.get('health_score_step1', {}).get('first_name', '')) }}
+                            {% for error in form.first_name.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label", **{'for': 'last_name'}) }}
+                            {{ form.last_name(class="form-control", placeholder=trans.get('Enter your last name (optional)', 'Enter your last name (optional)'), value=session.get('health_score_step1', {}).get('last_name', '')) }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label", **{'for': 'email'}) }}
+                            {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, value=session.get('health_score_step1', {}).get('email', '')) }}
+                            {% for error in form.email.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
                                 {{ form.auto_email(class="form-check-input", type="checkbox", checked=session.get('health_score_step1', {}).get('auto_email', False)) }}
+                                {{ form.auto_email.label(class="form-check-label", **{'for': 'auto_email'}) }}
                             </div>
-                            <div class="mb-3">
-                                {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
-                                {{ form.phone_number(class="form-control", placeholder=trans.get('Enter phone number (optional)', 'Enter phone number (optional)'), type="tel", value=session.get('health_score_step1', {}).get('phone_number', '')) }}
-                            </div>
-                            <div class="mb-3">
-                                <p class="note-text">{{ trans.get('Language', 'Language') }}: {{ trans.get('English or Hausa', 'English or Hausa') }}</p>
-                                {{ form.language.label(class="form-label", **{'for': 'language'}) }}
-                                {{ form.language(class="form-select", required=True, value=session.get('health_score_step1', {}).get('language', 'en')) }}
-                            </div>
-                            <div class="step-navigation">
-                                <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
-                                <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
-                            </div>
-                        </form>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
+                            {{ form.phone_number(class="form-control", placeholder=trans.get('Enter phone number (optional)', 'Enter phone number (optional)'), type="tel", value=session.get('health_score_step1', {}).get('phone_number', '')) }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="note-text">{{ trans.get('Language', 'Language') }}: {{ trans.get('English or Hausa', 'English or Hausa') }}</p>
+                            {{ form.language.label(class="form-label", **{'for': 'language'}) }}
+                            {{ form.language(class="form-select", required=True) }}
+                            {% for error in form.language.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="step-navigation">
+                            <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
+                            <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
+                        </div>
+                    </form>
                     {% endif %}
 
                     <!-- Step 2: User Information -->
                     {% if step == 2 %}
-                        <form method="POST" action="{{ url_for('health_score_step2') }}">
-                            {{ form.hidden_tag() }}
-                            <h3>{{ trans.get('User Information', 'User Information') }}</h3>
-                            <div class="mb-3">
-                                {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
-                                {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, value=session.get('health_score_step2', {}).get('business_name', '')) }}
-                            </div>
-                            <div class="mb-3">
-                                <p class="note-text">{{ trans.get('User Type', 'User Type') }}: {{ trans.get('Business or Individual', 'Business or Individual') }}</p>
-                                {{ form.user_type.label(class="form-label", **{'for': 'user_type'}) }}
-                                {{ form.user_type(class="form-select", required=True, value=session.get('health_score_step2', {}).get('user_type', '')) }}
-                            </div>
-                            <div class="step-navigation">
-                                <a href="{{ url_for('health_score_step1') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
-                                <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
-                            </div>
-                        </form>
+                    <form method="POST" action="{{ url_for('health_score_step2') }}">
+                        {{ form.hidden_tag() }}
+                        <h3>{{ trans.get('User Information', 'User Information') }}</h3>
+                        <div class="mb-3">
+                            {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
+                            {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, value=session.get('health_score_step2', {}).get('business_name', '')) }}
+                        </div>
+                        <div class="mb-3">
+                            <p class="note-text">{{ trans.get('User Type', 'User Type') }}: {{ trans.get('Business or Individual', 'Business or Individual') }}</p>
+                            {{ form.user_type.label(class="form-label", **{'for': 'user_type'}) }}
+                            {{ form.user_type(class="form-select", required=True, value=session.get('health_score_step2', {}).get('user_type', '')) }}
+                        </div>
+                        <div class="step-navigation">
+                            <a href="{{ url_for('health_score_step1') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
+                            <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
+                        </div>
+                    </form>
                     {% endif %}
 
                     <!-- Step 3: Financial Information -->
                     {% if step == 3 %}
-                        <form method="POST" action="{{ url_for('health_score_step3') }}">
-                            {{ form.hidden_tag() }}
-                            <h3>{{ trans.get('Financial Information', 'Financial Information') }}</h3>
-                            <div class="mb-3">
-                                <div class="field-container">
-                                    <span class="visual-icon">💰</span>
-                                    {{ form.income_revenue.label(class="form-label", **{'for': 'income_revenue'}) }}
-                                    <span class="info-icon" aria-label="{{ trans.get('Income information', 'Income information') }}">
-                                        <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-text">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
-                                    </span>
-                                </div>
-                                {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="number", step="0.01", min="0", required=True) }}
+                    <form method="POST" action="{{ url_for('health_score_step3') }}">
+                        {{ form.hidden_tag() }}
+                        <h3>{{ trans.get('Financial Information', 'Financial Information') }}</h3>
+                        <div class="mb-3">
+                            <div class="field-container">
+                                <span class="visual-icon">💰</span>
+                                {{ form.income_revenue.label(class="form-label", **{'for': 'income_revenue'}) }}
+                                <span class="info-icon" aria-label="{{ trans.get('Income information', 'Income information') }}">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
+                                </span>
                             </div>
-                            <div class="mb-3">
-                                <div class="field-container">
-                                    <span class="visual-icon">💸</span>
-                                    {{ form.expenses_costs.label(class="form-label", **{'for': 'expenses_costs'}) }}
-                                    <span class="info-icon" aria-label="{{ trans.get('Expenses information', 'Expenses information') }}">
-                                        <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-text">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
-                                    </span>
-                                </div>
-                                {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="number", step="0.01", min="0", required=True) }}
+                            {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="number", step="0.01", min="0", required=True) }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="field-container">
+                                <span class="visual-icon">💸</span>
+                                {{ form.expenses_costs.label(class="form-label", **{'for': 'expenses_costs'}) }}
+                                <span class="info-icon" aria-label="{{ trans.get('Expenses information', 'Expenses information') }}">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
+                                </span>
                             </div>
-                            <div class="mb-3">
-                                <div class="field-container">
-                                    <span class="visual-icon">🏦</span>
-                                    {{ form.debt_loan.label(class="form-label", **{'for': 'debt_loan'}) }}
-                                    <span class="info-icon" aria-label="{{ trans.get('Debt information', 'Debt information') }}">
-                                        <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-text">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
-                                    </span>
-                                </div>
-                                {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="number", step="0.01", min="0") }}
+                            {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="number", step="0.01", min="0", required=True) }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="field-container">
+                                <span class="visual-icon">🏦</span>
+                                {{ form.debt_loan.label(class="form-label", **{'for': 'debt_loan'}) }}
+                                <span class="info-icon" aria-label="{{ trans.get('Debt information', 'Debt information') }}">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
+                                </span>
                             </div>
-                            <div class="mb-3">
-                                <div class="field-container">
-                                    <span class="visual-icon">📈</span>
-                                    {{ form.debt_interest_rate.label(class="form-label", **{'for': 'debt_interest_rate'}) }}
-                                    <span class="info-icon" aria-label="{{ trans.get('Interest rate information', 'Interest rate information') }}">
-                                        <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-text">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
-                                    </span>
-                                </div>
-                                {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0") }}
+                            {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="number", step="0.01", min="0") }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="field-container">
+                                <span class="visual-icon">📈</span>
+                                {{ form.debt_interest_rate.label(class="form-label", **{'for': 'debt_interest_rate'}) }}
+                                <span class="info-icon" aria-label="{{ trans.get('Interest rate information', 'Interest rate information') }}">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
+                                </span>
                             </div>
-                            <div class="step-navigation">
-                                <a href="{{ url_for('health_score_step2') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
-                                {{ form.submit(class="btn btn-primary btn-lg", value=trans.get('Submit', 'Submit'), **{'aria-label': trans.get('Submit', 'Submit')}) }}
-                            </div>
-                        </form>
+                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0") }}
+                        </div>
+                        <div class="step-navigation">
+                            <a href="{{ url_for('health_score_step2') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
+                            {{ form.submit(class="btn btn-primary btn-lg", value=trans.get('Submit', 'Submit'), **{'aria-label': trans.get('Submit', 'Submit')}) }}
+                        </div>
+                    </form>
                     {% endif %}
                 </div>
             </div>
@@ -495,18 +513,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Format numbers with commas on input
-            document.querySelectorAll('.number-input').forEach(input => {
+            const numberInputs = document.querySelectorAll('.number-input');
+            numberInputs.forEach(input => {
                 input.addEventListener('input', function (e) {
-                    let value = parseFloat(e.target.value) || 0;
+                    const value = parseFloat(e.target.value.replace(/,/g, '')) || 0;
                     e.target.value = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 });
-                // Set initial value with commas
-                let initialValue = parseFloat(input.value) || 0;
+                const initialValue = parseFloat(input.value.replace(/,/g, '')) || 0;
                 if (initialValue > 0) {
                     input.value = initialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
             });
+
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    console.log('Form submitted:', new FormData(form));
+                });
+            }
         });
     </script>
 </body>
