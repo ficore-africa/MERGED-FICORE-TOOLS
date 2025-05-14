@@ -592,6 +592,7 @@ class HealthScoreStep3Form(FlaskForm):
         super().__init__(*args, **kwargs)
         trans = get_translations(language or session.get('language', 'en'))
         self.submit.label.text = trans.get('Submit', 'Submit')
+
 # Load Quiz Questions
 try:
     with open('questions.json', 'r', encoding='utf-8') as f:
@@ -876,15 +877,18 @@ def budget_step3():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step2'))
-        # Clean and convert to float
-        session['budget_data'].update({
-            'housing_expenses': float(request.form.get('housing_expenses', '0').replace(',', '')),
-            'food_expenses': float(request.form.get('food_expenses', '0').replace(',', '')),
-            'transport_expenses': float(request.form.get('transport_expenses', '0').replace(',', '')),
-            'other_expenses': float(request.form.get('other_expenses', '0').replace(',', ''))
-        })
-        session.modified = True
-        return redirect(url_for('budget_step4'))
+        try:
+            session['budget_data'].update({
+                'housing_expenses': float(request.form.get('housing_expenses', '0').replace(',', '')),
+                'food_expenses': float(request.form.get('food_expenses', '0').replace(',', '')),
+                'transport_expenses': float(request.form.get('transport_expenses', '0').replace(',', '')),
+                'other_expenses': float(request.form.get('other_expenses', '0').replace(',', ''))
+            })
+            session.modified = True
+            return redirect(url_for('budget_step4'))
+        except ValueError:
+            logger.error(f"Invalid number input in budget_step3")
+            flash(trans['Invalid Number'], 'error')
     return render_template(
         'budget_step3.html',
         form=form,
@@ -910,15 +914,14 @@ def budget_step4():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step3'))
-        # Clean and convert to float
-        savings_goal = float(request.form.get('savings_goal', '0').replace(',', '')) if request.form.get('savings_goal') else 0.0
-        session['budget_data'].update({
-            'savings_goal': savings_goal,
-            'auto_email': form.auto_email.data
-        })
-        session.modified = True
-        budget_data = session['budget_data']
         try:
+            savings_goal = float(request.form.get('savings_goal', '0').replace(',', '')) if request.form.get('savings_goal') else 0.0
+            session['budget_data'].update({
+                'savings_goal': savings_goal,
+                'auto_email': form.auto_email.data
+            })
+            session.modified = True
+            budget_data = session['budget_data']
             df = pd.DataFrame([budget_data], columns=PREDETERMINED_HEADERS_BUDGET)
             df = calculate_budget_metrics(df)
             if df.empty:
@@ -938,7 +941,7 @@ def budget_step4():
                 budget_data.get('transport_expenses', 0),
                 budget_data.get('other_expenses', 0),
                 budget_data.get('savings_goal', 0),
-                budget_data.get('auto_email', False),
+                str(budget_data.get('auto_email', False)).lower(),
                 user_df['total_expenses'].iloc[0],
                 user_df['savings'].iloc[0],
                 user_df['surplus_deficit'].iloc[0],
@@ -957,6 +960,9 @@ def budget_step4():
                 flash(trans['Check Inbox'], 'success')
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('budget_dashboard'))
+        except ValueError:
+            logger.error(f"Invalid number input in budget_step4")
+            flash(trans['Invalid Number'], 'error')
         except Exception as e:
             logger.error(f"Error in budget_step4: {e}")
             flash(trans['Error retrieving data. Please try again.'], 'error')
@@ -1424,12 +1430,28 @@ def quiz_step3():
             quiz_data.update({
                 'first_name': sanitize_input(form.first_name.data) if form.first_name.data else '',
                 'email': sanitize_input(form.email.data) if form.email.data else '',
-                'language': form.language.data
+                'language': form.language.data,
+                'auto_email': form.auto_email.data
             })
             session['quiz_data'] = quiz_data
             session['language'] = form.language.data
             session.modified = True
             logger.info(f"Quiz step 3 validated successfully")
+
+            # Calculate results
+            answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in quiz_data.items() if k.startswith('question_')]
+            personality, personality_desc, tip = assign_personality(answers, language)
+            user_df = pd.DataFrame([{
+                'Timestamp': datetime.now(),
+                'first_name': quiz_data.get('first_name', ''),
+                'email': quiz_data.get('email', ''),
+                'language': quiz_data.get('language', 'en'),
+                'personality': personality,
+                **{f'question_{i}': QUIZ_QUESTIONS[i-1].get('text', '') for i in range(1, 11)},
+                **{f'answer_{i}': quiz_data.get(f'question_{i}', '') for i in range(1, 11)}
+            }])
+            all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+            badges = assign_badges_quiz(user_df, all_users_df)
 
             # Prepare data for Google Sheets
             data = [
@@ -1437,32 +1459,17 @@ def quiz_step3():
                 quiz_data.get('first_name', ''),
                 quiz_data.get('email', ''),
                 quiz_data.get('language', 'en'),
-                *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)],
+                *[QUIZ_QUESTIONS[i-1].get('text', '') for i in range(1, 11)],
                 *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)],
                 personality,
                 ','.join(badges),
-                'true' if quiz_data.get('email') else 'false'
+                str(form.auto_email.data).lower()
             ]
 
             # Append to Google Sheets
-            if not append_to_sheet(data, headers, 'Quiz'):
+            if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
                 flash(trans['Google Sheets Error'], 'error')
-                return redirect(url_for('quiz_step1'))
-
-            # Calculate results
-            answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in quiz_data.items() if k.startswith('question_')]
-            personality, personality_desc, tip = assign_personality(answers, language)
-            user_df = pd.DataFrame([{
-                'Timestamp': datetime.now(),
-                'FirstName': quiz_data.get('first_name', ''),
-                'Email': quiz_data.get('email', ''),
-                'language': quiz_data.get('language', 'en'),
-                'personality': personality,
-                **{f'Answer{i}': quiz_data.get(f'question_{i}', '') for i in range(1, 11)}
-            }])
-            all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
-            badges = assign_badges_quiz(user_df, all_users_df)
-            summary_chart = generate_quiz_summary_chart(answers, language)
+                return redirect(url_for('quiz_step3'))
 
             results = {
                 'first_name': quiz_data.get('first_name', ''),
@@ -1471,17 +1478,18 @@ def quiz_step3():
                 'tip': tip,
                 'badges': badges,
                 'answers': {q['text']: a for q, a in answers},
-                'summary_chart': summary_chart
+                'summary_chart': generate_quiz_summary_chart(answers, language)
             }
             session['quiz_results'] = results
             session.modified = True
 
-            # Send email if provided
-            if quiz_data.get('email'):
+            # Send email if auto_email is True
+            if quiz_data.get('auto_email') and quiz_data.get('email'):
                 threading.Thread(
                     target=send_quiz_email_async,
                     args=(quiz_data['email'], quiz_data['first_name'], personality, personality_desc, tip, language)
                 ).start()
+                flash(trans['Check Inbox'], 'success')
 
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('quiz_results'))
