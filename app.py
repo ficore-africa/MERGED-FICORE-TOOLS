@@ -808,7 +808,9 @@ def budget_step2():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step1'))
-        session['budget_data']['monthly_income'] = form.monthly_income.data
+        # Clean and convert to float
+        monthly_income = float(request.form.get('monthly_income', '0').replace(',', ''))
+        session['budget_data']['monthly_income'] = monthly_income
         session.modified = True
         return redirect(url_for('budget_step3'))
     return render_template(
@@ -836,11 +838,12 @@ def budget_step3():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step2'))
+        # Clean and convert to float
         session['budget_data'].update({
-            'housing_expenses': form.housing_expenses.data,
-            'food_expenses': form.food_expenses.data,
-            'transport_expenses': form.transport_expenses.data,
-            'other_expenses': form.other_expenses.data
+            'housing_expenses': float(request.form.get('housing_expenses', '0').replace(',', '')),
+            'food_expenses': float(request.form.get('food_expenses', '0').replace(',', '')),
+            'transport_expenses': float(request.form.get('transport_expenses', '0').replace(',', '')),
+            'other_expenses': float(request.form.get('other_expenses', '0').replace(',', ''))
         })
         session.modified = True
         return redirect(url_for('budget_step4'))
@@ -869,8 +872,10 @@ def budget_step4():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step3'))
+        # Clean and convert to float
+        savings_goal = float(request.form.get('savings_goal', '0').replace(',', '')) if request.form.get('savings_goal') else 0.0
         session['budget_data'].update({
-            'savings_goal': form.savings_goal.data or 0.0,
+            'savings_goal': savings_goal,
             'auto_email': form.auto_email.data
         })
         session.modified = True
