@@ -558,28 +558,41 @@ class Step4Form(FlaskForm):
         super(Step4Form, self).__init__(*args, **kwargs)
         self.submit.label.text = get_translations(language)['Continue to Dashboard']
 
-class HealthScoreForm(FlaskForm):
+class HealthScoreStep1Form(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number', validators=[Optional()])
-    business_name = StringField('Business Name', validators=[DataRequired()])
-    user_type = SelectField('User Type', choices=[('SME', 'SME'), ('Individual', 'Individual')], validators=[DataRequired()])
-    income_revenue = FloatField('Monthly Income/Revenue', validators=[DataRequired(), non_negative])
-    expenses_costs = FloatField('Monthly Expenses/Costs', validators=[DataRequired(), non_negative])
-    debt_loan = FloatField('Total Debt/Loan Amount', validators=[DataRequired(), non_negative])
-    debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[DataRequired(), non_negative])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en', validators=[DataRequired()])
     auto_email = BooleanField('Receive Email Report')
     submit = SubmitField()
 
     def __init__(self, language=None, *args, **kwargs):
-        super(HealthScoreForm, self).__init__(*args, **kwargs)
-        self.submit.label.text = get_translations(language or 'en')['Submit']
-        # Set language from session or default
+        super().__init__(*args, **kwargs)
+        trans = get_translations(language or session.get('language', 'en'))
+        self.submit.label.text = trans.get('Next', 'Next')
         if not self.language.data:
             self.language.data = language or session.get('language', 'en')
 
+class HealthScoreStep2Form(FlaskForm):
+    business_name = StringField('Business Name', validators=[DataRequired()])
+    user_type = SelectField('User Type', choices=[('SME', 'SME'), ('Individual', 'Individual')], validators=[DataRequired()])
+    submit = SubmitField()
+
+    def __init__(self, language=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        trans = get_translations(language or session.get('language', 'en'))
+        self.submit.label.text = trans.get('Next', 'Next')
+
+class HealthScoreStep3Form(FlaskForm):
+    income_revenue = FloatField('Monthly Income/Revenue', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
+    expenses_costs = FloatField('Monthly Expenses/Costs', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
+    debt_loan = FloatField('Total Debt/Loan Amount', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
+    debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[DataRequired(), NumberRange(min=0, max=100)])
+    submit = SubmitField()
+
+    def __init__(self, language=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        trans = get_translations(language or session.get('language', 'en'))
+        self.submit.label.text = trans.get('Submit', 'Submit')
 try:
     with open('questions.json', 'r', encoding='utf-8') as f:
         QUIZ_QUESTIONS = json.load(f)
