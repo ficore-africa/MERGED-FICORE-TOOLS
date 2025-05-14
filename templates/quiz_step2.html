@@ -25,12 +25,20 @@
         .card {
             border-radius: 10px;
         }
+        footer a {
+            margin: 0 0.5rem;
+            text-decoration: none;
+            color: #007bff;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <header class="container">
         <div class="logo-container">
-            <img src="/static/img/logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
+            <img src="/static/img/ficore_logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
         </div>
         <h1 class="text-center">{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</h1>
         <p class="text-center">{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
@@ -55,7 +63,7 @@
                     {% endif %}
                 {% endwith %}
 
-                <form method="POST" action="">
+                <form method="POST" action="{{ url_for('quiz_step2') }}">
                     {{ form.hidden_tag() }}
                     {% for i in range(5, 8) %}
                         {% if i - 5 < questions|length %}
@@ -86,7 +94,7 @@
                     {% endfor %}
                     <div class="d-flex justify-content-between">
                         <button type="submit" name="back" class="btn btn-secondary w-100 mt-3 me-2">{{ trans.get('Back', 'Back') }}</button>
-                        <button type="submit" class="btn btn-primary w-100 mt-3">{{ trans.get('Next', 'Next') }}</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">{{ form.submit.label.text }}</button>
                     </div>
                 </form>
 
@@ -100,13 +108,13 @@
     <footer class="container text-center mt-5">
         <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
         <div class="mb-2">
-            <a href="#" class="me-2">LinkedIn</a>
-            <a href="#" class="me-2">Twitter</a>
-            <a href="#">Facebook</a>
+            <a href="{{ LINKEDIN_URL }}">LinkedIn</a>
+            <a href="{{ TWITTER_URL }}">Twitter</a>
+            <a href="{{ FACEBOOK_URL }}">Facebook</a>
         </div>
         <div>
-            <a href="#">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
-            <a href="#">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+            <a href="{{ CONSULTANCY_FORM_URL }}">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
+            <a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
             <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
         </div>
     </footer>
