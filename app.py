@@ -1030,7 +1030,9 @@ def health_score_step1():
         if not form.first_name.data:
             flash(trans.get('First Name Required', 'First Name Required'), 'error')
             return render_template('health_score.html', form=form, step=1, trans=trans)
-        if not form.email.data or not form.validate_email(form.email):
+        if not form.validate():
+            flash(trans.get('Please correct the errors below'), 'error')
+            return render_template('health_score.html', form=form, step=1, trans=trans)
             flash(trans.get('Invalid Email', 'Invalid Email'), 'error')
             return render_template('health_score.html', form=form, step=1, trans=trans)
         if not form.language.data:
