@@ -1032,29 +1032,27 @@ def budget_dashboard():
 @app.route('/health_score_step1', methods=['GET', 'POST'])
 def health_score_step1():
     logger.debug(f"Session before: {session}")
-    form = HealthScoreForm()
-    trans = get_translations(form.language.data or session.get('language', 'en'))
+    language = session.get('language', 'en')
+    form = HealthScoreStep1Form(language=language)
+    trans = get_translations(language)
 
     if form.validate_on_submit():
-        session['health_score_step1'] = {
-            'first_name': form.first_name.data,
-            'last_name': form.last_name.data,
-            'email': form.email.data,
-            'auto_email': form.auto_email.data,
-            'phone_number': form.phone_number.data,
-            'language': form.language.data
+        session['health_data'] = {
+            'first_name': sanitize_input(form.first_name.data),
+            'email': sanitize_input(form.email.data),
+            'language': form.language.data,
+            'auto_email': form.auto_email.data
         }
         session['language'] = form.language.data
         session.modified = True
         logger.info(f"Health score step 1 validated successfully for email: {form.email.data}")
-        logger.debug(f"Session after: {session}")
         return redirect(url_for('health_score_step2'))
-    
-    for field, errors in form.errors.items():
-        for error in errors:
-            logger.error(f"Validation error in {field}: {error}")
+
     if form.errors:
-        flash(trans.get('Please correct the errors below', 'Please correct the errors below'), 'error')
+        for field, errors in form.errors.items():
+            for error in errors:
+                logger.error(f"Validation error in {field}: {error}")
+        flash(trans['Please correct the errors below'], 'error')
 
     return render_template(
         'health_score.html',
@@ -1067,179 +1065,236 @@ def health_score_step1():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=form.language.data or 'en'
+        language=language
     )
-    
+
 @app.route('/health_score_step2', methods=['GET', 'POST'])
 def health_score_step2():
-    # Ensure Step 1 data exists
-    if 'health_score_step1' not in session:
-        flash('Please complete Step 1 first.', 'error')
+    if 'health_data' not in session:
+        flash(get_translations(session.get('language', 'en'))['Session Expired'], 'error')
         return redirect(url_for('health_score_step1'))
 
-    form = HealthScoreForm()
-    trans = get_translations(session['health_score_step1']['language'])
+    language = session.get('language', 'en')
+    form = HealthScoreStep2Form(language=language)
+    trans = get_translations(language)
 
-    if request.method == 'POST':
-        # Validate Step 2 fields
-        form.business_name.data = request.form.get('business_name')
-        form.user_type.data = request.form.get('user_type')
-
-        if not form.business_name.data:
-            flash(trans.get('Business Name Required', 'Business Name Required'), 'error')
-            return render_template('health_score.html', form=form, step=2, trans=trans)
-        if not form.user_type.data:
-            flash('User Type is required.', 'error')
-            return render_template('health_score.html', form=form, step=2, trans=trans)
-
-        # Store data in session
-        session['health_score_step2'] = {
-            'business_name': form.business_name.data,
+    if form.validate_on_submit():
+        session['health_data'].update({
+            'business_name': sanitize_input(form.business_name.data),
             'user_type': form.user_type.data
-        }
+        })
+        session.modified = True
+        logger.info(f"Health score step 2 validated successfully")
         return redirect(url_for('health_score_step3'))
 
-    return render_template('health_score.html', form=form, step=2, trans=trans)
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                logger.error(f"Validation error in {field}: {error}")
+        flash(trans['Please correct the errors below'], 'error')
+
+    return render_template(
+        'health_score.html',
+        form=form,
+        step=2,
+        trans=trans,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL,
+        FACEBOOK_URL=FACEBOOK_URL,
+        language=language
+    )
 
 @app.route('/health_score_step3', methods=['GET', 'POST'])
 def health_score_step3():
-    # Ensure previous steps are completed
-    if 'health_score_step1' not in session or 'health_score_step2' not in session:
-        flash('Please complete previous steps first.', 'error')
+    if 'health_data' not in session:
+        flash(get_translations(session.get('language', 'en'))['Session Expired'], 'error')
         return redirect(url_for('health_score_step1'))
 
-    form = HealthScoreForm()
-    trans = get_translations(session['health_score_step1']['language'])
+    language = session.get('language', 'en')
+    form = HealthScoreStep3Form(language=language)
+    trans = get_translations(language)
 
-    if request.method == 'POST':
+    if form.validate_on_submit():
         try:
-            form.income_revenue.data = float(request.form.get('income_revenue', 0))
-            form.expenses_costs.data = float(request.form.get('expenses_costs', 0))
-            form.debt_loan.data = float(request.form.get('debt_loan', 0)) if request.form.get('debt_loan') else 0
-            form.debt_interest_rate.data = float(request.form.get('debt_interest_rate', 0)) if request.form.get('debt_interest_rate') else 0
+            # Clean and convert number inputs
+            income_revenue = float(request.form.get('income_revenue', '0').replace(',', ''))
+            expenses_costs = float(request.form.get('expenses_costs', '0').replace(',', ''))
+            debt_loan = float(request.form.get('debt_loan', '0').replace(',', ''))
+            debt_interest_rate = float(request.form.get('debt_interest_rate', '0').replace(',', ''))
 
-            if form.income_revenue.data < 0 or form.expenses_costs.data < 0:
-                flash(trans.get('Value must be positive.', 'Value must be positive.'), 'error')
-                return render_template('health_score.html', form=form, step=3, trans=trans)
-            if form.debt_loan.data < 0 or form.debt_interest_rate.data < 0:
-                flash(trans.get('Value must be positive.', 'Value must be positive.'), 'error')
-                return render_template('health_score.html', form=form, step=3, trans=trans)
+            session['health_data'].update({
+                'income_revenue': income_revenue,
+                'expenses_costs': expenses_costs,
+                'debt_loan': debt_loan,
+                'debt_interest_rate': debt_interest_rate
+            })
+            session.modified = True
+            logger.info(f"Health score step 3 validated successfully")
 
-            # Combine all data
-            health_score_data = {
-                **session['health_score_step1'],
-                **session['health_score_step2'],
-                'income_revenue': form.income_revenue.data,
-                'expenses_costs': form.expenses_costs.data,
-                'debt_loan': form.debt_loan.data,
-                'debt_interest_rate': form.debt_interest_rate.data
-            }
+            # Prepare data for Google Sheets
+            health_data = session['health_data']
+            data = [
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                health_data.get('business_name', ''),
+                health_data.get('income_revenue', 0.0),
+                health_data.get('expenses_costs', 0.0),
+                health_data.get('debt_loan', 0.0),
+                health_data.get('debt_interest_rate', 0.0),
+                str(health_data.get('auto_email', False)).lower(),
+                '',  # phone_number (empty)
+                health_data.get('first_name', ''),
+                '',  # last_name (empty)
+                health_data.get('user_type', ''),
+                health_data.get('email', ''),
+                '',  # badges (to be assigned in dashboard)
+                health_data.get('language', 'en')
+            ]
 
-            # Simple health score calculation (example logic)
-            cash_flow = health_score_data['income_revenue'] - health_score_data['expenses_costs']
-            debt_to_income = (health_score_data['debt_loan'] / health_score_data['income_revenue'] * 100) if health_score_data['income_revenue'] > 0 else 0
-            debt_interest_burden = health_score_data['debt_interest_rate'] * (health_score_data['debt_loan'] / 100) if health_score_data['debt_loan'] > 0 else 0
-            health_score = min(100, max(0, 50 + (cash_flow * 0.2) - (debt_to_income * 0.3) - (debt_interest_burden * 0.1)))
+            # Append to Google Sheets
+            if not append_to_sheet(data, PREDETERMINED_HEADERS_HEALTH, 'Health'):
+                flash(trans['Google Sheets Error'], 'error')
+                return redirect(url_for('health_score_step1'))
 
-            # Store data for dashboard
+            # Fetch and calculate health score
+            user_df = fetch_data_from_sheet(email=health_data['email'], headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
+            all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
+            user_df = calculate_health_score(user_df)
+            all_users_df = calculate_health_score(all_users_df)
+
+            if user_df.empty:
+                flash(trans['Error retrieving data. Please try again.'], 'error')
+                return redirect(url_for('health_score_step1'))
+
+            user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
+            user_df = user_df.sort_values('Timestamp', ascending=False)
+            user_row = user_df.iloc[0]
+
+            # Assign badges
+            badges = assign_badges_health(user_df, all_users_df)
+
+            # Calculate rank
+            all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
+            rank = (all_scores >= user_row['HealthScore']).sum()
+            total_users = len(all_scores)
+
+            # Store dashboard data
             session['dashboard_data'] = {
-                'first_name': health_score_data['first_name'],
-                'email': health_score_data['email'],
-                'health_score': health_score,
-                'user_data': health_score_data,
-                'rank': 1,  # Placeholder, replace with actual ranking logic
-                'total_users': 100,  # Placeholder, replace with actual total users
-                'breakdown_plot': True,  # Placeholder, replace with actual plot data
-                'comparison_plot': True,  # Placeholder, replace with actual plot data
-                'all_users_df': {'HealthScore': [health_score, 60, 70, 80, 90]},  # Placeholder data
-                'badges': ['Positive Cash Flow'] if cash_flow > 0 else [],
-                'course_url': 'https://example.com/course',
-                'course_title': 'Financial Health 101'
+                'first_name': health_data['first_name'],
+                'email': health_data['email'],
+                'language': health_data['language'],
+                'health_score': user_row['HealthScore'],
+                'score_description': user_row['ScoreDescription'],
+                'course_title': user_row['CourseTitle'],
+                'course_url': user_row['CourseURL'],
+                'rank': rank,
+                'total_users': total_users,
+                'badges': badges,
+                'breakdown_plot': generate_breakdown_plot(user_df),
+                'comparison_plot': generate_comparison_plot(user_df, all_users_df),
+                'user_data': user_row.to_dict(),
+                'all_users_df': all_users_df.to_dict()
             }
 
-            # Clear previous step data
-            session.pop('health_score_step1', None)
-            session.pop('health_score_step2', None)
+            # Send email if auto_email is True
+            if health_data.get('auto_email'):
+                threading.Thread(
+                    target=send_health_email_async,
+                    args=(
+                        health_data['email'],
+                        health_data['first_name'],
+                        user_row['HealthScore'],
+                        user_row['ScoreDescription'],
+                        rank,
+                        total_users,
+                        user_row['CourseTitle'],
+                        user_row['CourseURL'],
+                        language
+                    )
+                ).start()
+                flash(trans['Check Inbox'], 'success')
 
-            # Redirect to dashboard with step 1
+            flash(trans['Submission Success'], 'success')
             return redirect(url_for('health_dashboard', step=1))
 
         except ValueError:
-            flash(trans.get('Invalid Number', 'Invalid Number'), 'error')
-            return render_template('health_score.html', form=form, step=3, trans=trans)
+            flash(trans['Invalid Number'], 'error')
 
-    return render_template('health_score.html', form=form, step=3, trans=trans)
-        
-@app.route('/health_dashboard/<int:step>', methods=['GET'])
-def health_dashboard(step=1):
-    # Validate step range
-    if step < 1 or step > 6:
-        flash(get_translations('en')['Error retrieving data. Please try again.'], 'error')
-        return redirect(url_for('health_score'))
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                logger.error(f"Validation error in {field}: {error}")
+        flash(trans['Please correct the errors below'], 'error')
 
-    # Check session data
-    dashboard_data = session.get('dashboard_data', {})
-    if not dashboard_data or 'email' not in dashboard_data:
-        flash(get_translations('en')['Session Expired'], 'error')
-        return redirect(url_for('health_score'))
+    return render_template(
+        'health_score.html',
+        form=form,
+        step=3,
+        trans=trans,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL,
+        FACEBOOK_URL=FACEBOOK_URL,
+        language=language
+    )
 
-    # Extract language and translation
-    language = dashboard_data.get('language', 'en')
+@app.route('/health_dashboard', methods=['GET'])
+def health_dashboard():
+    step = request.args.get('step', default=1, type=int)
+    if step not in range(1, 7):
+        flash(get_translations(session.get('language', 'en'))['Invalid Step'], 'error')
+        return redirect(url_for('health_dashboard', step=1))
+
+    language = session.get('language', 'en')
     trans = get_translations(language)
+    dashboard_data = session.get('dashboard_data', {})
 
-    # Extract user data from session
+    if not dashboard_data or 'email' not in dashboard_data:
+        flash(trans['Session Expired'], 'error')
+        return redirect(url_for('health_score_step1'))
+
     email = dashboard_data['email']
-    first_name = dashboard_data.get('first_name', 'User')
-
     try:
-        # Fetch data from sheet
         user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
-        if user_df.empty:
-            flash(trans['Error retrieving data. Please try again.'], 'error')
-            return redirect(url_for('health_score'))
-
         all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
 
-        # Calculate health scores
+        if user_df.empty:
+            flash(trans['Error retrieving data. Please try again.'], 'error')
+            return redirect(url_for('health_score_step1'))
+
         user_df = calculate_health_score(user_df)
         all_users_df = calculate_health_score(all_users_df)
-
-        # Sort user data by timestamp
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
-        user_data = user_df.iloc[0].to_dict()
+        user_row = user_df.iloc[0]
 
-        # Get health score (use session value if available, otherwise from user_df)
-        health_score = user_data.get('HealthScore', dashboard_data.get('health_score', 0.0))
-
-        # Assign badges
         badges = assign_badges_health(user_df, all_users_df)
-
-        # Calculate rank
         all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
-        rank = (all_scores >= health_score).sum()
+        rank = (all_scores >= user_row['HealthScore']).sum()
         total_users = len(all_scores)
 
-        # Generate plots
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
 
-        # Prepare template data
         template_data = {
             'trans': trans,
-            'user_data': user_data,
+            'user_data': user_row.to_dict(),
             'badges': badges,
             'rank': rank,
             'total_users': total_users,
-            'health_score': health_score,
-            'first_name': sanitize_input(first_name),
+            'health_score': user_row['HealthScore'],
+            'first_name': sanitize_input(dashboard_data.get('first_name', 'User')),
             'email': sanitize_input(email),
-            'step': step,
             'breakdown_plot': breakdown_plot,
             'comparison_plot': comparison_plot,
-            'course_title': user_data.get('CourseTitle', trans['Financial Health Course']),
-            'course_url': user_data.get('CourseURL', '#'),
+            'course_title': user_row['CourseTitle'],
+            'course_url': user_row['CourseURL'],
             'all_users_df': all_users_df,
+            'step': step,
             'FEEDBACK_FORM_URL': FEEDBACK_FORM_URL,
             'WAITLIST_FORM_URL': WAITLIST_FORM_URL,
             'CONSULTANCY_FORM_URL': CONSULTANCY_FORM_URL,
@@ -1249,12 +1304,18 @@ def health_dashboard(step=1):
             'language': language
         }
 
+        # Clear session data only after step 6
+        if step == 6:
+            session.pop('health_data', None)
+            session.pop('dashboard_data', None)
+            session.modified = True
+
         return render_template('health_dashboard.html', **template_data)
 
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}")
         flash(trans['Error retrieving data. Please try again.'], 'error')
-        return redirect(url_for('health_score'))
+        return redirect(url_for('health_score_step1'))
         
 @app.route('/quiz_step1', methods=['GET', 'POST'])
 def quiz_step1():
