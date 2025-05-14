@@ -649,62 +649,42 @@ except json.JSONDecodeError as e:
     logger.error(f"Error decoding questions.json: {e}")
     QUIZ_QUESTIONS = []
 
-# Form Classes
-class QuizStep1Form(FlaskForm):
-    submit = SubmitField('Next')
-    back = SubmitField('Back')
-    def __init__(self, start_idx, end_idx, *args, **kwargs):
-        super(QuizStep1Form, self).__init__(*args, **kwargs)
-        for i in range(start_idx, end_idx):
-            if i < len(QUIZ_QUESTIONS):
-                question = QUIZ_QUESTIONS[i]
-                choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
-                field = RadioField(
-                    f'Question {i+1}',
-                    choices=choices,
-                    validators=[DataRequired()] if question.get('required', True) else [Optional()]
-                )
-                setattr(self, f'question_{i+1}', field)
-                self._fields[f'question_{i+1}'] = field
-
-class QuizStep2Form(FlaskForm):
-    submit = SubmitField('Next')
-    back = SubmitField('Back')
-    def __init__(self, start_idx, end_idx, *args, **kwargs):
-        super(QuizStep2Form, self).__init__(*args, **kwargs)
-        for i in range(start_idx, end_idx):
-            if i < len(QUIZ_QUESTIONS):
-                question = QUIZ_QUESTIONS[i]
-                choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
-                field = RadioField(
-                    f'Question {i+1}',
-                    choices=choices,
-                    validators=[DataRequired()] if question.get('required', True) else [Optional()]
-                )
-                setattr(self, f'question_{i+1}', field)
-                self._fields[f'question_{i+1}'] = field
-
-class QuizStep3Form(FlaskForm):
+class QuizForm(FlaskForm):
+    # Statically define 10 RadioFields for the 10 questions
+    question_1 = RadioField('Question 1', validators=[DataRequired()])
+    question_2 = RadioField('Question 2', validators=[DataRequired()])
+    question_3 = RadioField('Question 3', validators=[DataRequired()])
+    question_4 = RadioField('Question 4', validators=[DataRequired()])
+    question_5 = RadioField('Question 5', validators=[DataRequired()])
+    question_6 = RadioField('Question 6', validators=[DataRequired()])
+    question_7 = RadioField('Question 7', validators=[DataRequired()])
+    question_8 = RadioField('Question 8', validators=[DataRequired()])
+    question_9 = RadioField('Question 9', validators=[DataRequired()])
+    question_10 = RadioField('Question 10', validators=[DataRequired()])
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
     auto_email = BooleanField('Receive Email Report')
-    submit = SubmitField('Submit Quiz')
+    submit = SubmitField('Next')
     back = SubmitField('Back')
-    def __init__(self, start_idx, end_idx, *args, **kwargs):
-        super(QuizStep3Form, self).__init__(*args, **kwargs)
-        for i in range(start_idx, end_idx):
-            if i < len(QUIZ_QUESTIONS):
-                question = QUIZ_QUESTIONS[i]
-                choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
-                field = RadioField(
-                    f'Question {i+1}',
-                    choices=choices,
-                    validators=[DataRequired()] if question.get('required', True) else [Optional()]
-                )
-                setattr(self, f'question_{i+1}', field)
-                self._fields[f'question_{i+1}'] = field
 
+    def __init__(self, language='en', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.trans = get_translations(language)
+        # Update submit button label based on step (set in routes)
+        self.populate_questions()
+
+    def populate_questions(self):
+        """Dynamically set labels and choices for question fields based on QUIZ_QUESTIONS."""
+        for i in range(1, 11):
+            field = getattr(self, f'question_{i}', None)
+            if field and i <= len(QUIZ_QUESTIONS):
+                question = QUIZ_QUESTIONS[i - 1]
+                field.label.text = question.get('text', f'Question {i}')
+                field.choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
+                # Adjust validators based on question requirement
+                field.validators = [DataRequired()] if question.get('required', True) else [Optional()]
+                
 # Personality, Badges, Chart, and Email Functions
 def assign_personality(answers, language='en'):
     trans = get_translations(language)
@@ -1384,22 +1364,17 @@ def quiz_step1():
 
     language = session.get('language', 'en')
     trans = get_translations(language)
-    form = QuizStep1Form(start_idx=0, end_idx=4, obj=request.form if request.method == 'POST' else None)
+    form = QuizForm(language=language, obj=request.form if request.method == 'POST' else None)
+    form.submit.label.text = trans['Next']
 
     if request.method == 'POST' and form.validate():
         session['quiz_data'] = session.get('quiz_data', {})
         session['quiz_data'].update({
-            f'question_{i+1}': form[f'question_{i+1}'].data for i in range(4)
+            f'question_{i}': form[f'question_{i}'].data for i in range(1, 5)
         })
         session.modified = True
         logger.info(f"Quiz step 1 validated successfully")
         return redirect(url_for('quiz_step2'))
-
-    if form.errors:
-        for field, errors in form.errors.items():
-            for error in errors:
-                logger.error(f"Validation error in {field}: {error}")
-        flash(trans['Please correct the errors below'], 'error')
 
     return render_template(
         'quiz_step1.html',
@@ -1424,21 +1399,16 @@ def quiz_step2():
 
     language = session.get('language', 'en')
     trans = get_translations(language)
-    form = QuizStep2Form(start_idx=4, end_idx=7, obj=request.form if request.method == 'POST' else None)
+    form = QuizForm(language=language, obj=request.form if request.method == 'POST' else None)
+    form.submit.label.text = trans['Next']
 
     if request.method == 'POST' and form.validate():
         session['quiz_data'].update({
-            f'question_{i+1}': form[f'question_{i+1}'].data for i in range(4, 7)
+            f'question_{i}': form[f'question_{i}'].data for i in range(5, 8)
         })
         session.modified = True
         logger.info(f"Quiz step 2 validated successfully")
         return redirect(url_for('quiz_step3'))
-
-    if form.errors:
-        for field, errors in form.errors.items():
-            for error in errors:
-                logger.error(f"Validation error in {field}: {error}")
-        flash(trans['Please correct the errors below'], 'error')
 
     return render_template(
         'quiz_step2.html',
@@ -1463,13 +1433,14 @@ def quiz_step3():
 
     language = session.get('language', 'en')
     trans = get_translations(language)
-    form = QuizStep3Form(start_idx=7, end_idx=10, obj=request.form if request.method == 'POST' else None)
+    form = QuizForm(language=language, obj=request.form if request.method == 'POST' else None)
+    form.submit.label.text = trans['Submit Quiz']
 
     if request.method == 'POST' and form.validate():
         try:
             quiz_data = session['quiz_data']
             quiz_data.update({
-                f'question_{i+1}': form[f'question_{i+1}'].data for i in range(7, 10)
+                f'question_{i}': form[f'question_{i}'].data for i in range(8, 11)
             })
             quiz_data.update({
                 'first_name': sanitize_input(form.first_name.data) if form.first_name.data else '',
@@ -1486,7 +1457,7 @@ def quiz_step3():
             answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in quiz_data.items() if k.startswith('question_')]
             personality, personality_desc, tip = assign_personality(answers, language)
             user_df = pd.DataFrame([{
-                'Timestamp': datetime.now(),
+                'Timestamp': datetime.utcnow(),
                 'first_name': quiz_data.get('first_name', ''),
                 'email': quiz_data.get('email', ''),
                 'language': quiz_data.get('language', 'en'),
@@ -1499,7 +1470,7 @@ def quiz_step3():
 
             # Prepare data for Google Sheets
             data = [
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
                 quiz_data.get('first_name', ''),
                 quiz_data.get('email', ''),
                 quiz_data.get('language', 'en'),
@@ -1542,12 +1513,6 @@ def quiz_step3():
             logger.error(f"Error processing quiz step 3: {e}")
             flash(trans['Error processing data. Please try again.'], 'error')
 
-    if form.errors:
-        for field, errors in form.errors.items():
-            for error in errors:
-                logger.error(f"Validation error in {field}: {error}")
-        flash(trans['Please correct the errors below'], 'error')
-
     return render_template(
         'quiz_step3.html',
         form=form,
@@ -1562,7 +1527,6 @@ def quiz_step3():
         FACEBOOK_URL=FACEBOOK_URL,
         language=language
     )
-
 @app.route('/quiz_results', methods=['GET'])
 def quiz_results():
     language = session.get('language', 'en')
