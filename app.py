@@ -1158,16 +1158,14 @@ def health_score_step3():
 
     if form.validate_on_submit():
         try:
-            # Clean and convert number inputs
             income_revenue = float(request.form.get('income_revenue', '0').replace(',', ''))
             expenses_costs = float(request.form.get('expenses_costs', '0').replace(',', ''))
             debt_loan = float(request.form.get('debt_loan', '0').replace(',', ''))
             debt_interest_rate = float(request.form.get('debt_interest_rate', '0').replace(',', ''))
 
-            # Update session with JSON-serializable types
             health_data = session['health_data']
             health_data.update({
-                'income_revenue': float(income_revenue),  # Ensure float
+                'income_revenue': float(income_revenue),
                 'expenses_costs': float(expenses_costs),
                 'debt_loan': float(debt_loan),
                 'debt_interest_rate': float(debt_interest_rate)
@@ -1176,36 +1174,30 @@ def health_score_step3():
                 key: float(val) if isinstance(val, (np.int64, np.float64)) else int(val) if isinstance(val, np.int64) else val
                 for key, val in health_data.items()
             }
-            except Exception as e:
-                logger.error(f"Error in health_score_step3: {e}")
-                flash(trans.get('Error processing data. Please try again.', 'Error processing data. Please try again.'), 'error')
             session.modified = True
             logger.info(f"Health score step 3 validated successfully")
 
-            # Prepare data for Google Sheets
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 health_data.get('business_name', ''),
-                float(health_data.get('income_revenue', 0.0)),  # Ensure float
+                float(health_data.get('income_revenue', 0.0)),
                 float(health_data.get('expenses_costs', 0.0)),
                 float(health_data.get('debt_loan', 0.0)),
                 float(health_data.get('debt_interest_rate', 0.0)),
                 str(health_data.get('auto_email', False)).lower(),
-                '',  # phone_number (empty)
+                '',
                 health_data.get('first_name', ''),
-                '',  # last_name (empty)
+                '',
                 health_data.get('user_type', ''),
                 health_data.get('email', ''),
-                '',  # badges (to be assigned in dashboard)
+                '',
                 health_data.get('language', 'en')
             ]
 
-            # Append to Google Sheets
             if not append_to_sheet(data, PREDETERMINED_HEADERS_HEALTH, 'Health'):
                 flash(trans['Google Sheets Error'], 'error')
                 return redirect(url_for('health_score_step1'))
 
-            # Fetch and calculate health score
             user_df = fetch_data_from_sheet(email=health_data['email'], headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
             all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
             user_df = calculate_health_score(user_df)
@@ -1219,24 +1211,20 @@ def health_score_step3():
             user_df = user_df.sort_values('Timestamp', ascending=False)
             user_row = user_df.iloc[0]
 
-            # Assign badges
             badges = assign_badges_health(user_df, all_users_df)
-
-            # Calculate rank
             all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
             rank = (all_scores >= user_row['HealthScore']).sum()
             total_users = len(all_scores)
 
-            # Store dashboard data with JSON-serializable types
             session['dashboard_data'] = {
                 'first_name': health_data['first_name'],
                 'email': health_data['email'],
                 'language': health_data['language'],
-                'health_score': float(user_row['HealthScore']),  # Ensure float
+                'health_score': float(user_row['HealthScore']),
                 'score_description': user_row['ScoreDescription'],
                 'course_title': user_row['CourseTitle'],
                 'course_url': user_row['CourseURL'],
-                'rank': int(rank),  # Ensure int
+                'rank': int(rank),
                 'total_users': int(total_users),
                 'badges': badges,
                 'breakdown_plot': generate_breakdown_plot(user_df),
@@ -1245,7 +1233,6 @@ def health_score_step3():
                 'all_users_df': all_users_df.to_dict()
             }
 
-            # Send email if auto_email is True
             if health_data.get('auto_email'):
                 threading.Thread(
                     target=send_health_email_async,
@@ -1266,8 +1253,6 @@ def health_score_step3():
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('health_dashboard', step=1))
 
-        except ValueError:
-            flash(trans['Invalid Number'], 'error')
         except Exception as e:
             logger.error(f"Error in health_score_step3: {e}")
             flash(trans['Error processing data. Please try again.'], 'error')
@@ -1291,7 +1276,6 @@ def health_score_step3():
         FACEBOOK_URL=FACEBOOK_URL,
         language=language
     )
-
 @app.route('/health_dashboard', methods=['GET'])
 def health_dashboard():
     step = request.args.get('step', default=1, type=int)
