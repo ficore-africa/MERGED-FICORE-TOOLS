@@ -1,12 +1,92 @@
 [
-    {"text": "Do you track your expenses weekly?", "type": "yes_no", "tooltip": "Tracking: Recording all money spent daily."},
-    {"text": "Do you avoid budgeting?", "type": "yes_no", "tooltip": "Budgeting: Planning how to spend your money."},
-    {"text": "Do you save a portion of your income monthly?", "type": "yes_no", "tooltip": "Saving: Setting aside money for future use."},
-    {"text": "Do you often spend on non-essentials like entertainment?", "type": "yes_no", "tooltip": "Non-essentials: Items or activities not critical to daily needs."},
-    {"text": "Do you plan your purchases in advance?", "type": "yes_no", "tooltip": "Planning: Deciding what to buy before spending."},
-    {"text": "How often do you save?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Saving frequency: How regularly you set aside money."},
-    {"text": "How often do you overspend at the market?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Overspending: Spending more than planned."},
-    {"text": "How often do you review your finances?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Reviewing: Checking your income and expenses."},
-    {"text": "How often do you buy on impulse?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Impulse buying: Purchasing without planning."},
-    {"text": "How often do you join savings groups?", "type": "multiple_choice", "options": ["Never", "Sometimes", "Always"], "tooltip": "Savings groups: Local groups for collective saving."}
+    {
+        "text": "Do you make impulse purchases?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["No"],
+        "negative_answers": ["Yes"]
+    },
+    {
+        "text": "Do you spend on non-essentials?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["No"],
+        "negative_answers": ["Yes"]
+    },
+    {
+        "text": "Do you use budgeting tools?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you save regularly?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you invest your money?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you track your expenses?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you have an emergency fund?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you plan your expenses?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you set financial goals?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    },
+    {
+        "text": "Do you seek financial advice?",
+        "options": ["Yes", "No"],
+        "type": "multiple",
+        "required": true,
+        "weight": 1,
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
+    }
 ]
