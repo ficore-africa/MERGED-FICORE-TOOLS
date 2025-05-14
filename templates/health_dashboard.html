@@ -443,7 +443,7 @@
                 <div class="card-body light-blue">
                     {% if breakdown_plot %}
                         <div class="chart-container">
-                            <div id="score-breakdown-chart"></div>
+                            {{ breakdown_plot|safe }}
                         </div>
                     {% else %}
                         <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to data issues.') }}</div>
@@ -594,9 +594,9 @@
                     <div class="info-box">
                         {{ trans.get("You're ahead of", "You're ahead of") }} {{ (((total_users - rank) / total_users * 100)|round(1)) }}% {{ trans.get('of users', 'of users') }}
                     </div>
-                    {% if comparison_plot and all_users_df['HealthScore']|length > 0 %}
+                    {% if comparison_plot %}
                         <div class="chart-container">
-                            <div id="compare-others-chart"></div>
+                            {{ comparison_plot|safe }}
                         </div>
                     {% else %}
                         <div class="info-box">{{ trans.get('Chart Unavailable', 'Chart unavailable due to insufficient data or data issues.') }}</div>
@@ -672,104 +672,5 @@
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Score Breakdown Chart
-            {% if breakdown_plot and step == 2 %}
-                const breakdownData = [{
-                    type: 'bar',
-                    x: [
-                        '{{ trans.get('Income', 'Income') }}',
-                        '{{ trans.get('Expenses', 'Expenses') }}',
-                        '{{ trans.get('Debt', 'Debt') }}'
-                    ],
-                    y: [
-                        {{ user_data['income_revenue']|float(0) }},
-                        {{ user_data['expenses_costs']|float(0) }},
-                        {{ user_data['debt_loan']|float(0) }}
-                    ],
-                    marker: { color: ['#2E7D32', '#0288D1', '#D81B60'] },
-                    text: [
-                        '{{ trans.get('Income', 'Income') }}: {{ user_data['income_revenue']|float(0) }} ₦',
-                        '{{ trans.get('Expenses', 'Expenses') }}: {{ user_data['expenses_costs']|float(0) }} ₦',
-                        '{{ trans.get('Debt', 'Debt') }}: {{ user_data['debt_loan']|float(0) }} ₦'
-                    ],
-                    textposition: 'auto',
-                    hoverinfo: 'text'
-                }];
-                const breakdownLayout = {
-                    title: '{{ trans.get('Financial Breakdown', 'Financial Breakdown') }}',
-                    yaxis: { title: '{{ trans.get('Amount (₦)', 'Amount (₦)') }}' },
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    height: 300,
-                    margin: { t: 50, b: 50, l: 50, r: 50 },
-                    font: { size: 12 },
-                    bargap: 0.2
-                };
-                Plotly.newPlot('score-breakdown-chart', breakdownData, breakdownLayout, { responsive: true });
-            {% endif %}
-
-            // Compare to Others Chart
-            {% if comparison_plot and step == 5 and all_users_df['HealthScore']|length > 0 %}
-                const allScores = {{ all_users_df['HealthScore'].to_list()|tojson }};
-                const userScore = {{ health_score }};
-                
-                // Calculate frequencies for hover info
-                const scoreBins = Array(10).fill(0); // Bins for scores 0-10, 10-20, ..., 90-100
-                allScores.forEach(score => {
-                    const binIndex = Math.min(Math.floor(score / 10), 9);
-                    scoreBins[binIndex]++;
-                });
-
-                const compareData = [{
-                    type: 'histogram',
-                    x: allScores,
-                    name: '{{ trans.get('All Users', 'All Users') }}',
-                    marker: { color: '#0288D1' },
-                    opacity: 0.6,
-                    xbins: { start: 0, end: 100, size: 10 },
-                    hovertemplate: '%{x}: %{y} {{ trans.get('users', 'users') }}<extra></extra>'
-                }, {
-                    type: 'histogram',
-                    x: [userScore],
-                    name: '{{ trans.get('Your Score', 'Your Score') }}',
-                    marker: { color: '#2E7D32' },
-                    opacity: 0.8,
-                    xbins: { start: 0, end: 100, size: 10 },
-                    hovertemplate: '{{ trans.get('This is where you stand', 'This is where you stand') }}: %{x}<extra></extra>'
-                }];
-                const compareLayout = {
-                    title: '{{ trans.get('Score Distribution', 'Score Distribution') }}',
-                    xaxis: { 
-                        title: '{{ trans.get('Health Score', 'Health Score') }}',
-                        range: [0, 100],
-                        tickfont: { size: 10 }
-                    },
-                    yaxis: { 
-                        title: '{{ trans.get('Number of Users', 'Number of Users') }}',
-                        tickfont: { size: 10 }
-                    },
-                    barmode: 'overlay',
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    height: 300,
-                    margin: { t: 50, b: 50, l: 50, r: 50 },
-                    font: { size: 12 },
-                    annotations: [{
-                        x: {{ all_users_df['HealthScore'].mean()|float(0) }},
-                        y: 0.9,
-                        yref: 'paper',
-                        text: '{{ trans.get('Average', 'Average') }}: {{ all_users_df['HealthScore'].mean()|round(1) }}',
-                        showarrow: true,
-                        arrowhead: 2,
-                        ax: 20,
-                        ay: -30
-                    }]
-                };
-                Plotly.newPlot('compare-others-chart', compareData, compareLayout, { responsive: true });
-            {% endif %}
-        });
-    </script>
 </body>
 </html>
