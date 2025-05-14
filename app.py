@@ -569,12 +569,16 @@ class HealthScoreForm(FlaskForm):
     expenses_costs = FloatField('Monthly Expenses/Costs', validators=[DataRequired(), non_negative])
     debt_loan = FloatField('Total Debt/Loan Amount', validators=[DataRequired(), non_negative])
     debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[DataRequired(), non_negative])
-    language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
+    language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en', validators=[DataRequired()])
     auto_email = BooleanField('Receive Email Report')
     submit = SubmitField()
-    def __init__(self, language='en', *args, **kwargs):
+
+    def __init__(self, language=None, *args, **kwargs):
         super(HealthScoreForm, self).__init__(*args, **kwargs)
-        self.submit.label.text = get_translations(language)['Submit']
+        self.submit.label.text = get_translations(language or 'en')['Submit']
+        # Set language from session or default
+        if not self.language.data:
+            self.language.data = language or session.get('language', 'en')
 
 try:
     with open('questions.json', 'r', encoding='utf-8') as f:
