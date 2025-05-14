@@ -844,15 +844,13 @@ def budget_step2():
     if form.validate_on_submit():
         if form.back.data:
             return redirect(url_for('budget_step1'))
-        # Clean and convert to float
         try:
-    monthly_income = float(request.form.get('monthly_income', '0').replace(',', ''))
-except ValueError:
-    flash(trans['Invalid Number'], 'error')
-    return render_template('budget_step2.html', ...)
-        session['budget_data']['monthly_income'] = monthly_income
-        session.modified = True
-        return redirect(url_for('budget_step3'))
+            monthly_income = float(request.form.get('monthly_income', '0').replace(',', ''))
+            session['budget_data']['monthly_income'] = monthly_income
+            session.modified = True
+            return redirect(url_for('budget_step3'))
+        except ValueError:
+            flash(trans['Invalid Number'], 'error')
     return render_template(
         'budget_step2.html',
         form=form,
