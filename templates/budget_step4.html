@@ -235,7 +235,13 @@
                                     <span class="tooltip-text">{{ trans.get('Desired monthly savings amount.', 'Desired monthly savings amount.') }}</span>
                                 </span>
                             </div>
-                            {{ form.savings_goal(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦5,000', 'e.g. ₦5,000'), **{'aria-label': trans.get('Savings Goal', 'Savings Goal')}, value=session.get('budget_data', {}).get('savings_goal', '')) }}
+                            {{ form.savings_goal(**{
+                                'class': 'form-control number-input',
+                                'type': 'text',
+                                'placeholder': trans.get('e.g. ₦5,000', 'e.g. ₦5,000'),
+                                'aria-label': trans.get('Savings Goal', 'Savings Goal'),
+                                'value': session.get('budget_data', {}).get('savings_goal', '')
+                            }) }}
                             <p class="note-text">{{ trans.get('Desired monthly savings amount.', 'Desired monthly savings amount.') }} ({{ trans.get('Optional', 'Optional') }})</p>
                         </div>
                         <div class="mb-3">
