@@ -338,7 +338,23 @@ def get_translations(language='en'):
             'Increase Income': 'Increase Income',
             "You're ahead of": "You're ahead of",
             'This is where you stand': 'This is where you stand',
-            'Ready for your next financial win? Book Consultancy today!': 'Ready for your next financial win? Book Consultancy today!'
+            'Ready for your next financial win? Book Consultancy today!': 'Ready for your next financial win? Book Consultancy today!',
+            # New Quiz-Related Translations
+            'Impulse: buying something without planning': 'Impulse: buying something without planning',
+            'Non-essentials: items not needed for daily living': 'Non-essentials: items not needed for daily living',
+            'Budgeting tools: apps or methods to track spending': 'Budgeting tools: apps or methods to track spending',
+            'Yes, I often buy without planning': 'Yes, I often buy without planning',
+            'No, I plan my purchases': 'No, I plan my purchases',
+            'Yes, I spend on extras': 'Yes, I spend on extras',
+            'No, I focus on essentials': 'No, I focus on essentials',
+            'Yes, I track my spending': 'Yes, I track my spending',
+            'No, I don’t track spending': 'No, I don’t track spending',
+            'Yes, I save consistently': 'Yes, I save consistently',
+            'No, I don’t save often': 'No, I don’t save often',
+            'Yes, I plan ahead': 'Yes, I plan ahead',
+            'No, I don’t plan': 'No, I don’t plan',
+            'Your Information': 'Your Information',
+            'Take Quiz Again': 'Take Quiz Again',
         },
         'ha': {
             # General
@@ -674,7 +690,23 @@ def get_translations(language='en'):
             'Increase Income': 'Kara Kudin Shiga',
             "You're ahead of": "Kuna gaban",
             'This is where you stand': 'Wannan shine inda kuke',
-            'Ready for your next financial win? Book Consultancy today!': 'Shirya don nasarar ku ta gaba ta kudi? Yi shawara a yau!'
+            'Ready for your next financial win? Book Consultancy today!': 'Shirya don nasarar ku ta gaba ta kudi? Yi shawara a yau!',
+            # New Quiz-Related Translations
+            'Impulse: buying something without planning': 'Sha’awa: Siyan wani abu ba tare da tsari ba',
+            'Non-essentials: items not needed for daily living': 'Abubuwan da ba su da mahimmanci: Abubuwa da ba su da bukata ga rayuwa ta yau da kullum',
+            'Budgeting tools: apps or methods to track spending': 'Kayan aikin kasafin kuɗi: Apps ko hanyoyin bin diddigin kashe kuɗi',
+            'Yes, I often buy without planning': 'E, sau da yawa na saya ba tare da tsari ba',
+            'No, I plan my purchases': 'A’a, na tsara abubuwan da zan saya',
+            'Yes, I spend on extras': 'E, na kashe kuɗi akan abubuwan ƙari',
+            'No, I focus on essentials': 'A’a, na mai da hankali kan abubuwan da suke da mahimmanci',
+            'Yes, I track my spending': 'E, na binciki kashe kuɗina',
+            'No, I don’t track spending': 'A’a, ba na binciki kashe kuɗi',
+            'Yes, I save consistently': 'E, na ajiye kuɗi akai-akai',
+            'No, I don’t save often': 'A’a, ba na ajiya sau da yawa',
+            'Yes, I plan ahead': 'E, na tsara gaba',
+            'No, I don’t plan': 'A’a, ba na tsarawa',
+            'Your Information': 'Bayanan Ku',
+            'Take Quiz Again': 'Sake Ɗaukar Tambayar',
         }
     }
     return translations.get(language, translations['en'])
