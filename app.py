@@ -1216,6 +1216,15 @@ def health_score_step3():
             rank = (all_scores >= user_row['HealthScore']).sum()
             total_users = len(all_scores)
 
+            # Convert user_row to a JSON-serializable dictionary
+            user_row_dict = {
+                key: float(val) if isinstance(val, (np.float64, np.int64)) else 
+                     int(val) if isinstance(val, np.int64) else 
+                     val.strftime('%Y-%m-%d %H:%M:%S') if isinstance(val, pd.Timestamp) else 
+                     val
+                for key, val in user_row.to_dict().items()
+            }
+
             session['dashboard_data'] = {
                 'first_name': health_data['first_name'],
                 'email': health_data['email'],
@@ -1229,8 +1238,7 @@ def health_score_step3():
                 'badges': badges,
                 'breakdown_plot': generate_breakdown_plot(user_df),
                 'comparison_plot': generate_comparison_plot(user_df, all_users_df),
-                'user_data': {k: float(v) if isinstance(v, (np.int64, np.float64)) else int(v) if isinstance(v, np.int64) else v for k, v in user_row.to_dict().items()},
-                'all_users_df': all_users_df.to_dict()
+                'user_data': user_row_dict  # Store the serialized user_row
             }
 
             if health_data.get('auto_email'):
@@ -1316,18 +1324,17 @@ def health_dashboard():
 
         template_data = {
             'trans': trans,
-            'user_data': user_row.to_dict(),
+            'user_data': dashboard_data['user_data'],  # Use the serialized user_data
             'badges': badges,
             'rank': rank,
             'total_users': total_users,
-            'health_score': user_row['HealthScore'],
+            'health_score': dashboard_data['health_score'],
             'first_name': sanitize_input(dashboard_data.get('first_name', 'User')),
             'email': sanitize_input(email),
             'breakdown_plot': breakdown_plot,
             'comparison_plot': comparison_plot,
-            'course_title': user_row['CourseTitle'],
-            'course_url': user_row['CourseURL'],
-            'all_users_df': all_users_df,
+            'course_title': dashboard_data['course_title'],
+            'course_url': dashboard_data['course_url'],
             'step': step,
             'FEEDBACK_FORM_URL': FEEDBACK_FORM_URL,
             'WAITLIST_FORM_URL': WAITLIST_FORM_URL,
