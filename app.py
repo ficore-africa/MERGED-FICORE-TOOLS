@@ -1014,32 +1014,11 @@ def budget_dashboard():
 
 @app.route('/health_score_step1', methods=['GET', 'POST'])
 def health_score_step1():
+    logger.debug(f"Session before: {session}")
     form = HealthScoreForm()
-    trans = get_translations(form.language.data or 'en')
+    trans = get_translations(form.language.data or session.get('language', 'en'))
 
-    if request.method == 'POST':
-        # Validate Step 1 fields
-        form.first_name.data = request.form.get('first_name')
-        form.last_name.data = request.form.get('last_name')
-        form.email.data = request.form.get('email')
-        form.auto_email.data = 'auto_email' in request.form
-        form.phone_number.data = request.form.get('phone_number')
-        form.language.data = request.form.get('language')
-
-        # Validate required fields
-        if not form.first_name.data:
-            flash(trans.get('First Name Required', 'First Name Required'), 'error')
-            return render_template('health_score.html', form=form, step=1, trans=trans)
-        if not form.validate():
-            flash(trans.get('Please correct the errors below'), 'error')
-            return render_template('health_score.html', form=form, step=1, trans=trans)
-            flash(trans.get('Invalid Email', 'Invalid Email'), 'error')
-            return render_template('health_score.html', form=form, step=1, trans=trans)
-        if not form.language.data:
-            flash(trans.get('Language required', 'Language required'), 'error')
-            return render_template('health_score.html', form=form, step=1, trans=trans)
-
-        # Store data in session
+    if form.validate_on_submit():
         session['health_score_step1'] = {
             'first_name': form.first_name.data,
             'last_name': form.last_name.data,
@@ -1048,10 +1027,32 @@ def health_score_step1():
             'phone_number': form.phone_number.data,
             'language': form.language.data
         }
+        session['language'] = form.language.data
+        session.modified = True
+        logger.info(f"Health score step 1 validated successfully for email: {form.email.data}")
+        logger.debug(f"Session after: {session}")
         return redirect(url_for('health_score_step2'))
+    
+    for field, errors in form.errors.items():
+        for error in errors:
+            logger.error(f"Validation error in {field}: {error}")
+    if form.errors:
+        flash(trans.get('Please correct the errors below', 'Please correct the errors below'), 'error')
 
-    return render_template('health_score.html', form=form, step=1, trans=trans)
-
+    return render_template(
+        'health_score.html',
+        form=form,
+        step=1,
+        trans=trans,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL,
+        FACEBOOK_URL=FACEBOOK_URL,
+        language=form.language.data or 'en'
+    )
+    
 @app.route('/health_score_step2', methods=['GET', 'POST'])
 def health_score_step2():
     # Ensure Step 1 data exists
