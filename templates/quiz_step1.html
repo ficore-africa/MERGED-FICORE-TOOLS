@@ -1,0 +1,158 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Take the Ficore Africa financial quiz to assess your knowledge.">
+    <meta name="keywords" content="ficore africa, financial quiz, financial literacy, Africa SME finance">
+    <meta name="author" content="Ficore Africa">
+    <title>{{ trans['Financial Personality Quiz'] }} - Ficore Africa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #E3F2FD, #F5F7FA); margin: 0; padding: 20px; box-sizing: border-box; color: #333; }
+        .container { max-width: 1000px; margin: auto; }
+        header { background: linear-gradient(45deg, #2E7D32, #0288D1); padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-bottom: 2rem; text-align: center; color: white; }
+        .logo-container img { max-width: 200px; }
+        .progress-bar { width: 100%; background-color: #e0e0e0; border-radius: 5px; margin-bottom: 20px; }
+        .progress { height: 20px; background: linear-gradient(to right, #28a745, #007bff); border-radius: 5px; width: 0%; transition: width 0.3s; }
+        .question-block { margin-bottom: 1rem; padding: 1em; background: #f6fafe; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .question-title { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+        .question-text { font-size: 15px; margin-bottom: 10px; }
+        .form-check { margin-bottom: 5px; display: flex; align-items: center; }
+        .form-check-input { margin-right: 10px; }
+        .tooltip-icon { margin-left: 5px; color: #0288D1; cursor: pointer; }
+        .submit-btn, .back-btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; transition: transform 0.2s ease; }
+        .submit-btn { background: linear-gradient(to right, #28a745, #007bff); color: white; }
+        .back-btn { background: #6c757d; color: white; }
+        .submit-btn:hover, .back-btn:hover { transform: scale(1.05); }
+        .footer { margin-top: 20px; text-align: center; color: #333; }
+        .footer a { color: #0288D1; text-decoration: none; margin: 0 10px; }
+        .social-icons a { font-size: 1.2rem; margin: 0 10px; color: #0288D1; }
+        .social-icons a:hover { color: #2E7D32; }
+        @media (max-width: 600px) { body { padding: 10px; } .question-block { padding: 10px; } .submit-btn, .back-btn { padding: 8px 16px; font-size: 0.9rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="my-4">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" class="img-fluid">
+            </div>
+            <h1>{{ trans['Financial Personality Quiz'] }}</h1>
+            <p>{{ trans['Discover Your Financial Personality'] }}</p>
+        </header>
+
+        <main>
+            <div class="progress-bar">
+                <div class="progress" id="progress" style="width: 33%;"></div>
+            </div>
+            {% if app.config['DEBUG'] %}
+                <p style="color: red;">Debug - Current Language: {{ language }}</p>
+                <p style="color: red;">Debug - Step: 1/3</p>
+            {% endif %}
+            <form method="POST" id="quiz-form" class="row g-3">
+                {% for i, question in questions|enumerate(1) %}
+                    <div class="col-12 question-block">
+                        <fieldset>
+                            <legend class="question-title">
+                                {{ trans['Question'] }} {{ i }} of {{ QUIZ_QUESTIONS|length }}
+                                {% if question.text in ['Do you make impulse purchases?', 'Do you spend on non-essentials?', 'Do you use budgeting tools?'] %}
+                                    <i class="fa fa-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="{{ trans['Impulse: buying something without planning'] if question.text == 'Do you make impulse purchases?' else trans['Non-essentials: items not needed for daily living'] if question.text == 'Do you spend on non-essentials?' else trans['Budgeting tools: apps or methods to track spending'] }}"></i>
+                                {% endif %}
+                            </legend>
+                            <p class="question-text">{{ trans[question.text] if trans.get(question.text) else question.text }}</p>
+                            <div class="radio-options-container">
+                                {% for choice in question.options if question.type == 'multiple' %}
+                                    <div class="form-check">
+                                        <input type="radio" name="question_{{ i }}" value="{{ choice }}" class="form-check-input" required>
+                                        <label class="form-check-label">
+                                            {{ trans[choice] if trans.get(choice) else choice }}
+                                            {% if question.text == 'Do you make impulse purchases?' and choice in ['Yes', 'No'] %}
+                                                ({{ trans['Yes, I often buy without planning'] if choice == 'Yes' else trans['No, I plan my purchases'] }})
+                                            {% elif question.text == 'Do you spend on non-essentials?' and choice in ['Yes', 'No'] %}
+                                                ({{ trans['Yes, I spend on extras'] if choice == 'Yes' else trans['No, I focus on essentials'] }})
+                                            {% elif question.text == 'Do you use budgeting tools?' and choice in ['Yes', 'No'] %}
+                                                ({{ trans['Yes, I track my spending'] if choice == 'Yes' else trans['No, I don’t track spending'] }})
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                    </div>
+                {% endfor %}
+                <div class="col-12 d-flex justify-content-center gap-2">
+                    <button type="submit" name="submit" class="submit-btn">{{ trans['Next'] }}</button>
+                </div>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>{{ trans['About Ficore Africa'] }}: {{ trans['Empowering financial growth across Africa since 2023'] }}</p>
+            <div class="social-icons">
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans['Follow on Facebook'] }}"><i class="fab fa-facebook"></i></a>
+                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="{{ trans['Follow on LinkedIn'] }}"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans['Follow on Twitter'] }}"><i class="fab fa-twitter"></i></a>
+            </div>
+            <p>
+                <a href="{{ FEEDBACK_FORM_URL }}">{{ trans['Click to Email for support'] }}</a> |
+                <a href="{{ WAITLIST_FORM_URL }}" target="_blank">{{ trans['Provide Feedback'] }}</a>
+                <a href="{{ url_for('logout') }}">{{ trans['Logout'] }}</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>
