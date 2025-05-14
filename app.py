@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, send_from_directory
+from flask.sessions import SessionInterface  # Import SessionInterface from flask.sessions
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRange
-from flask_session import Session, SessionInterface
+from flask_session import Session  # For server-side session management
 from itsdangerous import URLSafeTimedSerializer
 from flask_caching import Cache
 from flask_mail import Mail, Message
@@ -117,9 +118,9 @@ class CompressedSession(SessionInterface):
             return {}
         try:
             serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-            compressed_data = bytes.fromhex(session_data)
-            decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
-            session = serializer.loads(decompressed_data)
+            decompressed_data = serializer.loads(session_data)
+            compressed_data = bytes.fromhex(decompressed_data)
+            session = json.loads(zlib.decompress(compressed_data).decode('utf-8'))
             if ('budget_data' not in session and 'health_data' not in session and 'quiz_results' not in session) and session.get('email'):
                 session = self.restore_from_backup(session.get('email'), session)
             return session
