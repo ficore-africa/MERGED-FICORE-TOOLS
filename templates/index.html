@@ -452,7 +452,7 @@
     <section class="hero">
         <h2>{{ trans.get('Your All-in-One Toolkit for Personal & SME Financial Health Across Africa', 'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa') }}</h2>
         <p>{{ trans.get('Track income, calculate net worth, plan budgets, and grow with confidence.', 'Track income, calculate net worth, plan budgets, and grow with confidence.') }}</p>
-        <a href="{{ url_for('health_score') }}" class="cta-button">{{ trans.get('Where to Start? Start With Your Free Financial Health Score', 'Where to Start? Start With Your Free Financial Health Score') }}</a>
+        <a href="{{ url_for('health_score_step1') }}" class="cta-button">{{ trans.get('Where to Start? Start With Your Free Financial Health Score', 'Where to Start? Start With Your Free Financial Health Score') }}</a>
     </section>
 
     <section class="tools-section">
@@ -461,7 +461,7 @@
             <div class="tool-card">
                 <h3>{{ trans.get('Financial Health Score', 'Financial Health Score') }}</h3>
                 <p>{{ trans.get('Your Financial Health Summary', 'Evaluates income, expenses, and debt for a health score') }}</p>
-                <a href="{{ url_for('health_score') }}" aria-label="{{ trans.get('Start Financial Health Score Assessment', 'Start Financial Health Score Assessment') }}">{{ trans.get('Start', 'Start') }}</a>
+                <a href="{{ url_for('health_score_step1') }}" aria-label="{{ trans.get('Start Financial Health Score Assessment', 'Start Financial Health Score Assessment') }}">{{ trans.get('Start', 'Start') }}</a>
             </div>
             <div class="tool-card">
                 <h3>{{ trans.get('Monthly Budget Planner', 'Monthly Budget Planner') }}</h3>
