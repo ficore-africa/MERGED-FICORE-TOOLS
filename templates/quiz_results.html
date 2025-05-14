@@ -28,12 +28,20 @@
         .form-group {
             margin-bottom: 1.5rem;
         }
+        footer a {
+            margin: 0 0.5rem;
+            text-decoration: none;
+            color: #007bff;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <header class="container">
         <div class="logo-container">
-            <img src="/static/img/logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
+            <img src="/static/img/ficore_logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
         </div>
         <h1 class="text-center">{{ trans.get('Financial Personality Quiz Results', 'Financial Personality Quiz Results') }}</h1>
         <p class="text-center">{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</p>
@@ -105,8 +113,8 @@
     <footer class="container text-center mt-5">
         <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
         <div class="mb-2">
-            <a href="{{ LINKEDIN_URL }}" class="me-2">LinkedIn</a>
-            <a href="{{ TWITTER_URL }}" class="me-2">Twitter</a>
+            <a href="{{ LINKEDIN_URL }}">LinkedIn</a>
+            <a href="{{ TWITTER_URL }}">Twitter</a>
             <a href="{{ FACEBOOK_URL }}">Facebook</a>
         </div>
         <div>
