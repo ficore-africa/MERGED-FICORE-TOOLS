@@ -229,54 +229,54 @@
                         <div class="mb-3">
                             <div class="field-container">
                                 <span class="visual-icon">🏠</span>
-                                {{ form.housing_expenses.label(class="form-label", **{'for': 'housing_expenses'}) }}
+                                {{ form.housing_expenses.label(class="form-label", for="housing_expenses") }}
                                 <span class="info-icon" aria-label="{{ trans.get('Housing information', 'Housing information') }}">
                                     <i class="fas fa-info-circle"></i>
                                     <span class="tooltip-text">{{ trans.get('Rent, electricity, or water bills.', 'Rent, electricity, or water bills.') }}</span>
                                 </span>
                             </div>
-                            {{ form.housing_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦30,000', 'e.g. ₦30,000'), **{'aria-required': 'true', 'aria-label': trans.get('Housing Expenses', 'Housing Expenses')}, value=session.get('budget_data', {}).get('housing_expenses', '')) }}
+                            {{ form.housing_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦30,000', 'e.g. ₦30,000'), aria_required="true", aria_label=trans.get('Housing Expenses', 'Housing Expenses'), value=session.get('budget_data', {}).get('housing_expenses', '')) }}
                             <p class="note-text">{{ trans.get('Rent, electricity, or water bills.', 'Rent, electricity, or water bills.') }}</p>
                         </div>
                         <div class="mb-3">
                             <div class="field-container">
                                 <span class="visual-icon">🍽️</span>
-                                {{ form.food_expenses.label(class="form-label", **{'for': 'food_expenses'}) }}
+                                {{ form.food_expenses.label(class="form-label", for="food_expenses") }}
                                 <span class="info-icon" aria-label="{{ trans.get('Food information', 'Food information') }}">
                                     <i class="fas fa-info-circle"></i>
                                     <span class="tooltip-text">{{ trans.get('Money spent on food each month.', 'Money spent on food each month.') }}</span>
                                 </span>
                             </div>
-                            {{ form.food_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦45,000', 'e.g. ₦45,000'), **{'aria-required': 'true', 'aria-label': trans.get('Food Expenses', 'Food Expenses')}, value=session.get('budget_data', {}).get('food_expenses', '')) }}
+                            {{ form.food_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦45,000', 'e.g. ₦45,000'), aria_required="true", aria_label=trans.get('Food Expenses', 'Food Expenses'), value=session.get('budget_data', {}).get('food_expenses', '')) }}
                             <p class="note-text">{{ trans.get('Money spent on food each month.', 'Money spent on food each month.') }}</p>
                         </div>
                         <div class="mb-3">
                             <div class="field-container">
                                 <span class="visual-icon">🚗</span>
-                                {{ form.transport_expenses.label(class="form-label", **{'for': 'transport_expenses'}) }}
+                                {{ form.transport_expenses.label(class="form-label", for="transport_expenses") }}
                                 <span class="info-icon" aria-label="{{ trans.get('Transport information', 'Transport information') }}">
                                     <i class="fas fa-info-circle"></i>
                                     <span class="tooltip-text">{{ trans.get('Bus, bike, taxi, or fuel costs.', 'Bus, bike, taxi, or fuel costs.') }}</span>
                                 </span>
                             </div>
-                            {{ form.transport_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦10,000', 'e.g. ₦10,000'), **{'aria-required': 'true', 'aria-label': trans.get('Transport Expenses', 'Transport Expenses')}, value=session.get('budget_data', {}).get('transport_expenses', '')) }}
+                            {{ form.transport_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦10,000', 'e.g. ₦10,000'), aria_required="true", aria_label=trans.get('Transport Expenses', 'Transport Expenses'), value=session.get('budget_data', {}).get('transport_expenses', '')) }}
                             <p class="note-text">{{ trans.get('Bus, bike, taxi, or fuel costs.', 'Bus, bike, taxi, or fuel costs.') }}</p>
                         </div>
                         <div class="mb-3">
                             <div class="field-container">
                                 <span class="visual-icon">🛠️</span>
-                                {{ form.other_expenses.label(class="form-label", **{'for': 'other_expenses'}) }}
+                                {{ form.other_expenses.label(class="form-label", for="other_expenses") }}
                                 <span class="info-icon" aria-label="{{ trans.get('Other information', 'Other information') }}">
                                     <i class="fas fa-info-circle"></i>
                                     <span class="tooltip-text">{{ trans.get('Internet, clothes, or other spending.', 'Internet, clothes, or other spending.') }}</span>
                                 </span>
                             </div>
-                            {{ form.other_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦20,000', 'e.g. ₦20,000'), **{'aria-required': 'true', 'aria-label': trans.get('Other Expenses', 'Other Expenses')}, value=session.get('budget_data', {}).get('other_expenses', '')) }}
+                            {{ form.other_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦20,000', 'e.g. ₦20,000'), aria_required="true", aria_label=trans.get('Other Expenses', 'Other Expenses'), value=session.get('budget_data', {}).get('other_expenses', '')) }}
                             <p class="note-text">{{ trans.get('Internet, clothes, or other spending.', 'Internet, clothes, or other spending.') }}</p>
                         </div>
                         <div class="step-navigation">
                             <a href="{{ url_for('budget_step2') }}" class="btn btn-back" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
-                            {{ form.submit(class="btn btn-primary", **{'aria-label': trans.get('Continue to Savings & Review', 'Continue to Savings & Review')}) }}
+                            {{ form.submit(class="btn btn-primary", aria_label=trans.get('Continue to Savings & Review', 'Continue to Savings & Review')) }}
                         </div>
                     </form>
                     {% for field in [form.housing_expenses, form.food_expenses, form.transport_expenses, form.other_expenses] %}
