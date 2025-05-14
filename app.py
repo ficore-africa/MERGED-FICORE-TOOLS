@@ -6,6 +6,7 @@ from wtforms.validators import DataRequired, Email, Optional, ValidationError, N
 from flask_session import Session
 from itsdangerous import URLSafeTimedSerializer
 from flask_caching import Cache
+import numpy as np  # Add at top of app.py
 from flask_mail import Mail, Message
 import os
 import time
@@ -1175,6 +1176,9 @@ def health_score_step3():
                 key: float(val) if isinstance(val, (np.int64, np.float64)) else int(val) if isinstance(val, np.int64) else val
                 for key, val in health_data.items()
             }
+            except Exception as e:
+                logger.error(f"Error in health_score_step3: {e}")
+                flash(trans.get('Error processing data. Please try again.', 'Error processing data. Please try again.'), 'error')
             session.modified = True
             logger.info(f"Health score step 3 validated successfully")
 
