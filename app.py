@@ -64,6 +64,10 @@ app.config['MAIL_PASSWORD'] = os.getenv('SMTP_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
+# Define session directories
+SESSION_FILE_DIR = os.path.join(app.root_path, 'flask_session')
+SESSION_BACKUP_DIR = os.path.join(app.root_path, 'session_backup')
+
 # Configure server-side session
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = os.path.join(app.root_path, 'flask_session')
@@ -93,7 +97,6 @@ except Exception as e:
     raise RuntimeError(f"Failed to create or verify {SESSION_FILE_DIR}")
 
 # Session backup directory
-SESSION_BACKUP_DIR = os.path.join(app.root_path, 'session_backup')
 try:
     os.makedirs(SESSION_BACKUP_DIR, exist_ok=True)
     os.chmod(SESSION_BACKUP_DIR, stat.S_IRWXU)
@@ -109,6 +112,10 @@ except Exception as e:
     logger.critical(f"Failed to create or verify {SESSION_BACKUP_DIR}: {e}")
     raise RuntimeError(f"Failed to create or verify {SESSION_BACKUP_DIR}")
 
+# Define sanitize_input for backup filenames
+def sanitize_input(email):
+    return re.sub(r'[^\w\-_\. ]', '_', email)
+    
 # Custom session interface for compression
 class CompressedSession(SessionInterface):
     def open_session(self, app, request):
