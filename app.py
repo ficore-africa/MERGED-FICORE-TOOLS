@@ -1163,24 +1163,29 @@ def health_score_step3():
             debt_loan = float(request.form.get('debt_loan', '0').replace(',', ''))
             debt_interest_rate = float(request.form.get('debt_interest_rate', '0').replace(',', ''))
 
-            session['health_data'].update({
-                'income_revenue': income_revenue,
-                'expenses_costs': expenses_costs,
-                'debt_loan': debt_loan,
-                'debt_interest_rate': debt_interest_rate
+            # Update session with JSON-serializable types
+            health_data = session['health_data']
+            health_data.update({
+                'income_revenue': float(income_revenue),  # Ensure float
+                'expenses_costs': float(expenses_costs),
+                'debt_loan': float(debt_loan),
+                'debt_interest_rate': float(debt_interest_rate)
             })
+            session['health_data'] = {
+                key: float(val) if isinstance(val, (np.int64, np.float64)) else int(val) if isinstance(val, np.int64) else val
+                for key, val in health_data.items()
+            }
             session.modified = True
             logger.info(f"Health score step 3 validated successfully")
 
             # Prepare data for Google Sheets
-            health_data = session['health_data']
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 health_data.get('business_name', ''),
-                health_data.get('income_revenue', 0.0),
-                health_data.get('expenses_costs', 0.0),
-                health_data.get('debt_loan', 0.0),
-                health_data.get('debt_interest_rate', 0.0),
+                float(health_data.get('income_revenue', 0.0)),  # Ensure float
+                float(health_data.get('expenses_costs', 0.0)),
+                float(health_data.get('debt_loan', 0.0)),
+                float(health_data.get('debt_interest_rate', 0.0)),
                 str(health_data.get('auto_email', False)).lower(),
                 '',  # phone_number (empty)
                 health_data.get('first_name', ''),
@@ -1218,21 +1223,21 @@ def health_score_step3():
             rank = (all_scores >= user_row['HealthScore']).sum()
             total_users = len(all_scores)
 
-            # Store dashboard data
+            # Store dashboard data with JSON-serializable types
             session['dashboard_data'] = {
                 'first_name': health_data['first_name'],
                 'email': health_data['email'],
                 'language': health_data['language'],
-                'health_score': user_row['HealthScore'],
+                'health_score': float(user_row['HealthScore']),  # Ensure float
                 'score_description': user_row['ScoreDescription'],
                 'course_title': user_row['CourseTitle'],
                 'course_url': user_row['CourseURL'],
-                'rank': rank,
-                'total_users': total_users,
+                'rank': int(rank),  # Ensure int
+                'total_users': int(total_users),
                 'badges': badges,
                 'breakdown_plot': generate_breakdown_plot(user_df),
                 'comparison_plot': generate_comparison_plot(user_df, all_users_df),
-                'user_data': user_row.to_dict(),
+                'user_data': {k: float(v) if isinstance(v, (np.int64, np.float64)) else int(v) if isinstance(v, np.int64) else v for k, v in user_row.to_dict().items()},
                 'all_users_df': all_users_df.to_dict()
             }
 
@@ -1243,7 +1248,7 @@ def health_score_step3():
                     args=(
                         health_data['email'],
                         health_data['first_name'],
-                        user_row['HealthScore'],
+                        float(user_row['HealthScore']),
                         user_row['ScoreDescription'],
                         rank,
                         total_users,
@@ -1259,6 +1264,9 @@ def health_score_step3():
 
         except ValueError:
             flash(trans['Invalid Number'], 'error')
+        except Exception as e:
+            logger.error(f"Error in health_score_step3: {e}")
+            flash(trans['Error processing data. Please try again.'], 'error')
 
     if form.errors:
         for field, errors in form.errors.items():
