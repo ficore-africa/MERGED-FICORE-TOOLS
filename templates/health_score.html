@@ -115,7 +115,6 @@
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
-            display: none;
         }
         .guide-section ul {
             list-style-type: disc;
@@ -147,70 +146,6 @@
             color: #666;
             margin-bottom: 0.5rem;
         }
-        .tooltip-fallback {
-            display: none;
-            background: #555;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 4px;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .tooltip-fallback.active {
-            display: block;
-        }
-        .book-toggle {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            width: fit-content;
-        }
-        .book-icon {
-            position: relative;
-            width: 40px;
-            height: 30px;
-            background: #0288D1;
-            border-radius: 4px 8px 8px 4px;
-            margin-right: 10px;
-            transition: transform 0.3s ease;
-        }
-        .book-icon::before {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            right: 2px;
-            bottom: 2px;
-            background: #E3F2FD;
-            border-radius: 2px 6px 6px 2px;
-        }
-        .book-icon::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #01579B;
-            border-radius: 4px 0 0 4px;
-        }
-        .book-icon.open {
-            transform: rotateY(-30deg);
-        }
-        .book-label {
-            font-weight: 500;
-            color: #0288D1;
-            font-size: 1rem;
-        }
-        .form-step {
-            display: none;
-        }
-        .form-step.active {
-            display: block;
-        }
         .progress {
             margin-bottom: 2rem;
             height: 30px;
@@ -219,7 +154,6 @@
         }
         .progress-bar {
             background: #2E7D32;
-            transition: width 0.3s ease;
         }
         .step-navigation {
             display: flex;
@@ -280,13 +214,6 @@
             .info-icon {
                 font-size: 0.9rem;
             }
-            .book-label {
-                font-size: 0.9rem;
-            }
-            .book-icon {
-                width: 30px;
-                height: 22px;
-            }
             .progress {
                 height: 20px;
             }
@@ -321,12 +248,8 @@
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="form-card">
-                    <!-- Guide Toggle -->
-                    <div class="book-toggle" id="guide-toggle">
-                        <div class="book-icon" id="book-icon"></div>
-                        <span class="book-label">{{ trans.get('New to finances? Click here to get guided tips on how to fill this form.', 'New to finances? Click here to get guided tips on how to fill this form.') }}</span>
-                    </div>
-                    <div class="guide-section" id="guide-content">
+                    <!-- Guide Section -->
+                    <div class="guide-section">
                         <h4>{{ trans.get('Getting Started with Ficore Africa', 'Getting Started with Ficore Africa') }}</h4>
                         <ul>
                             <li><strong>{{ trans.get('Personal Information', 'Personal Information') }}</strong>: {{ trans.get('Fill in your name, email, and phone number. Choose your language—English or Hausa.', 'Fill in your name, email, and phone number. Choose your language—English or Hausa.') }}</li>
@@ -338,68 +261,73 @@
 
                     <!-- Progress Bar -->
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: 33.33%;" aria-valuenow="33.33" aria-valuemin="0" aria-valuemax="100">
-                            {{ trans.get('Step', 'Step') }} 1 {{ trans.get('of', 'of') }} 3
+                        <div class="progress-bar" role="progressbar" style="width: {{ (step / 3) * 100 }}%;" aria-valuenow="{{ (step / 3) * 100 }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ trans.get('Step', 'Step') }} {{ step }} {{ trans.get('of', 'of') }} 3
                         </div>
                     </div>
 
-                    <form id="submission-form" method="POST" action="{{ url_for('health_score') }}">
-                        {{ form.hidden_tag() }}
-
-                        <!-- Step 1: Personal Information -->
-                        <div class="form-step active" id="step-1">
+                    <!-- Step 1: Personal Information -->
+                    {% if step == 1 %}
+                        <form method="POST" action="{{ url_for('health_score_step1') }}">
+                            {{ form.hidden_tag() }}
                             <h3>{{ trans.get('Personal Information', 'Personal Information') }}</h3>
                             <div class="mb-3">
                                 {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
-                                {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, **{'data-error': trans.get('First Name Required', 'First Name Required'), 'aria-required': 'true'}) }}
+                                {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, value=session.get('health_score_step1', {}).get('first_name', '')) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.last_name.label(class="form-label", **{'for': 'last_name'}) }}
-                                {{ form.last_name(class="form-control", placeholder=trans.get('Enter your last name (optional)', 'Enter your last name (optional)')) }}
+                                {{ form.last_name(class="form-control", placeholder=trans.get('Enter your last name (optional)', 'Enter your last name (optional)'), value=session.get('health_score_step1', {}).get('last_name', '')) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.email.label(class="form-label", **{'for': 'email'}) }}
-                                {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, **{'data-error': trans.get('Invalid Email', 'Invalid Email'), 'aria-required': 'true'}) }}
+                                {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, value=session.get('health_score_step1', {}).get('email', '')) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.auto_email.label(class="form-label", **{'for': 'auto_email'}) }}
-                                {{ form.auto_email(class="form-check-input", type="checkbox") }}
+                                {{ form.auto_email(class="form-check-input", type="checkbox", checked=session.get('health_score_step1', {}).get('auto_email', False)) }}
                             </div>
                             <div class="mb-3">
                                 {{ form.phone_number.label(class="form-label", **{'for': 'phone_number'}) }}
-                                {{ form.phone_number(class="form-control", placeholder=trans.get('Enter phone number (optional)', 'Enter phone number (optional)'), type="tel") }}
+                                {{ form.phone_number(class="form-control", placeholder=trans.get('Enter phone number (optional)', 'Enter phone number (optional)'), type="tel", value=session.get('health_score_step1', {}).get('phone_number', '')) }}
                             </div>
                             <div class="mb-3">
                                 <p class="note-text">{{ trans.get('Language', 'Language') }}: {{ trans.get('English or Hausa', 'English or Hausa') }}</p>
                                 {{ form.language.label(class="form-label", **{'for': 'language'}) }}
-                                {{ form.language(class="form-select", required=True, **{'aria-required': 'true'}) }}
+                                {{ form.language(class="form-select", required=True, value=session.get('health_score_step1', {}).get('language', 'en')) }}
                             </div>
                             <div class="step-navigation">
                                 <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
-                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(2)" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
+                                <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
                             </div>
-                        </div>
+                        </form>
+                    {% endif %}
 
-                        <!-- Step 2: User Information -->
-                        <div class="form-step" id="step-2">
+                    <!-- Step 2: User Information -->
+                    {% if step == 2 %}
+                        <form method="POST" action="{{ url_for('health_score_step2') }}">
+                            {{ form.hidden_tag() }}
                             <h3>{{ trans.get('User Information', 'User Information') }}</h3>
                             <div class="mb-3">
                                 {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
-                                {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, **{'data-error': trans.get('Business Name Required', 'Business Name Required'), 'aria-required': 'true'}) }}
+                                {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, value=session.get('health_score_step2', {}).get('business_name', '')) }}
                             </div>
                             <div class="mb-3">
                                 <p class="note-text">{{ trans.get('User Type', 'User Type') }}: {{ trans.get('Business or Individual', 'Business or Individual') }}</p>
                                 {{ form.user_type.label(class="form-label", **{'for': 'user_type'}) }}
-                                {{ form.user_type(class="form-select", required=True, **{'aria-required': 'true'}) }}
+                                {{ form.user_type(class="form-select", required=True, value=session.get('health_score_step2', {}).get('user_type', '')) }}
                             </div>
                             <div class="step-navigation">
-                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(1)" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</button>
-                                <button type="button" class="btn btn-nav btn-next" onclick="nextStep(3)" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
+                                <a href="{{ url_for('health_score_step1') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
+                                <button type="submit" class="btn btn-nav btn-next" aria-label="{{ trans.get('Next', 'Next') }}">{{ trans.get('Next', 'Next') }}</button>
                             </div>
-                        </div>
+                        </form>
+                    {% endif %}
 
-                        <!-- Step 3: Financial Information -->
-                        <div class="form-step" id="step-3">
+                    <!-- Step 3: Financial Information -->
+                    {% if step == 3 %}
+                        <form method="POST" action="{{ url_for('health_score_step3') }}">
+                            {{ form.hidden_tag() }}
                             <h3>{{ trans.get('Financial Information', 'Financial Information') }}</h3>
                             <div class="mb-3">
                                 <div class="field-container">
@@ -407,10 +335,9 @@
                                     {{ form.income_revenue.label(class="form-label", **{'for': 'income_revenue'}) }}
                                     <span class="info-icon" aria-label="{{ trans.get('Income information', 'Income information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.income_revenue(class="form-control", placeholder=trans.get('e.g. 150000', 'e.g. 150000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
+                                {{ form.income_revenue(class="form-control", placeholder=trans.get('e.g. 150000', 'e.g. 150000'), type="number", step="0.01", min="0", required=True) }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
@@ -418,10 +345,9 @@
                                     {{ form.expenses_costs.label(class="form-label", **{'for': 'expenses_costs'}) }}
                                     <span class="info-icon" aria-label="{{ trans.get('Expenses information', 'Expenses information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
                                     </span>
                                 </div>
-                                {{ form.expenses_costs(class="form-control", placeholder=trans.get('e.g. 60000', 'e.g. 60000'), type="number", step="0.01", min="0", required=True, **{'data-error': trans.get('Invalid Number', 'Invalid Number'), 'aria-required': 'true'}) }}
+                                {{ form.expenses_costs(class="form-control", placeholder=trans.get('e.g. 60000', 'e.g. 60000'), type="number", step="0.01", min="0", required=True) }}
                             </div>
                             <div class="mb-3">
                                 <div class="field-container">
@@ -429,7 +355,6 @@
                                     {{ form.debt_loan.label(class="form-label", **{'for': 'debt_loan'}) }}
                                     <span class="info-icon" aria-label="{{ trans.get('Debt information', 'Debt information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
                                     </span>
                                 </div>
                                 {{ form.debt_loan(class="form-control", placeholder=trans.get('e.g. 25000', 'e.g. 25000'), type="number", step="0.01", min="0") }}
@@ -440,17 +365,16 @@
                                     {{ form.debt_interest_rate.label(class="form-label", **{'for': 'debt_interest_rate'}) }}
                                     <span class="info-icon" aria-label="{{ trans.get('Interest rate information', 'Interest rate information') }}">
                                         <i class="fas fa-info-circle"></i>
-                                        <span class="tooltip-fallback">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                     </span>
                                 </div>
                                 {{ form.debt_interest_rate(class="form-control", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="number", step="0.01", min="0") }}
                             </div>
                             <div class="step-navigation">
-                                <button type="button" class="btn btn-nav btn-prev" onclick="prevStep(2)" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</button>
+                                <a href="{{ url_for('health_score_step2') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Previous', 'Previous') }}">{{ trans.get('Previous', 'Previous') }}</a>
                                 {{ form.submit(class="btn btn-primary btn-lg", value=trans.get('Submit', 'Submit'), **{'aria-label': trans.get('Submit', 'Submit')}) }}
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -471,119 +395,5 @@
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Multi-Step Form Navigation
-        let currentStep = 1;
-        const totalSteps = 3;
-
-        function showStep(step) {
-            document.querySelectorAll('.form-step').forEach(stepEl => {
-                stepEl.classList.remove('active');
-            });
-            document.getElementById(`step-${step}`).classList.add('active');
-            
-            // Update progress bar
-            const progressPercent = (step / totalSteps) * 100;
-            const progressBar = document.querySelector('.progress-bar');
-            progressBar.style.width = `${progressPercent}%`;
-            progressBar.setAttribute('aria-valuenow', progressPercent);
-            progressBar.textContent = `{{ trans.get('Step', 'Step') }} ${step} {{ trans.get('of', 'of') }} ${totalSteps}`;
-            
-            currentStep = step;
-        }
-
-        function nextStep(step) {
-            if (validateStep(currentStep)) {
-                showStep(step);
-            }
-        }
-
-        function prevStep(step) {
-            showStep(step);
-        }
-
-        function validateStep(step) {
-            const stepElement = document.getElementById(`step-${step}`);
-            const inputs = stepElement.querySelectorAll('input[required], select[required]');
-            let isValid = true;
-
-            inputs.forEach(input => {
-                if (!input.checkValidity()) {
-                    input.reportValidity();
-                    isValid = false;
-                }
-                // Ensure positive numbers for financial fields
-                if (input.type === 'number' && input.value < 0) {
-                    input.setCustomValidity("{{ trans.get('Value must be positive.', 'Value must be positive.') }}");
-                    input.reportValidity();
-                    isValid = false;
-                } else if (input.type === 'number') {
-                    input.setCustomValidity('');
-                }
-            });
-
-            // Email confirmation validation
-            if (step === 1) {
-                const email = document.getElementById('email').value;
-                const autoEmailCheckbox = document.getElementById('auto_email');
-                if (autoEmailCheckbox.checked && !email) {
-                    document.getElementById('email').setCustomValidity("{{ trans.get('Email is required when opting for email results.', 'Email is required when opting for email results.') }}");
-                    document.getElementById('email').reportValidity();
-                    isValid = false;
-                } else {
-                    document.getElementById('email').setCustomValidity('');
-                }
-            }
-
-            return isValid;
-        }
-
-        // DOM Content Loaded
-        document.addEventListener('DOMContentLoaded', function () {
-            // Toggle guide section
-            const guideToggle = document.getElementById('guide-toggle');
-            const bookIcon = document.getElementById('book-icon');
-            const guideContent = document.getElementById('guide-content');
-            if (guideToggle && bookIcon && guideContent) {
-                guideToggle.addEventListener('click', function () {
-                    const isOpen = guideContent.style.display === 'block';
-                    guideContent.style.display = isOpen ? 'none' : 'block';
-                    bookIcon.classList.toggle('open', !isOpen);
-                });
-            }
-
-            // Custom tooltip handling
-            document.querySelectorAll('.info-icon').forEach(icon => {
-                icon.addEventListener('click', function () {
-                    const tooltip = icon.querySelector('.tooltip-fallback');
-                    if (tooltip) {
-                        tooltip.classList.toggle('active');
-                    }
-                });
-                icon.addEventListener('mouseenter', function () {
-                    const tooltip = icon.querySelector('.tooltip-fallback');
-                    if (tooltip) {
-                        tooltip.classList.add('active');
-                    }
-                });
-                icon.addEventListener('mouseleave', function () {
-                    const tooltip = icon.querySelector('.tooltip-fallback');
-                    if (tooltip) {
-                        tooltip.classList.remove('active');
-                    }
-                });
-            });
-
-            // Custom validation with translated error messages
-            document.querySelectorAll('.form-control, .form-select').forEach(input => {
-                input.addEventListener('invalid', function(e) {
-                    e.target.setCustomValidity(e.target.dataset.error || '');
-                });
-                input.addEventListener('input', function(e) {
-                    e.target.setCustomValidity('');
-                });
-            });
-        });
-    </script>
 </body>
 </html>
