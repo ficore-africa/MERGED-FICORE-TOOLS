@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, send_from_directory
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, BooleanField, SubmitField, RadioField
-from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRangefrom flask_session import Session
+from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRange
+from flask_session import Session, SessionInterface, SecureCookieSession
 from flask_caching import Cache
 from flask_mail import Mail, Message
-from flask.sessions import SessionInterface, SecureCookieSession
 import os
 import logging
 import json
