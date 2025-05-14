@@ -346,7 +346,7 @@
                     <div class="guide-section">
                         <h4>{{ trans.get('Getting Started with Ficore Africa', 'Getting Started with Ficore Africa') }}</h4>
                         <ul>
-                            <li><strong>{{ trans.get('Personal Information', 'Personal Information') }}</strong>: {{ trans.get('Fill in your name, email, and phone number. Choose your language—English or Hausa.', 'Fill in your name and email. Choose your language—English or Hausa.') }}</li>
+                            <li><strong>{{ trans.get('Personal Information', 'Personal Information') }}</strong>: {{ trans.get('Fill in your name and email. Choose your language—English or Hausa.', 'Fill in your name and email. Choose your language—English or Hausa.') }}</li>
                             <li><strong>{{ trans.get('User Information', 'User Information') }}</strong>: {{ trans.get('Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.', 'Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.') }}</li>
                             <li><strong>{{ trans.get('Financial Information', 'Financial Information') }}</strong>: {{ trans.get('Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.', 'Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.') }}</li>
                             <li><strong>{{ trans.get('Submit', 'Submit') }}</strong>: {{ trans.get('Double-check your details, then click Submit to get your financial health score!', 'Double-check your details, then click Submit to get your financial health score!') }}</li>
@@ -367,21 +367,21 @@
                         <h3>{{ trans.get('Personal Information', 'Personal Information') }}</h3>
                         <div class="mb-3">
                             {{ form.first_name.label(class="form-label", **{'for': 'first_name'}) }}
-                            {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, value=session.get('health_score_step1', {}).get('first_name', '')) }}
+                            {{ form.first_name(class="form-control", placeholder=trans.get('Enter your first name', 'Enter your first name'), required=True, value=session.get('health_data', {}).get('first_name', '')) }}
                             {% for error in form.first_name.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
                             {{ form.email.label(class="form-label", **{'for': 'email'}) }}
-                            {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, value=session.get('health_score_step1', {}).get('email', '')) }}
+                            {{ form.email(class="form-control", placeholder=trans.get('Enter your email', 'Enter your email'), type="email", required=True, value=session.get('health_data', {}).get('email', '')) }}
                             {% for error in form.email.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                {{ form.auto_email(class="form-check-input", type="checkbox", checked=session.get('health_score_step1', {}).get('auto_email', False)) }}
+                                {{ form.auto_email(class="form-check-input", type="checkbox", checked=session.get('health_data', {}).get('auto_email', False)) }}
                                 {{ form.auto_email.label(class="form-check-label", **{'for': 'auto_email'}) }}
                             </div>
                         </div>
@@ -407,7 +407,7 @@
                         <h3>{{ trans.get('User Information', 'User Information') }}</h3>
                         <div class="mb-3">
                             {{ form.business_name.label(class="form-label", **{'for': 'business_name'}) }}
-                            {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, value=session.get('health_score_step2', {}).get('business_name', '')) }}
+                            {{ form.business_name(class="form-control", placeholder=trans.get('Type personal name if no business', 'Type personal name if no business'), required=True, value=session.get('health_data', {}).get('business_name', '')) }}
                             {% for error in form.business_name.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -441,7 +441,7 @@
                                     <span class="tooltip-text">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
                                 </span>
                             </div>
-                            {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="text", required=True, value=session.get('health_score_step3', {}).get('income_revenue', '')|string) }}
+                            {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="text", required=True, value=session.get('health_data', {}).get('income_revenue', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('income_revenue') else '') }}
                             {% for error in form.income_revenue.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -455,7 +455,7 @@
                                     <span class="tooltip-text">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
                                 </span>
                             </div>
-                            {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="text", required=True, value=session.get('health_score_step3', {}).get('expenses_costs', '')|string) }}
+                            {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="text", required=True, value=session.get('health_data', {}).get('expenses_costs', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('expenses_costs') else '') }}
                             {% for error in form.expenses_costs.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -469,7 +469,7 @@
                                     <span class="tooltip-text">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
                                 </span>
                             </div>
-                            {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="text", required=True, value=session.get('health_score_step3', {}).get('debt_loan', '')|string) }}
+                            {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="text", required=True, value=session.get('health_data', {}).get('debt_loan', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('debt_loan') else '') }}
                             {% for error in form.debt_loan.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -483,7 +483,7 @@
                                     <span class="tooltip-text">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                 </span>
                             </div>
-                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_score_step3', {}).get('debt_interest_rate', '')|string) }}
+                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_data', {}).get('debt_interest_rate', '')|string if session.get('health_data', {}).get('debt_interest_rate') else '') }}
                             {% for error in form.debt_interest_rate.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -504,6 +504,7 @@
             <div class="social-icons">
                 <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
                 <a href="{{ TWITTER_URL }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
             </div>
             <p>
                 <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email', 'Click to Email') }} {{ trans.get('for support', 'for support') }}</a> |
@@ -519,14 +520,15 @@
             const numberInputs = document.querySelectorAll('.number-input');
             numberInputs.forEach(input => {
                 // Format initial value
-                const initialValue = parseFloat(input.value.replace(/,/g, '')) || '';
+                const initialValue = input.value.replace(/,/g, '');
                 if (initialValue !== '') {
-                    input.value = initialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const numValue = parseFloat(initialValue) || 0;
+                    input.value = numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
 
                 // Handle input
                 input.addEventListener('input', function (e) {
-                    let value = e.target.value.replace(/[^0-9.]/g, ''); // Allow digits and decimal point
+                    let value = e.target.value.replace(/[^0-9.]/g, '');
                     const parts = value.split('.');
                     if (parts.length > 2) {
                         value = parts[0] + '.' + parts.slice(1).join('');
@@ -552,7 +554,6 @@
                         const value = input.value.replace(/,/g, '');
                         input.value = value;
                     });
-                    console.log('Form submitted:', new FormData(form));
                 });
             }
         });
