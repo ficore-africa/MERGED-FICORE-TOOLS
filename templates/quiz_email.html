@@ -1,84 +1,70 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans.get('Quiz Report Subject', 'Your Financial Personality Report') }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            background: linear-gradient(to right, #28a745, #007bff);
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px 5px 0 0;
-        }
-        .content {
-            padding: 20px;
-        }
-        .footer {
-            text-align: center;
-            padding: 10px;
-            font-size: 12px;
-            color: #666;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background: linear-gradient(to right, #28a745, #007bff);
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .footer a {
-            color: #0288D1;
-            text-decoration: none;
-            margin: 0 5px;
-        }
-        @media only screen and (max-width: 600px) {
-            .container { padding: 10px; }
-            .header, .content, .footer { padding: 10px; }
-            .button { padding: 8px 16px; font-size: 14px; }
-        }
-    </style>
+    <title>{{ trans.get('Your Quiz Report', 'Your Quiz Report') }}</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</h1>
-        </div>
-        <div class="content">
-            <p>{{ trans.get('Dear', 'Dear') }} {{ user_name }},</p>
-            <p>{{ trans.get('Thank you for completing the Financial Personality Quiz. Here is your personalized report.', 'Thank you for completing the Financial Personality Quiz. Here is your personalized report.') }}</p>
-            <h2>{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}: {{ personality }}</h2>
-            <p>{{ personality_desc }}</p>
-            <h3>{{ trans.get('Personalized Tip', 'Personalized Tip') }}</h3>
-            <p>{{ tip }}</p>
-            <p><a href="{{ url_for('quiz', _external=True) }}" class="button">{{ trans.get('Retake Quiz', 'Retake Quiz') }}</a></p>
-            <p>{{ trans.get('Thank you for choosing Ficore Africa!', 'Thank you for choosing Ficore Africa!') }}</p>
-        </div>
-        <div class="footer">
-            <p><a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a></p>
-            <p><a href="{{ WAITLIST_FORM_URL }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a></p>
-            <p><a href="{{ CONSULTANCY_FORM_URL }}">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a></p>
-            <p><a href="{{ LINKEDIN_URL }}">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a></p>
-            <p><a href="{{ FACEBOOK_URL }}">{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}</a></p>
-            <p><a href="{{ TWITTER_URL }}">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a></p>
+<body style="font-family: 'Poppins', Arial, sans-serif; background: #F0F2F5; margin: 0; padding: 20px; color: #333;">
+    <div style="max-width: 600px; margin: auto; background: #f6fafe; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <img src="{{ url_for('static', filename='img/ficore_logo.png', _external=True) }}" alt="Ficore Africa Logo" style="max-width: 200px; display: block; margin: 0 auto 1rem;">
+        <h1 style="color: #1C3D5A; text-align: center; font-weight: 600;">{{ trans.get('Your Quiz Report', 'Your Quiz Report') }}</h1>
+        <p style="line-height: 1.6;"><i class="fas fa-user me-2"></i>{{ trans.get('Hello', 'Hello') }}, {{ user_name }}!</p>
+        <p style="line-height: 1.6;"><i class="fas fa-star me-2"></i>{{ trans.get('Your financial personality is', 'Your financial personality is') }}: <strong style="color: #F4C430;">{{ personality }}</strong></p>
+        <p style="line-height: 1.6;">{{ personality_desc }}</p>
+        <p style="line-height: 1.6;"><strong><i class="fas fa-lightbulb me-2"></i>{{ trans.get('Tip', 'Tip') }}:</strong> {{ tip }}</p>
+        <p style="line-height: 1.6; text-align: center;"><a href="{{ url_for('quiz_step1', _external=True) }}" style="display: inline-block; padding: 10px 20px; background: linear-gradient(to right, #28A745, #007BFF); color: #FFFFFF; text-decoration: none; border-radius: 5px; font-weight: 600;"><i class="fas fa-redo me-1"></i>{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a></p>
+        <div style="border-bottom: 1px solid #e0e0e0; margin: 1.5rem 0;"></div>
+        <div style="text-align: center; font-size: 0.9em; color: #333;">
+            <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
+            <div style="margin: 10px 0;">
+                <a href="{{ LINKEDIN_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-linkedin"></i></a>
+                <a href="{{ TWITTER_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-twitter"></i></a>
+                <a href="{{ FACEBOOK_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-facebook"></i></a>
+            </div>
+            <p>
+                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank" style="color: #1C3D5A; text-decoration: none;">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+                <a href="{{ CONSULTANCY_FORM_URL }}" target="_blank" style="color: #1C3D5A; text-decoration: none;">{{ trans.get('Book a Consultation', 'Book a Consultation') }}</a>
+            </p>
         </div>
     </div>
 </body>
