@@ -646,7 +646,6 @@ class QuizStep3Form(FlaskForm):
     auto_email = BooleanField('Receive Email Report')
     submit = SubmitField('Submit Quiz')
     back = SubmitField('Back')
-    
     def __init__(self, start_idx, end_idx, *args, **kwargs):
         super(QuizStep3Form, self).__init__(*args, **kwargs)
         for i in range(start_idx, end_idx):
