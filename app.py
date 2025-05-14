@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, send_from_directory
-from flask.sessions import SessionInterface
+from flask.sessions import SessionInterface, SecureCookieSession
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRange
@@ -121,18 +121,19 @@ class CompressedSession(SessionInterface):
         session_data = request.cookies.get(self.get_cookie_name(app))
         if not session_data:
             logger.info("No session cookie found, creating new session")
-            return {}
+            return SecureCookieSession()  # Return a new SecureCookieSession
         try:
             serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
             decompressed_data = serializer.loads(session_data)
             compressed_data = bytes.fromhex(decompressed_data)
-            session = json.loads(zlib.decompress(compressed_data).decode('utf-8'))
+            session_dict = json.loads(zlib.decompress(compressed_data).decode('utf-8'))
+            session = SecureCookieSession(session_dict)  # Wrap dict in SecureCookieSession
             if ('budget_data' not in session and 'health_data' not in session and 'quiz_results' not in session) and session.get('email'):
                 session = self.restore_from_backup(session.get('email'), session)
             return session
         except Exception as e:
             logger.error(f"Error decompressing session data: {e}")
-            return {}
+            return SecureCookieSession()  # Return empty session on error
 
     def save_session(self, app, session, response):
         if not session.modified:
@@ -183,7 +184,7 @@ class CompressedSession(SessionInterface):
                 with open(backup_file, 'r') as f:
                     backup_data = json.load(f)
                 session.update(backup_data)
-                session.modified = True
+                session.modified = True  # Mark session as modified
                 logger.info(f"Session restored for {email}")
             return session
         except Exception as e:
