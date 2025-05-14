@@ -1,96 +1,51 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
+<!DOCTYPE html>
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}">
-    <meta name="keywords" content="ficore africa, financial quiz, Africa SME finance">
-    <meta name="author" content="Ficore Africa">
-    <title>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }} - Ficore Africa</title>
+    <title>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
-<body>
-    <div class="container">
-        <header class="my-4">
-            <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" class="img-fluid">
+<body class="bg-light">
+    <div class="container mt-5">
+        <header class="text-center mb-4">
+            <img src="{{ url_for('static', filename='ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="d-block mx-auto mb-3" width="150" height="auto">
             <h1>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</h1>
-            <p>{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
+            <p class="lead">{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
         </header>
 
-        <!-- Progress Bar -->
-        <div class="progress-bar">
-            <div class="progress" style="width: 33%;"></div>
-        </div>
+        <section class="card p-4 mx-auto" style="max-width: 600px;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="alert-container my-3">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans.get('Close', 'Close') }}"></button>
-                        </div>
-                    {% endfor %}
+            {% if app.config['DEBUG'] %}
+                <div class="alert alert-info">
+                    <p>Debug - Current Language: {{ language }}</p>
+                    <p>Debug - Step: 1/3</p>
                 </div>
             {% endif %}
-        {% endwith %}
 
-        <div class="content-container">
-            <form method="POST" action="{{ url_for('quiz_step1') }}">
+            <form method="POST" class="needs-validation" novalidate>
                 {{ form.hidden_tag() }}
-                {% for i in range(4) %}
-                    {% if i < len(questions) %}
-                        {% set question = questions[i] %}
+                {% for i in range(1, 5) %}
+                    {% if i - 1 < len(questions) %}
+                        {% set question = questions[i - 1] %}
                         <div class="mb-4">
-                            <h5 class="question-title"><i class="fas fa-circle-question me-2"></i>{{ trans.get('Question', 'Question') }} {{ i + 1 }} {{ trans.get('of', 'of') }} {{ QUIZ_QUESTIONS|length }}</h5>
-                            <p class="question-text">{{ trans.get(question.text, question.text) }}</p>
+                            <h5>{{ trans.get('Question', 'Question') }} {{ i }} {{ trans.get('of', 'of') }} {{ QUIZ_QUESTIONS|length }}</h5>
+                            <p>{{ trans.get(question.text, question.text) }}</p>
                             {% for choice in question.options %}
                                 <div class="form-check">
-                                    {{ form['question_' + (i + 1)|string](value=choice, class="form-check-input") }}
+                                    {{ form['question_' + i|string](value=choice, class="form-check-input") }}
                                     <label class="form-check-label">
                                         {{ trans.get(choice, choice) }}
                                         {% if question.text == 'Do you make impulse purchases?' and choice in ['Yes', 'No'] %}
@@ -103,40 +58,40 @@
                                     </label>
                                 </div>
                             {% endfor %}
-                            {% if form['question_' + (i + 1)|string].errors %}
+                            {% if form['question_' + i|string].errors %}
                                 <div class="text-danger">
-                                    {% for error in form['question_' + (i + 1)|string].errors %}
-                                        {{ error }}
+                                    {% for error in form['question_' + i|string].errors %}
+                                        <small>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            {% if i < 3 %}
-                                <div class="section-divider"></div>
+                            {% if i < 4 %}
+                                <hr>
                             {% endif %}
                         </div>
                     {% endif %}
                 {% endfor %}
-                <div class="d-flex gap-2 justify-content-center">
-                    {{ form.submit(class="btn btn-primary") }} <i class="fas fa-check-circle ms-1"></i>
+                <div class="d-flex justify-content-end">
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
-        </div>
+        </section>
 
-        <footer class="footer mt-4">
+        <footer class="text-center mt-4">
             <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
-            <div class="social-icons">
-                <a href="{{ LINKEDIN_URL }}" target="_blank" aria-label="{{ trans.get('Follow on LinkedIn', 'Follow on LinkedIn') }}"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ TWITTER_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}"><i class="fab fa-twitter"></i></a>
-                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
+            <div class="mt-3">
+                <a href="{{ LINKEDIN_URL }}" class="text-decoration-none me-2">LinkedIn</a>
+                <a href="{{ TWITTER_URL }}" class="text-decoration-none me-2">Twitter</a>
+                <a href="{{ FACEBOOK_URL }}" class="text-decoration-none">Facebook</a>
             </div>
-            <p>
-                <a href="/cdn-cgi/l/email-protection#31525451514e5355314748424e53444047534842400f424e4c">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
-                <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
-            </p>
+            <div class="mt-2">
+                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
+                <a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+                <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
+            </div>
         </footer>
     </div>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
