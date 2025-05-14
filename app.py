@@ -21,7 +21,7 @@ from google.oauth2.service_account import Credentials
 from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 import random
-from translations import get_translations  # Import translations from translations.py
+from translations import get_translations
 
 # Configure logging
 logging.basicConfig(
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+app.config['DEBUG'] = False  # Set to True during development
 mail = Mail(app)
 if not app.config['SECRET_KEY']:
     logger.critical("FLASK_SECRET_KEY not set.")
@@ -196,7 +197,7 @@ RECOVERY_COURSE_URL = 'https://www.youtube.com/@FICORE.AFRICA'
 
 # Headers for Google Sheets
 PREDETERMINED_HEADERS_BUDGET = [
-    'Timestamp', 'first_name seb', 'email', 'language', 'monthly_income',
+    'Timestamp', 'first_name', 'email', 'language', 'monthly_income',
     'housing_expenses', 'food_expenses', 'transport_expenses', 'other_expenses',
     'savings_goal', 'auto_email', 'total_expenses', 'savings', 'surplus_deficit',
     'badges', 'rank', 'total_users'
@@ -207,10 +208,9 @@ PREDETERMINED_HEADERS_HEALTH = [
     'user_type', 'email', 'badges', 'language'
 ]
 PREDETERMINED_HEADERS_QUIZ = [
-    'Timestamp', 'first_name', 'email', 'language', 'question_1', 'answer_1',
-    'question_2', 'answer_2', 'question_3', 'answer_3', 'question_4', 'answer_4',
-    'question_5', 'answer_5', 'question_6', 'answer_6', 'question_7', 'answer_7',
-    'question_8', 'answer_8', 'question_9', 'answer_9', 'question_10', 'answer_10',
+    'Timestamp', 'first_name', 'email', 'language',
+    *(f'question_{i}' for i in range(1, 11)),
+    *(f'answer_{i}' for i in range(1, 11)),
     'personality', 'badges', 'auto_email'
 ]
 
@@ -237,7 +237,6 @@ def set_sheet_headers(headers, worksheet_name):
             client.add_worksheet(worksheet_name, rows=100, cols=len(headers))
             worksheet = client.worksheet(worksheet_name)
         
-        # Calculate the correct column letter for the range (e.g., 'A' to 'AA' for 27 columns)
         col_num = len(headers)
         col_letter = ''
         while col_num > 0:
@@ -573,7 +572,7 @@ class HealthScoreForm(FlaskForm):
         self.submit.label.text = get_translations(language)['Submit']
 
 try:
-    with open('questions.json', 'r') as f:
+    with open('questions.json', 'r', encoding='utf-8') as f:
         QUIZ_QUESTIONS = json.load(f)
     logger.debug(f"Successfully loaded QUIZ_QUESTIONS: {QUIZ_QUESTIONS}")
 except FileNotFoundError:
@@ -582,47 +581,68 @@ except FileNotFoundError:
 except json.JSONDecodeError as e:
     logger.error(f"Error decoding questions.json: {e}")
     QUIZ_QUESTIONS = []  # Fallback to empty list to prevent crashes
-    
-class QuizForm(FlaskForm):
+
+class QuizStep1Form(FlaskForm):
+    submit = SubmitField('Next')
+    back = SubmitField('Back')
+    def __init__(self, start_idx, end_idx, *args, **kwargs):
+        super(QuizStep1Form, self).__init__(*args, **kwargs)
+        for i in range(start_idx, end_idx):
+            question = QUIZ_QUESTIONS[i]
+            choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
+            field = RadioField(
+                f'Question {i+1}',
+                choices=choices,
+                validators=[DataRequired()] if question.get('required', True) else [Optional()]
+            )
+            setattr(self, f'question_{i+1}', field)
+            self._fields[f'question_{i+1}'] = field
+
+class QuizStep2Form(FlaskForm):
+    submit = SubmitField('Next')
+    back = SubmitField('Back')
+    def __init__(self, start_idx, end_idx, *args, **kwargs):
+        super(QuizStep2Form, self).__init__(*args, **kwargs)
+        for i in range(start_idx, end_idx):
+            question = QUIZ_QUESTIONS[i]
+            choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
+            field = RadioField(
+                f'Question {i+1}',
+                choices=choices,
+                validators=[DataRequired()] if question.get('required', True) else [Optional()]
+            )
+            setattr(self, f'question_{i+1}', field)
+            self._fields[f'question_{i+1}'] = field
+
+class QuizStep3Form(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
     submit = SubmitField('Submit Quiz')
+    back = SubmitField('Back')
+    def __init__(self, start_idx, end_idx, *args, **kwargs):
+        super(QuizStep3Form, self).__init__(*args, **kwargs)
+        for i in range(start_idx, end_idx):
+            question = QUIZ_QUESTIONS[i]
+            choices = [(opt, opt) for opt in question.get('options', ['Yes', 'No'])]
+            field = RadioField(
+                f'Question {i+1}',
+                choices=choices,
+                validators=[DataRequired()] if question.get('required', True) else [Optional()]
+            )
+            setattr(self, f'question_{i+1}', field)
+            self._fields[f'question_{i+1}'] = field
 
-    def __init__(self, *args, **kwargs):
-        super(QuizForm, self).__init__(*args, **kwargs)  # Initialize the base form
-        for i, question in enumerate(QUIZ_QUESTIONS, 1):
-            choices = [('Yes', 'Yes'), ('No', 'No')] if question['type'] == 'yes_no' else [(opt, opt) for opt in question['options']]
-            field = RadioField(f'Question {i}', choices=choices, validators=[DataRequired()])
-            setattr(self, f'question_{i}', field)
-            self._fields[f'question_{i}'] = field  # Register the field
-            # Explicitly bind the field to the form
-            if request.method == 'POST':
-                field.process(formdata=request.form)
-            else:
-                field.process(formdata=None)
-            logger.debug(f"Bound field: {f'question_{i}'} with choices: {choices}")
-            
 def assign_personality(answers, language='en'):
-    score = 0
-    for question, answer in answers:
-        q = next((q for q in QUIZ_QUESTIONS if q['text'] == question), None)
-        if not q:
-            continue
-        if q['type'] == 'yes_no':
-            if q['text'] in ["Do you track your expenses weekly?", "Do you save a portion of your income monthly?", "Do you plan your purchases in advance?"]:
-                score += 1 if answer == 'Yes' else -1
-            elif q['text'] in ["Do you avoid budgeting?", "Do you often spend on non-essentials like entertainment?"]:
-                score -= 1 if answer == 'Yes' else 1
-        else:
-            if answer == 'Always':
-                score += 1 if q['text'] in ["How often do you save?", "How often do you review your finances?", "How often do you join savings groups?"] else -1
-            elif answer == 'Never':
-                score -= 1 if q['text'] in ["How often do you save?", "How often do you review your finances?", "How often do you join savings groups?"] else 1
     trans = get_translations(language)
-    if score >= 3:
+    score = sum(
+        q.get('weight', 1) * (1 if a in q.get('positive_answers', ['Yes', 'Always']) else -1 if a in q.get('negative_answers', ['No', 'Never']) else 0)
+        for q, a in answers
+        if any(a in opt for opt in q.get('options', ['Yes', 'No']))
+    )
+    if score >= 6:
         return 'Planner', trans.get('Planner', 'You plan your finances well.'), trans.get('Planner Tip', 'Save regularly.')
-    elif score >= 1:
+    elif score >= 2:
         return 'Saver', trans.get('Saver', 'You save consistently.'), trans.get('Saver Tip', 'Increase your savings rate.')
     elif score == 0:
         return 'Minimalist', trans.get('Minimalist', 'You maintain a balanced approach.'), trans.get('Minimalist Tip', 'Consider a budget.')
@@ -631,12 +651,33 @@ def assign_personality(answers, language='en'):
     else:
         return 'Avoider', trans.get('Avoider', 'You avoid financial planning.'), trans.get('Avoider Tip', 'Start with a simple plan.')
 
+def assign_badges_quiz(user_df, all_users_df):
+    badges = []
+    if user_df.empty:
+        logger.warning("Empty user_df in assign_badges_quiz.")
+        return badges
+    try:
+        user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
+        user_df = user_df.sort_values('Timestamp', ascending=False)
+        user_row = user_df.iloc[0]
+        language = user_row['language']
+        trans = get_translations(language)
+        if len(user_df) == 1:
+            badges.append(trans['First Quiz Completed!'])
+        if user_row['personality'] == 'Planner':
+            badges.append(trans['Master Planner!'])
+        elif user_row['personality'] == 'Avoider' and len(all_users_df) > 10:
+            badges.append(trans['Needs Guidance!'])
+        return badges
+    except Exception as e:
+        logger.error(f"Error in assign_badges_quiz: {e}")
+        return badges
+
 def generate_quiz_summary_chart(answers, language='en'):
     try:
-        answer_counts = {'Yes': 0, 'No': 0, 'Always': 0, 'Sometimes': 0, 'Never': 0}
+        answer_counts = {}
         for _, answer in answers:
-            if answer in answer_counts:
-                answer_counts[answer] += 1
+            answer_counts[answer] = answer_counts.get(answer, 0) + 1
         labels = list(answer_counts.keys())
         values = list(answer_counts.values())
         fig = px.bar(x=labels, y=values, title=get_translations(language).get('Quiz Summary', 'Quiz Summary'), labels={'x': 'Answer', 'y': 'Count'})
@@ -835,19 +876,14 @@ def budget_step4():
         session.modified = True
         budget_data = session['budget_data']
         try:
-            # Prepare DataFrame from session data
             df = pd.DataFrame([budget_data], columns=PREDETERMINED_HEADERS_BUDGET)
             df = calculate_budget_metrics(df)
             if df.empty:
                 flash(trans['Error retrieving data. Please try again.'], 'error')
                 return redirect(url_for('budget_step1'))
             user_df = df
-
-            # Assign badges
             badges = assign_badges_budget(user_df)
             user_df['badges'] = ', '.join(badges)
-
-            # Prepare data to append to Google Sheets
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 budget_data.get('first_name', ''),
@@ -867,20 +903,15 @@ def budget_step4():
                 0,  # rank (calculated in dashboard)
                 0   # total_users (calculated in dashboard)
             ]
-
-            # Append to Google Sheets
             if not append_to_sheet(data, PREDETERMINED_HEADERS_BUDGET, 'Budget'):
                 flash(trans['Google Sheets Error'], 'error')
                 return redirect(url_for('budget_step1'))
-
-            # Send email if requested
             if budget_data.get('auto_email'):
                 threading.Thread(
                     target=send_budget_email_async,
                     args=(budget_data['email'], budget_data['first_name'], user_df.iloc[0], language)
                 ).start()
                 flash(trans['Check Inbox'], 'success')
-
             flash(trans['Submission Success'], 'success')
             return redirect(url_for('budget_dashboard'))
         except Exception as e:
@@ -905,68 +936,42 @@ def budget_step4():
 def budget_dashboard():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    
-    # Check if budget_data exists in session (fresh submission)
     if 'budget_data' not in session or not session['budget_data'].get('email'):
         flash(trans['Session Expired'], 'error')
         return redirect(url_for('budget_step1'))
-
     email = session['budget_data']['email']
     try:
-        # If budget_data is in session, use it directly
         if 'budget_data' in session:
             budget_data = session['budget_data']
             df = pd.DataFrame([budget_data], columns=PREDETERMINED_HEADERS_BUDGET)
             user_df = calculate_budget_metrics(df)
-            user_df['Timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
+            user_df['Timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         else:
-            # Fallback to Google Sheets if session data is unavailable
             user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
             if user_df.empty:
                 flash(trans['Error retrieving data. Please try again.'], 'error')
                 return redirect(url_for('budget_step1'))
             user_df = calculate_budget_metrics(user_df)
             user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
-
-        # Fetch all users' data for ranking
         all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_BUDGET, worksheet_name='Budget')
-
-        # Sort user data by timestamp and get the latest entry
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
         user_row = user_df.iloc[0]
-
-        # Calculate rank
         rank = sum(all_users_df['surplus_deficit'].astype(float) > user_row['surplus_deficit']) + 1
         total_users = len(all_users_df)
-
-        # Assign badges
         badges = assign_badges_budget(user_df)
-
-        # Generate plots
         budget_breakdown = {
             'Housing': user_row['housing_expenses'],
             'Food': user_row['food_expenses'],
             'Transport': user_row['transport_expenses'],
             'Other': user_row['other_expenses']
         }
-        breakdown_fig = px.pie(
-            names=list(budget_breakdown.keys()),
-            values=list(budget_breakdown.values()),
-            title=trans['Budget Breakdown']
-        )
+        breakdown_fig = px.pie(names=list(budget_breakdown.keys()), values=list(budget_breakdown.values()), title=trans['Budget Breakdown'])
         breakdown_plot = breakdown_fig.to_html(full_html=False, include_plotlyjs=False)
-        comparison_fig = px.bar(
-            x=['Income', 'Expenses', 'Savings'],
-            y=[user_row['monthly_income'], user_row['total_expenses'], user_row['savings']],
-            title=trans['Income vs Expenses']
-        )
+        comparison_fig = px.bar(x=['Income', 'Expenses', 'Savings'], y=[user_row['monthly_income'], user_row['total_expenses'], user_row['savings']], title=trans['Income vs Expenses'])
         comparison_plot = comparison_fig.to_html(full_html=False, include_plotlyjs=False)
-
-        # Clear the session budget_data after rendering to prevent reuse
         session.pop('budget_data', None)
         session.modified = True
-
         return render_template(
             'budget_dashboard.html',
             trans=trans,
@@ -1085,58 +1090,31 @@ def health_dashboard(step=1):
     if step < 1 or step > 6:
         flash(get_translations('en')['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health_score'))
-
-    # Validate session data
     if 'health_data' not in session or 'email' not in session['health_data']:
         flash(get_translations('en')['Session Expired'], 'error')
         return redirect(url_for('health_score'))
-
     language = session.get('health_data', {}).get('language', 'en')
     trans = get_translations(language)
     email = session['health_data']['email']
     first_name = session['health_data'].get('first_name', 'User')
-
     try:
-        # Fetch user data from Google Sheets
-        user_df = fetch_data_from_sheet(
-            email=email,
-            headers=PREDETERMINED_HEADERS_HEALTH,
-            worksheet_name='Health'
-        )
-
+        user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
         if user_df.empty:
             flash(trans['Error retrieving data. Please try again.'], 'error')
             return redirect(url_for('health_score'))
-
-        # Fetch all users' data for ranking and comparison
-        all_users_df = fetch_data_from_sheet(
-            headers=PREDETERMINED_HEADERS_HEALTH,
-            worksheet_name='Health'
-        )
-
-        # Recalculate health scores
+        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
         user_df = calculate_health_score(user_df)
         all_users_df = calculate_health_score(all_users_df)
-
-        # Get latest user record
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
         user_data = user_df.iloc[0].to_dict()
         health_score = user_data.get('HealthScore', 0.0)
-
-        # Assign badges
         badges = assign_badges_health(user_df, all_users_df)
-
-        # Calculate rank
         all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
         rank = (all_scores >= health_score).sum()
         total_users = len(all_scores)
-
-        # Generate plots
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
-
-        # Render the dashboard
         return render_template(
             'health_dashboard.html',
             trans=trans,
@@ -1161,131 +1139,198 @@ def health_dashboard(step=1):
             FACEBOOK_URL=FACEBOOK_URL,
             language=language
         )
-
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}")
         flash(trans['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health_score'))
 
-@app.route('/quiz', methods=['GET', 'POST'])
-def quiz():
+@app.route('/quiz_step1', methods=['GET', 'POST'])
+def quiz_step1():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    questions = QUIZ_QUESTIONS
-    logger.debug(f"Questions passed to template: {questions}")  # Debug the passed variable
-    answers = {}
-
-    if request.method == 'POST':
-        # Since we're using hardcoded questions in the template, we need to match the expected structure
-        # We'll iterate over the expected question indices (1 to 10) to collect answers
-        for i in range(1, 11):  # Hardcoded to match the 10 questions in quiz.html
-            answer = request.form.get(f'question_{i}')
-            if answer:
-                # Since questions are hardcoded, we can use a placeholder question text
-                # When we switch to dynamic loading, this will use questions[i-1]['text']
-                question_text = f"Question {i}"
-                answers[question_text] = answer
-
-        if answers:
-            # Assign personality based on answers
-            personality, personality_desc, tip = assign_personality([(q, a) for q, a in answers.items()], language)
-            quiz_data = {
-                'first_name': sanitize_input(request.form.get('first_name', '')),
-                'email': sanitize_input(request.form.get('email', '')),
-                'language': language,
-                'auto_email': bool(request.form.get('email')),
-                'personality': personality,
-                'badges': trans.get('Personality Unlocked!', 'Personality Unlocked!')
-            }
-            data = [
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                quiz_data['first_name'],
-                quiz_data['email'],
-                quiz_data['language']
-            ]
-            for q, a in answers.items():
-                data.extend([q, a])
-            data.extend([personality, quiz_data['badges'], str(quiz_data['auto_email']).lower()])
-
-            # Append to Google Sheets (assuming this function exists)
-            if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
-                flash(trans.get('Google Sheets Error', 'Error saving to Google Sheets'), 'error')
-                return redirect(url_for('quiz'))
-
-            # Generate summary chart (assuming this function exists)
-            summary_chart = generate_quiz_summary_chart(list(answers.items()), language)
-            session['quiz_results'] = {
-                'first_name': quiz_data['first_name'],
-                'email': quiz_data['email'],
-                'language': language,
-                'personality': personality,
-                'personality_desc': personality_desc,
-                'tip': tip,
-                'answers': list(answers.items()),
-                'badges': [quiz_data['badges']],
-                'summary_chart': summary_chart
-            }
-            session.modified = True
-
-            # Send email if auto_email is enabled
-            if quiz_data['auto_email'] and quiz_data['email']:
-                try:
-                    threading.Thread(
-                        target=send_quiz_email_async,
-                        args=(quiz_data['email'], quiz_data['first_name'] or 'User', personality, personality_desc, tip, language)
-                    ).start()
-                    flash(trans.get('Check Inbox', 'Check your inbox for results'), 'success')
-                except Exception as e:
-                    logger.error(f"Failed to send quiz email: {e}")
-                    flash(trans.get('Email Send Error', 'Failed to send email'), 'error')
-
-            flash(trans.get('Submission Success', 'Quiz submitted successfully'), 'success')
-            return redirect(url_for('quiz_results'))
-
-    return render_template('quiz.html', 
-                           questions=questions, 
-                           trans=trans,
-                           language=language,
-                           FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-                           WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-                           CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-                           LINKEDIN_URL=LINKEDIN_URL,
-                           TWITTER_URL=TWITTER_URL,
-                           FACEBOOK_URL=FACEBOOK_URL,
-    )
-    
-@app.route('/quiz_results', methods=['GET', 'POST'])
-def quiz_results():
-    language = session.get('language', 'en')
-    trans = get_translations(language)
-    if 'quiz_results' not in session:
-        flash(trans['Session Expired'], 'error')
-        return redirect(url_for('quiz'))
-    quiz_results = session['quiz_results']
+    form = QuizStep1Form(start_idx=0, end_idx=4)
+    form.submit.label.text = trans['Next']
+    if form.validate_on_submit():
+        if form.back.data:
+            return redirect(url_for('index'))
+        quiz_data = session.get('quiz_data', {})
+        for i in range(0, 4):
+            quiz_data[f'question_{i+1}'] = getattr(form, f'question_{i+1}').data
+        session['quiz_data'] = quiz_data
+        session.modified = True
+        return redirect(url_for('quiz_step2'))
     return render_template(
-        'quiz_results.html',
-        results=quiz_results,
+        'quiz_step1.html',
+        form=form,
+        questions=QUIZ_QUESTIONS[0:4],
         trans=trans,
+        language=language,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         WAITLIST_FORM_URL=WAITLIST_FORM_URL,
         CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language
+        step=1
     )
+
+@app.route('/quiz_step2', methods=['GET', 'POST'])
+def quiz_step2():
+    language = session.get('language', 'en')
+    trans = get_translations(language)
+    if 'quiz_data' not in session:
+        flash(trans['Session Expired'], 'error')
+        return redirect(url_for('quiz_step1'))
+    form = QuizStep2Form(start_idx=4, end_idx=7)
+    form.submit.label.text = trans['Next']
+    form.back.label.text = trans['Back']
+    if form.validate_on_submit():
+        if form.back.data:
+            return redirect(url_for('quiz_step1'))
+        quiz_data = session['quiz_data']
+        for i in range(4, 7):
+            quiz_data[f'question_{i+1}'] = getattr(form, f'question_{i+1}').data
+        session['quiz_data'] = quiz_data
+        session.modified = True
+        return redirect(url_for('quiz_step3'))
+    return render_template(
+        'quiz_step2.html',
+        form=form,
+        questions=QUIZ_QUESTIONS[4:7],
+        trans=trans,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL,
+        FACEBOOK_URL=FACEBOOK_URL,
+        step=2
+    )
+
+@app.route('/quiz_step3', methods=['GET', 'POST'])
+def quiz_step3():
+    language = session.get('language', 'en')
+    trans = get_translations(language)
+    if 'quiz_data' not in session:
+        flash(trans['Session Expired'], 'error')
+        return redirect(url_for('quiz_step1'))
+    form = QuizStep3Form(start_idx=7, end_idx=10)
+    form.submit.label.text = trans['Submit Quiz']
+    form.back.label.text = trans['Back']
+    if form.validate_on_submit():
+        if form.back.data:
+            return redirect(url_for('quiz_step2'))
+        quiz_data = session['quiz_data']
+        for i in range(7, 10):
+            quiz_data[f'question_{i+1}'] = getattr(form, f'question_{i+1}').data
+        quiz_data.update({
+            'first_name': sanitize_input(form.first_name.data),
+            'email': sanitize_input(form.email.data),
+            'language': form.language.data,
+            'auto_email': bool(form.email.data)
+        })
+        answers = [(QUIZ_QUESTIONS[i]['text'], quiz_data[f'question_{i+1}']) for i in range(10)]
+        personality, personality_desc, tip = assign_personality([(QUIZ_QUESTIONS[i], quiz_data[f'question_{i+1}']) for i in range(10)], quiz_data['language'])
+        data = [
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            quiz_data['first_name'],
+            quiz_data['email'],
+            quiz_data['language']
+        ]
+        for i, (question, answer) in enumerate(answers, 1):
+            data.extend([question, answer])
+        data.extend([personality, '', str(quiz_data['auto_email']).lower()])  # Badges to be assigned later
+        if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
+            flash(trans.get('Google Sheets Error', 'Error saving to Google Sheets'), 'error')
+            return redirect(url_for('quiz_step1'))
+        user_df = fetch_data_from_sheet(email=quiz_data['email'], headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+        badges = assign_badges_quiz(user_df, all_users_df)
+        summary_chart = generate_quiz_summary_chart(answers, quiz_data['language'])
+        session['quiz_results'] = {
+            'first_name': quiz_data['first_name'],
+            'email': quiz_data['email'],
+            'language': quiz_data['language'],
+            'personality': personality,
+            'personality_desc': personality_desc,
+            'tip': tip,
+            'answers': answers,
+            'badges': badges,
+            'summary_chart': summary_chart
+        }
+        session.modified = True
+        if quiz_data['auto_email'] and quiz_data['email']:
+            threading.Thread(
+                target=send_quiz_email_async,
+                args=(quiz_data['email'], quiz_data['first_name'] or 'User', personality, personality_desc, tip, quiz_data['language'])
+            ).start()
+            flash(trans.get('Check Inbox', 'Check your inbox for results'), 'success')
+        flash(trans.get('Processing your results...'), 'info')
+        time.sleep(1)  # Simulate processing delay
+        flash(trans.get('Submission Success', 'Quiz submitted successfully'), 'success')
+        return redirect(url_for('quiz_results'))
+    return render_template(
+        'quiz_step3.html',
+        form=form,
+        questions=QUIZ_QUESTIONS[7:10],
+        trans=trans,
+        language=language,
+        FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+        WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+        CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+        LINKEDIN_URL=LINKEDIN_URL,
+        TWITTER_URL=TWITTER_URL,
+        FACEBOOK_URL=FACEBOOK_URL,
+        step=3
+    )
+
+@app.route('/quiz_results', methods=['GET', 'POST'])
+def quiz_results():
+    language = session.get('language', 'en')
+    trans = get_translations(language)
+    if 'quiz_results' not in session:
+        flash(trans['Session Expired'], 'error')
+        return redirect(url_for('quiz_step1'))
+    quiz_results = session['quiz_results']
+    if not quiz_results.get('email'):
+        flash(trans['Error retrieving data. Please try again.'], 'error')
+        return redirect(url_for('quiz_step1'))
+    email = quiz_results['email']
+    try:
+        user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+        if user_df.empty:
+            flash(trans['Error retrieving data. Please try again.'], 'error')
+            return redirect(url_for('quiz_step1'))
+        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+        badges = assign_badges_quiz(user_df, all_users_df)
+        quiz_results['badges'] = badges
+        session['quiz_results'] = quiz_results
+        session.modified = True
+        return render_template(
+            'quiz_results.html',
+            results=quiz_results,
+            trans=trans,
+            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
+            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
+            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
+            LINKEDIN_URL=LINKEDIN_URL,
+            TWITTER_URL=TWITTER_URL,
+            FACEBOOK_URL=FACEBOOK_URL,
+            language=language
+        )
+    except Exception as e:
+        logger.error(f"Error rendering quiz results: {e}")
+        flash(trans['Error retrieving data. Please try again.'], 'error')
+        return redirect(url_for('quiz_step1'))
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     language = session.get('language', 'en')
     trans = get_translations(language)
-    
-    # Clear session data
     email = session.get('budget_data', {}).get('email') or session.get('health_data', {}).get('email') or session.get('quiz_results', {}).get('email')
     session.clear()
     session.modified = True
-    
-    # Delete session backup file if it exists
     if email:
         backup_file = os.path.join(SESSION_BACKUP_DIR, f"{sanitize_input(email)}.json")
         if os.path.exists(backup_file):
@@ -1294,7 +1339,6 @@ def logout():
                 logger.info(f"Deleted session backup for {email}")
             except Exception as e:
                 logger.error(f"Failed to delete session backup for {email}: {e}")
-    
     flash(trans['Logged Out Successfully'], 'success')
     return redirect(url_for('index'))
     
