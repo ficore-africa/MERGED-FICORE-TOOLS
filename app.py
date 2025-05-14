@@ -10,6 +10,7 @@ import os
 import logging
 import json
 import threading
+from jinja2 import Environment
 import time
 import re
 import zlib
@@ -42,6 +43,10 @@ if not app.config['SECRET_KEY']:
 
 # Enable zip filter in Jinja2
 app.jinja_env.filters['zip'] = lambda *args, **kwargs: zip(*args, **kwargs)
+def enumerate_filter(sequence, start=0):
+    return enumerate(sequence, start)
+
+app.jinja_env.filters['enumerate'] = enumerate_filter
 
 # Validate environment variables
 required_env_vars = ['SMTP_SERVER', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD', 'SPREADSHEET_ID', 'GOOGLE_CREDENTIALS_JSON']
