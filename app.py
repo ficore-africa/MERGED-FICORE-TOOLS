@@ -750,6 +750,14 @@ def send_budget_email_async(to_email, user_name, user_data, language):
         send_budget_email(to_email, user_name, user_data, language)
 
 # Routes
+@app.route('/change_language', methods=['POST'])
+def change_language():
+    language = request.form.get('language', 'en')
+    if language in ['en', 'ha']:
+        session['language'] = language
+        session.modified = True
+    return redirect(request.args.get('next') or url_for('index'))
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     language = request.args.get('language', session.get('language', 'en'))
@@ -998,10 +1006,6 @@ def budget_dashboard():
         logger.error(f"Error in budget_dashboard: {e}")
         flash(trans['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
-        
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 @app.route('/health_score_step1', methods=['GET', 'POST'])
 def health_score_step1():
