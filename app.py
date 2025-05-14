@@ -1078,7 +1078,6 @@ def health_score_step3():
     trans = get_translations(session['health_score_step1']['language'])
 
     if request.method == 'POST':
-        # Validate Step 3 fields
         try:
             form.income_revenue.data = float(request.form.get('income_revenue', 0))
             form.expenses_costs.data = float(request.form.get('expenses_costs', 0))
@@ -1102,23 +1101,41 @@ def health_score_step3():
                 'debt_interest_rate': form.debt_interest_rate.data
             }
 
-            # Process the data (e.g., calculate score, save to database, send email, etc.)
-            # For now, we'll just flash a success message
-            flash(trans.get('Submission Success', 'Submission Success'), 'success')
+            # Simple health score calculation (example logic)
+            cash_flow = health_score_data['income_revenue'] - health_score_data['expenses_costs']
+            debt_to_income = (health_score_data['debt_loan'] / health_score_data['income_revenue'] * 100) if health_score_data['income_revenue'] > 0 else 0
+            debt_interest_burden = health_score_data['debt_interest_rate'] * (health_score_data['debt_loan'] / 100) if health_score_data['debt_loan'] > 0 else 0
+            health_score = min(100, max(0, 50 + (cash_flow * 0.2) - (debt_to_income * 0.3) - (debt_interest_burden * 0.1)))
 
-            # Clear session data
+            # Store data for dashboard
+            session['dashboard_data'] = {
+                'first_name': health_score_data['first_name'],
+                'email': health_score_data['email'],
+                'health_score': health_score,
+                'user_data': health_score_data,
+                'rank': 1,  # Placeholder, replace with actual ranking logic
+                'total_users': 100,  # Placeholder, replace with actual total users
+                'breakdown_plot': True,  # Placeholder, replace with actual plot data
+                'comparison_plot': True,  # Placeholder, replace with actual plot data
+                'all_users_df': {'HealthScore': [health_score, 60, 70, 80, 90]},  # Placeholder data
+                'badges': ['Positive Cash Flow'] if cash_flow > 0 else [],
+                'course_url': 'https://example.com/course',
+                'course_title': 'Financial Health 101'
+            }
+
+            # Clear previous step data
             session.pop('health_score_step1', None)
             session.pop('health_score_step2', None)
 
-            # Redirect to a results page or back to index
-            return redirect(url_for('index'))
+            # Redirect to dashboard with step 1
+            return redirect(url_for('health_dashboard', step=1))
 
         except ValueError:
             flash(trans.get('Invalid Number', 'Invalid Number'), 'error')
             return render_template('health_score.html', form=form, step=3, trans=trans)
 
     return render_template('health_score.html', form=form, step=3, trans=trans)
-    
+        
 @app.route('/health_dashboard/<int:step>', methods=['GET'])
 def health_dashboard(step=1):
     if step < 1 or step > 6:
