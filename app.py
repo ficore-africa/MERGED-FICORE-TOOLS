@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, send_from_directory
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, BooleanField, SubmitField, RadioField
-from wtforms.validators import DataRequired, Email, Optional, ValidationError
-from flask_session import Session
+from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRangefrom flask_session import Session
 from flask_caching import Cache
 from flask_mail import Mail, Message
 from flask.sessions import SessionInterface, SecureCookieSession
@@ -644,8 +643,10 @@ class QuizStep3Form(FlaskForm):
     first_name = StringField('First Name', validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email()])
     language = SelectField('Language', choices=[('en', 'English'), ('ha', 'Hausa')], default='en')
+    auto_email = BooleanField('Receive Email Report')
     submit = SubmitField('Submit Quiz')
     back = SubmitField('Back')
+    
     def __init__(self, start_idx, end_idx, *args, **kwargs):
         super(QuizStep3Form, self).__init__(*args, **kwargs)
         for i in range(start_idx, end_idx):
@@ -845,7 +846,11 @@ def budget_step2():
         if form.back.data:
             return redirect(url_for('budget_step1'))
         # Clean and convert to float
-        monthly_income = float(request.form.get('monthly_income', '0').replace(',', ''))
+        try:
+    monthly_income = float(request.form.get('monthly_income', '0').replace(',', ''))
+except ValueError:
+    flash(trans['Invalid Number'], 'error')
+    return render_template('budget_step2.html', ...)
         session['budget_data']['monthly_income'] = monthly_income
         session.modified = True
         return redirect(url_for('budget_step3'))
@@ -1435,11 +1440,14 @@ def quiz_step3():
                 quiz_data.get('first_name', ''),
                 quiz_data.get('email', ''),
                 quiz_data.get('language', 'en'),
-                *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)]
+                *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)],
+                *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)],
+                personality,
+                ','.join(badges),
+                'true' if quiz_data.get('email') else 'false'
             ]
 
             # Append to Google Sheets
-            headers = ['Timestamp', 'FirstName', 'Email', 'Language'] + [f'Answer{i}' for i in range(1, 11)]
             if not append_to_sheet(data, headers, 'Quiz'):
                 flash(trans['Google Sheets Error'], 'error')
                 return redirect(url_for('quiz_step1'))
@@ -1455,7 +1463,7 @@ def quiz_step3():
                 'personality': personality,
                 **{f'Answer{i}': quiz_data.get(f'question_{i}', '') for i in range(1, 11)}
             }])
-            all_users_df = pd.DataFrame()  # Placeholder: fetch from Google Sheets if needed
+            all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
             badges = assign_badges_quiz(user_df, all_users_df)
             summary_chart = generate_quiz_summary_chart(answers, language)
 
