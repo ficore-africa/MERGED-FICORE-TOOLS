@@ -1138,63 +1138,90 @@ def health_score_step3():
         
 @app.route('/health_dashboard/<int:step>', methods=['GET'])
 def health_dashboard(step=1):
+    # Validate step range
     if step < 1 or step > 6:
         flash(get_translations('en')['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health_score'))
-    if 'health_data' not in session or 'email' not in session['health_data']:
+
+    # Check session data
+    dashboard_data = session.get('dashboard_data', {})
+    if not dashboard_data or 'email' not in dashboard_data:
         flash(get_translations('en')['Session Expired'], 'error')
         return redirect(url_for('health_score'))
-    language = session.get('health_data', {}).get('language', 'en')
+
+    # Extract language and translation
+    language = dashboard_data.get('language', 'en')
     trans = get_translations(language)
-    email = session['health_data']['email']
-    first_name = session['health_data'].get('first_name', 'User')
+
+    # Extract user data from session
+    email = dashboard_data['email']
+    first_name = dashboard_data.get('first_name', 'User')
+
     try:
+        # Fetch data from sheet
         user_df = fetch_data_from_sheet(email=email, headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
         if user_df.empty:
             flash(trans['Error retrieving data. Please try again.'], 'error')
             return redirect(url_for('health_score'))
+
         all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_HEALTH, worksheet_name='Health')
+
+        # Calculate health scores
         user_df = calculate_health_score(user_df)
         all_users_df = calculate_health_score(all_users_df)
+
+        # Sort user data by timestamp
         user_df['Timestamp'] = pd.to_datetime(user_df['Timestamp'], format='mixed', errors='coerce')
         user_df = user_df.sort_values('Timestamp', ascending=False)
         user_data = user_df.iloc[0].to_dict()
-        health_score = user_data.get('HealthScore', 0.0)
+
+        # Get health score (use session value if available, otherwise from user_df)
+        health_score = user_data.get('HealthScore', dashboard_data.get('health_score', 0.0))
+
+        # Assign badges
         badges = assign_badges_health(user_df, all_users_df)
+
+        # Calculate rank
         all_scores = all_users_df['HealthScore'].astype(float).sort_values(ascending=False)
         rank = (all_scores >= health_score).sum()
         total_users = len(all_scores)
+
+        # Generate plots
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
-        return render_template(
-            'health_dashboard.html',
-            trans=trans,
-            user_data=user_data,
-            badges=badges,
-            rank=rank,
-            total_users=total_users,
-            health_score=health_score,
-            first_name=sanitize_input(first_name),
-            email=sanitize_input(email),
-            step=step,
-            breakdown_plot=breakdown_plot,
-            comparison_plot=comparison_plot,
-            course_title=user_data.get('CourseTitle', trans['Financial Health Course']),
-            course_url=user_data.get('CourseURL', '#'),
-            all_users_df=all_users_df,
-            FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
-            WAITLIST_FORM_URL=WAITLIST_FORM_URL,
-            CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
-            LINKEDIN_URL=LINKEDIN_URL,
-            TWITTER_URL=TWITTER_URL,
-            FACEBOOK_URL=FACEBOOK_URL,
-            language=language
-        )
+
+        # Prepare template data
+        template_data = {
+            'trans': trans,
+            'user_data': user_data,
+            'badges': badges,
+            'rank': rank,
+            'total_users': total_users,
+            'health_score': health_score,
+            'first_name': sanitize_input(first_name),
+            'email': sanitize_input(email),
+            'step': step,
+            'breakdown_plot': breakdown_plot,
+            'comparison_plot': comparison_plot,
+            'course_title': user_data.get('CourseTitle', trans['Financial Health Course']),
+            'course_url': user_data.get('CourseURL', '#'),
+            'all_users_df': all_users_df,
+            'FEEDBACK_FORM_URL': FEEDBACK_FORM_URL,
+            'WAITLIST_FORM_URL': WAITLIST_FORM_URL,
+            'CONSULTANCY_FORM_URL': CONSULTANCY_FORM_URL,
+            'LINKEDIN_URL': LINKEDIN_URL,
+            'TWITTER_URL': TWITTER_URL,
+            'FACEBOOK_URL': FACEBOOK_URL,
+            'language': language
+        }
+
+        return render_template('health_dashboard.html', **template_data)
+
     except Exception as e:
         logger.error(f"Error rendering health dashboard: {e}")
         flash(trans['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('health_score'))
-
+        
 @app.route('/quiz_step1', methods=['GET', 'POST'])
 def quiz_step1():
     language = session.get('language', 'en')
