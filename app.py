@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, flash, redirect, url_for, ses
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, BooleanField, SubmitField, RadioField
 from wtforms.validators import DataRequired, Email, Optional, ValidationError, NumberRange
-from flask_sessions import SessionInterface, SecureCookieSession
-from flask_session import Session
+from flask_session import Session, SessionInterface
+from itsdangerous import URLSafeTimedSerializer
 from flask_caching import Cache
 from flask_mail import Mail, Message
 import os
@@ -73,9 +73,40 @@ app.config['SESSION_COOKIE_NAME'] = 'session_id'
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
+# Create and verify SESSION_FILE_DIR
+try:
+    os.makedirs(SESSION_FILE_DIR, exist_ok=True)
+    # Set directory permissions to 700 (read/write/execute for owner only)
+    os.chmod(SESSION_FILE_DIR, stat.S_IRWXU)
+    # Verify writability
+    test_file = os.path.join(SESSION_FILE_DIR, 'test_write')
+    with open(test_file, 'w') as f:
+        f.write('test')
+    os.remove(test_file)
+    logger.info(f"SESSION_FILE_DIR {SESSION_FILE_DIR} created and is writable")
+except PermissionError:
+    logger.critical(f"Permission denied: Cannot write to {SESSION_FILE_DIR}")
+    raise RuntimeError(f"Cannot write to {SESSION_FILE_DIR}")
+except Exception as e:
+    logger.critical(f"Failed to create or verify {SESSION_FILE_DIR}: {e}")
+    raise RuntimeError(f"Failed to create or verify {SESSION_FILE_DIR}")
+
 # Session backup directory
 SESSION_BACKUP_DIR = os.path.join(app.root_path, 'session_backup')
-os.makedirs(SESSION_BACKUP_DIR, exist_ok=True)
+try:
+    os.makedirs(SESSION_BACKUP_DIR, exist_ok=True)
+    os.chmod(SESSION_BACKUP_DIR, stat.S_IRWXU)
+    test_file = os.path.join(SESSION_BACKUP_DIR, 'test_write')
+    with open(test_file, 'w') as f:
+        f.write('test')
+    os.remove(test_file)
+    logger.info(f"SESSION_BACKUP_DIR {SESSION_BACKUP_DIR} created and is writable")
+except PermissionError:
+    logger.critical(f"Permission denied: Cannot write to {SESSION_BACKUP_DIR}")
+    raise RuntimeError(f"Cannot write to {SESSION_BACKUP_DIR}")
+except Exception as e:
+    logger.critical(f"Failed to create or verify {SESSION_BACKUP_DIR}: {e}")
+    raise RuntimeError(f"Failed to create or verify {SESSION_BACKUP_DIR}")
 
 # Custom session interface for compression
 class CompressedSession(SessionInterface):
@@ -83,17 +114,18 @@ class CompressedSession(SessionInterface):
         session_data = request.cookies.get(self.get_cookie_name(app))
         if not session_data:
             logger.info("No session cookie found, creating new session")
-            return SecureCookieSession()
+            return {}
         try:
+            serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
             compressed_data = bytes.fromhex(session_data)
             decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
-            session = SecureCookieSession(json.loads(decompressed_data))
+            session = serializer.loads(decompressed_data)
             if ('budget_data' not in session and 'health_data' not in session and 'quiz_results' not in session) and session.get('email'):
                 session = self.restore_from_backup(session.get('email'), session)
             return session
         except Exception as e:
             logger.error(f"Error decompressing session data: {e}")
-            return SecureCookieSession()
+            return {}
 
     def save_session(self, app, session, response):
         if not session.modified:
@@ -105,12 +137,14 @@ class CompressedSession(SessionInterface):
                 response.delete_cookie(self.get_cookie_name(app), domain=domain, path=path)
             return
         try:
+            serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
             session_data = json.dumps(dict(session)).encode('utf-8')
             compressed_data = zlib.compress(session_data)
             encoded_data = compressed_data.hex()
+            signed_data = serializer.dumps(encoded_data)
             response.set_cookie(
                 self.get_cookie_name(app),
-                encoded_data,
+                signed_data,
                 max_age=app.permanent_session_lifetime,
                 secure=app.config['SESSION_COOKIE_SECURE'],
                 httponly=True,
@@ -157,7 +191,7 @@ class CompressedSession(SessionInterface):
 
     def get_cookie_path(self, app):
         return app.config.get('SESSION_COOKIE_PATH', '/')
-
+        
 app.session_interface = CompressedSession()
 
 # Configure caching
