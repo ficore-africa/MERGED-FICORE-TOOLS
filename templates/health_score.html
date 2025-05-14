@@ -70,14 +70,6 @@
             box-shadow: 0 0 8px rgba(46, 125, 50, 0.3);
             outline: none;
         }
-        .form-control[type="number"]::-webkit-inner-spin-button,
-        .form-control[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .form-control[type="number"] {
-            -moz-appearance: textfield;
-        }
         .btn-primary {
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             border: none;
@@ -120,7 +112,7 @@
             transition: max-height 0.3s ease;
         }
         .guide-section.open {
-            max-height: 500px;
+            max-height: none;
         }
         .guide-section ul {
             list-style-type: disc;
@@ -135,6 +127,9 @@
             cursor: pointer;
             margin-bottom: 1rem;
             width: fit-content;
+        }
+        .guide-toggle:active {
+            background: rgba(2, 136, 209, 0.1);
         }
         .book-icon {
             width: 40px;
@@ -309,6 +304,58 @@
             }
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Number input formatting
+            document.querySelectorAll('.number-input').forEach(input => {
+                // Format with commas on blur
+                input.addEventListener('blur', function (e) {
+                    let value = e.target.value.replace(/[^0-9.]/g, ''); // Remove all but digits and dot
+                    if (value === '') value = '0';
+                    const formatted = parseFloat(value).toLocaleString('en-US', {
+                        maximumFractionDigits: 0
+                    });
+                    e.target.value = formatted;
+                });
+
+                // Remove commas as user types
+                input.addEventListener('input', function (e) {
+                    e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+                });
+            });
+
+            // Strip commas before form submission
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function () {
+                    form.querySelectorAll('.number-input').forEach(input => {
+                        input.value = input.value.replace(/,/g, '');
+                    });
+                });
+            });
+
+            // Guide toggle functionality
+            const guideToggle = document.querySelector('.guide-toggle');
+            const guideSection = document.querySelector('.guide-section');
+            if (guideToggle && guideSection) {
+                guideToggle.addEventListener('click', function () {
+                    guideSection.classList.toggle('open');
+                    this.querySelector('.book-icon').classList.toggle('open');
+                    this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'false' ? 'true' : 'false');
+                    guideSection.style.maxHeight = guideSection.classList.contains('open') ? `${guideSection.scrollHeight}px` : '0';
+                });
+                // Allow keyboard activation
+                guideToggle.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        guideSection.classList.toggle('open');
+                        this.querySelector('.book-icon').classList.toggle('open');
+                        this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'false' ? 'true' : 'false');
+                        guideSection.style.maxHeight = guideSection.classList.contains('open') ? `${guideSection.scrollHeight}px` : '0';
+                    }
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -339,7 +386,7 @@
             <div class="col-md-10">
                 <div class="form-card">
                     <!-- Guide Toggle -->
-                    <div class="guide-toggle" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.book-icon').classList.toggle('open')">
+                    <div class="guide-toggle" role="button" tabindex="0" aria-expanded="false">
                         <div class="book-icon"></div>
                         <span class="book-label">{{ trans.get('New to finances? Click here to get guided tips on how to fill this form.', 'New to finances? Click here to get guided tips on how to fill this form.') }}</span>
                     </div>
@@ -441,7 +488,7 @@
                                     <span class="tooltip-text">{{ trans.get('Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.', 'Total money you receive regularly, like salary, business sales, gifts, grants, incentives, or side hustles.') }}</span>
                                 </span>
                             </div>
-                            {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="text", required=True, value=session.get('health_data', {}).get('income_revenue', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('income_revenue') else '') }}
+                            {{ form.income_revenue(class="form-control number-input", placeholder=trans.get('e.g. 150,000', 'e.g. 150,000'), type="text", required=True, value=session.get('health_data', {}).get('income_revenue', '')) }}
                             {% for error in form.income_revenue.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -455,7 +502,7 @@
                                     <span class="tooltip-text">{{ trans.get('All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.', 'All the money you spend, such as on rent, food, transport, electricity bill, gas and utilities, fine and penalties, levies, taxes, etc.') }}</span>
                                 </span>
                             </div>
-                            {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="text", required=True, value=session.get('health_data', {}).get('expenses_costs', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('expenses_costs') else '') }}
+                            {{ form.expenses_costs(class="form-control number-input", placeholder=trans.get('e.g. 60,000', 'e.g. 60,000'), type="text", required=True, value=session.get('health_data', {}).get('expenses_costs', '')) }}
                             {% for error in form.expenses_costs.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -469,7 +516,7 @@
                                     <span class="tooltip-text">{{ trans.get('Money you owe, like loans, IOUs, borrowings, or funds lent to you.', 'Money you owe, like loans, IOUs, borrowings, or funds lent to you.') }}</span>
                                 </span>
                             </div>
-                            {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="text", required=True, value=session.get('health_data', {}).get('debt_loan', '')|string|format_currency('NGN')|replace('₦', '') if session.get('health_data', {}).get('debt_loan') else '') }}
+                            {{ form.debt_loan(class="form-control number-input", placeholder=trans.get('e.g. 25,000', 'e.g. 25,000'), type="text", required=True, value=session.get('health_data', {}).get('debt_loan', '')) }}
                             {% for error in form.debt_loan.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -483,7 +530,7 @@
                                     <span class="tooltip-text">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                 </span>
                             </div>
-                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_data', {}).get('debt_interest_rate', '')|string if session.get('health_data', {}).get('debt_interest_rate') else '') }}
+                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_data', {}).get('debt_interest_rate', '')) }}
                             {% for error in form.debt_interest_rate.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
@@ -515,48 +562,5 @@
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const numberInputs = document.querySelectorAll('.number-input');
-            numberInputs.forEach(input => {
-                // Format initial value
-                const initialValue = input.value.replace(/,/g, '');
-                if (initialValue !== '') {
-                    const numValue = parseFloat(initialValue) || 0;
-                    input.value = numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-
-                // Handle input
-                input.addEventListener('input', function (e) {
-                    let value = e.target.value.replace(/[^0-9.]/g, '');
-                    const parts = value.split('.');
-                    if (parts.length > 2) {
-                        value = parts[0] + '.' + parts.slice(1).join('');
-                    }
-                    const numValue = parseFloat(value) || 0;
-                    if (numValue > 10000000000) {
-                        value = '10000000000';
-                    }
-                    e.target.value = value ? parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
-                });
-
-                // Handle form submission
-                input.addEventListener('change', function () {
-                    const value = parseFloat(this.value.replace(/,/g, '')) || 0;
-                    this.value = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                });
-            });
-
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    numberInputs.forEach(input => {
-                        const value = input.value.replace(/,/g, '');
-                        input.value = value;
-                    });
-                });
-            }
-        });
-    </script>
 </body>
 </html>
