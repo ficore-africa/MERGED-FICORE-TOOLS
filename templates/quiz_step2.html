@@ -1,87 +1,114 @@
 <!DOCTYPE html>
-<html lang="{{ language }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</title>
+    <title>Financial Personality Quiz</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-check {
+            margin-bottom: 0.75rem;
+        }
+        .form-check label {
+            margin-left: 0.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #0e8a3d, #0284c7);
+            border: none;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .card {
+            border-radius: 10px;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <header class="text-center mb-4">
-            <img src="{{ url_for('static', filename='ficore_logo.png') }}" alt="{{ trans.get('Ficore Africa Logo', 'Ficore Africa Logo') }}" class="d-block mx-auto mb-3" width="150" height="auto">
-            <h1>{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</h1>
-            <p class="lead">{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
-        </header>
+<body>
+    <header class="container">
+        <div class="logo-container">
+            <img src="/static/img/logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
+        </div>
+        <h1 class="text-center">{{ trans.get('Financial Personality Quiz', 'Financial Personality Quiz') }}</h1>
+        <p class="text-center">{{ trans.get('Discover Your Financial Personality', 'Discover Your Financial Personality') }}</p>
+    </header>
 
-        <section class="card p-4 mx-auto" style="max-width: 600px;">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="alert-container">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="progress mb-4">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
 
-            <form method="POST" class="needs-validation" novalidate>
-                {{ form.hidden_tag() }}
-                {% for i in range(5, 8) %}
-                    {% if i - 5 < len(questions) %}
-                        {% set question = questions[i - 5] %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
                         <div class="mb-4">
-                            <h5>{{ trans.get('Question', 'Question') }} {{ i }} {{ trans.get('of', 'of') }} {{ QUIZ_QUESTIONS|length }}</h5>
-                            <p>{{ trans.get(question.text, question.text) }}</p>
-                            {% for choice in question.options %}
-                                <div class="form-check">
-                                    {{ form['question_' + i|string](value=choice, class="form-check-input") }}
-                                    <label class="form-check-label">
-                                        {{ trans.get(choice, choice) }}
-                                        {% if question.text == 'Do you save regularly?' and choice in ['Yes', 'No'] %}
-                                            ({{ trans.get('Yes, I save consistently', 'Yes, I save consistently') if choice == 'Yes' else trans.get('No, I don’t save often', 'No, I don’t save often') }})
-                                        {% endif %}
-                                    </label>
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
                                 </div>
                             {% endfor %}
-                            {% if form['question_' + i|string].errors %}
-                                <div class="text-danger">
-                                    {% for error in form['question_' + i|string].errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            {% if i < 7 %}
-                                <hr>
-                            {% endif %}
                         </div>
                     {% endif %}
-                {% endfor %}
-                <div class="d-flex justify-content-between">
-                    {{ form.back(class="btn btn-secondary") }}
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </form>
-        </section>
+                {% endwith %}
 
-        <footer class="text-center mt-4">
-            <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
-            <div class="mt-3">
-                <a href="{{ LINKEDIN_URL }}" class="text-decoration-none me-2">LinkedIn</a>
-                <a href="{{ TWITTER_URL }}" class="text-decoration-none me-2">Twitter</a>
-                <a href="{{ FACEBOOK_URL }}" class="text-decoration-none">Facebook</a>
-            </div>
-            <div class="mt-2">
-                <a href="mailto:support@ficoreafrica.com">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
-                <a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
-                <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
-            </div>
-        </footer>
-    </div>
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    {% for i in range(5, 8) %}
+                        {% if i - 5 < questions|length %}
+                            {% set question = questions[i - 5] %}
+                            <div class="card mb-4 shadow-sm p-3">
+                                <h5 class="card-title">{{ trans.get('Question', 'Question') }} {{ i }} {{ trans.get('of', 'of') }} {{ QUIZ_QUESTIONS|length }}</h5>
+                                <p class="card-text">{{ trans.get(question.text, question.text) }}</p>
+                                {% for choice in question.options %}
+                                    <div class="form-check">
+                                        {{ form['question_' + i|string](value=choice, class="form-check-input") }}
+                                        <label class="form-check-label">
+                                            {{ trans.get(choice, choice) }}
+                                            {% if question.text == 'Do you save regularly?' and choice in ['Yes', 'No'] %}
+                                                ({{ trans.get('Yes, I save consistently', 'Yes, I save consistently') if choice == 'Yes' else trans.get('No, I don’t save often', 'No, I don’t save often') }})
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                {% if form['question_' + i|string].errors %}
+                                    <div class="error text-danger">
+                                        {% for error in form['question_' + i|string].errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" name="back" class="btn btn-secondary w-100 mt-3 me-2">{{ trans.get('Back', 'Back') }}</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">{{ trans.get('Next', 'Next') }}</button>
+                    </div>
+                </form>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                {% if debug_mode %}
+                    <p class="text-danger mt-3">Debug Info: Step 2 Loaded</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="container text-center mt-5">
+        <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
+        <div class="mb-2">
+            <a href="#" class="me-2">LinkedIn</a>
+            <a href="#" class="me-2">Twitter</a>
+            <a href="#">Facebook</a>
+        </div>
+        <div>
+            <a href="#">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
+            <a href="#">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+            <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
+        </div>
+    </footer>
 </body>
 </html>
