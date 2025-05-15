@@ -1,85 +1,36 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-</script>
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .question-item {
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .question-item p {
+        margin-bottom: 10px;
+    }
+    .form-check-label {
+        font-size: 1rem;
+        color: #666;
+    }
+    .quiz-answer-item {
+        margin-bottom: 8px;
+    }
+    .answer-box {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 4px rgba(0,0,0,0.05);
+    }
+    .answer {
+        color: #198754;
+        font-weight: 500;
+    }
+</style>
+
 <div class="container mt-5">
     <div class="text-center mb-4">
         <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" style="max-width: 200px; height: auto;">
@@ -92,12 +43,12 @@
     </p>
 
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-8 offset-md-2">
             <div class="card shadow" style="border-radius: 15px; border: none;">
-                <div class="card-body p-4">
+                <div class="card-body p-4" style="padding: 1.5rem 2rem;">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
-                            <div class="alert-container mb-4">
+                            <div class="alert-container mb-2">
                                 {% for category, message in messages %}
                                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                                         {{ message }}
@@ -108,9 +59,10 @@
                         {% endif %}
                     {% endwith %}
 
-                    <h3 style="color: #0288D1; font-weight: bold;">{{ trans[results.personality] }}</h3>
+                    <h3 style="color: #0c4b33; font-weight: 600; font-size: 1.25rem;">{{ trans[results.personality] }}</h3>
                     <p style="color: #666;">{{ results.personality_desc }}</p>
                     <p style="color: #666;"><strong>{{ trans['Tip'] }}:</strong> {{ results.tip }}</p>
+                    <p style="font-size: 0.875rem; color: #6c757d;">{{ trans['Take this tip to heart for better financial habits!'] }}</p>
 
                     {% if results.badges %}
                         <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Badges Earned'] }}</h5>
@@ -122,24 +74,23 @@
                     {% endif %}
 
                     {% if results.summary_chart %}
-                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Answer Summary'] }}</h5>
-                        <div class="mb-4">
+                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Your Answers Summary'] }}</h5>
+                        <div class="mb-4" style="margin-top: 1rem;">
                             {{ results.summary_chart | safe }}
                         </div>
                     {% endif %}
 
                     <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Your Answers'] }}</h5>
-                    <ul class="list-group mb-4">
-                        {% for question, answer in results.answers.items() %}
-                            <li class="list-group-item" style="border: none; color: #666;">
-                                <strong>{{ question }}</strong>: {{ answer }}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    {% for question, answer in results.answers.items() %}
+                        <div class="answer-box">
+                            <strong>{{ question }}</strong><br>
+                            <span class="answer">{{ answer }}</span>
+                        </div>
+                    {% endfor %}
 
                     <div class="d-flex justify-content-center">
-                        <a href="{{ url_for('index') }}" class="btn btn-primary" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
-                            {{ trans['Back to Home'] }}
+                        <a href="{{ url_for('index') }}" class="btn btn-success btn-lg" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
+                            {{ trans['Explore More Tools'] }}
                         </a>
                     </div>
 
@@ -153,6 +104,7 @@
 </div>
 
 <footer class="mt-5 text-center" style="color: #666; padding: 20px;">
+    <hr class="my-4">
     <p>
         {{ trans['About Ficore Africa'] }}: 
         {{ trans['Empowering financial growth across Africa since 2023'] }}
