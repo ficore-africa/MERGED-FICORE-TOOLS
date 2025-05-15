@@ -666,9 +666,9 @@ class QuizForm(FlaskForm):
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
 
-        # Dynamically add question fields with translated labels and options
-        for i, q in enumerate(self.questions, 1):
-            field_name = f'question_{i}'
+        # Dynamically add question fields with translated labels and options using question IDs
+        for q in self.questions:
+            field_name = q['id']  # Use the question ID (e.g., 'question_5')
             translated_text = self.trans.get(q['text'], q['text'])
             translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
             field = RadioField(
@@ -1453,6 +1453,7 @@ def quiz_step1():
         language=language,
         progress=progress
     )
+
 @app.route('/quiz_step2', methods=['GET', 'POST'])
 def quiz_step2():
     if not QUIZ_QUESTIONS:
@@ -1464,7 +1465,7 @@ def quiz_step2():
     
     preprocessed_questions = [
         {
-            'id': f'question_{i+5}',  # Adjust indices for step 2 (questions 5-7)
+            'id': f'question_{i+5}',  # Questions 5-7
             'text': trans.get(q['text'], q['text']),
             'type': q['type'],
             'options': [trans.get(opt, opt) for opt in q['options']],
@@ -1500,7 +1501,7 @@ def quiz_step2():
         for q in preprocessed_questions:
             if q['id'] in session['quiz_data']:
                 try:
-                    getattr(form, q['id']).data = session['quiz_data'][q['id']]
+                    form[q['id']].data = session['quiz_data'][q['id']]  # Use form[q['id']] instead of getattr
                 except AttributeError:
                     logger.warning(f"Field {q['id']} not found in form for pre-population")
 
@@ -1521,6 +1522,7 @@ def quiz_step2():
         language=language,
         progress=progress
     )
+    
 @app.route('/quiz_step3', methods=['GET', 'POST'])
 def quiz_step3():
     if 'quiz_data' not in session or not QUIZ_QUESTIONS:
