@@ -2,124 +2,283 @@
 
 {% block content %}
 <style>
-    .question-item {
-        border: 1px solid #e0e0e0;
-        padding: 15px;
-        border-radius: 8px;
+    /* General Styles */
+    body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        background-color: #F5F5F5;
+        color: #212121;
+    }
+    .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    /* Header */
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .header img {
+        max-width: 200px;
+        height: auto;
         margin-bottom: 20px;
     }
-    .question-item p {
-        margin-bottom: 10px;
+    .header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        background: linear-gradient(90deg, #0288D1, #2E7D32);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 10px;
     }
-    .form-check-label {
-        font-size: 1rem;
-        color: #666;
+    .header p {
+        font-size: 16px;
+        color: #666666;
+        margin: 0;
     }
-    .quiz-answer-item {
-        margin-bottom: 8px;
+
+    /* Card */
+    .card {
+        background-color: #FFFFFF;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: none;
+        padding: 30px;
+        margin-bottom: 40px;
+    }
+
+    /* Alerts */
+    .alert-container .alert {
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    .alert-success {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+        border-color: #C8E6C9;
+    }
+    .alert .btn-close {
+        padding: 10px;
+    }
+
+    /* Content Sections */
+    .card h3 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
+    }
+    .card p {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #212121;
+        margin: 0 0 15px;
+    }
+    .card p strong {
+        color: #01579B;
+    }
+    .card .tip {
+        font-size: 14px;
+        color: #666666;
+        margin: 0 0 20px;
+    }
+
+    /* Badges */
+    .badges h5 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
+    }
+    .badges .list-group-item {
+        border: none;
+        font-size: 14px;
+        color: #212121;
+        padding: 8px 0;
+        background: transparent;
+    }
+
+    /* Chart */
+    .chart-section h5 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
+    }
+    .chart-section .chart-container {
+        margin-bottom: 20px;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Answers */
+    .answers h5 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
     }
     .answer-box {
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        background: #f8f9fa;
-        border-radius: 0.5rem;
-        box-shadow: 0 0 4px rgba(0,0,0,0.05);
+        background: #F8F9FA;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-    .answer {
-        color: #198754;
+    .answer-box strong {
+        font-size: 14px;
+        color: #01579B;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .answer-box .answer {
+        font-size: 14px;
+        color: #2E7D32;
         font-weight: 500;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(90deg, #0288D1, #2E7D32);
+        border: none;
+        color: #FFFFFF;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 12px 24px;
+        border-radius: 8px;
+        transition: opacity 0.2s ease;
+    }
+    .btn-primary:hover {
+        opacity: 0.9;
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+    .btn-primary:focus {
+        box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.3);
+        outline: none;
+    }
+
+    /* Footer */
+    footer {
+        text-align: center;
+        padding: 30px 0;
+        color: #666666;
+        font-size: 14px;
+    }
+    footer hr {
+        border-color: #E0E0E0;
+        margin: 20px 0;
+    }
+    footer a {
+        color: #01579B;
+        text-decoration: none;
+        font-weight: bold;
+        margin: 0 10px;
+    }
+    footer a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 576px) {
+        .container {
+            padding: 0 15px;
+        }
+        .card {
+            padding: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .btn-primary {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" style="max-width: 200px; height: auto;">
+<div class="container">
+    <div class="header">
+        <img src="{{ base_url }}/static/img/ficore_logo.png" alt="Ficore Africa Logo">
+        <h1>{{ trans['Your Financial Personality'] }}</h1>
+        <p>{{ trans['Here’s how you manage your finances'] }}</p>
     </div>
-    <h1 class="text-center" style="color: #01579B; font-weight: bold; background: linear-gradient(90deg, #0288D1, #2E7D32); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        {{ trans['Your Financial Personality'] }}
-    </h1>
-    <p class="text-center" style="color: #666;">
-        {{ trans['Here’s how you manage your finances'] }}
-    </p>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8 offset-md-2">
-            <div class="card shadow" style="border-radius: 15px; border: none;">
-                <div class="card-body p-4" style="padding: 1.5rem 2rem;">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            <div class="alert-container mb-2">
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                {% endfor %}
+    <div class="card">
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                        {% endif %}
-                    {% endwith %}
-
-                    <h3 style="color: #0c4b33; font-weight: 600; font-size: 1.25rem;">{{ trans[results.personality] }}</h3>
-                    <p style="color: #666;">{{ results.personality_desc }}</p>
-                    <p style="color: #666;"><strong>{{ trans['Tip'] }}:</strong> {{ results.tip }}</p>
-                    <p style="font-size: 0.875rem; color: #6c757d;">{{ trans['Take this tip to heart for better financial habits!'] }}</p>
-
-                    {% if results.badges %}
-                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Badges Earned'] }}</h5>
-                        <ul class="list-group mb-4">
-                            {% for badge in results.badges %}
-                                <li class="list-group-item" style="border: none; color: #666;">{{ badge }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-
-                    {% if results.summary_chart %}
-                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Your Answers Summary'] }}</h5>
-                        <div class="mb-4" style="margin-top: 1rem;">
-                            {{ results.summary_chart | safe }}
-                        </div>
-                    {% endif %}
-
-                    <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Your Answers'] }}</h5>
-                    {% for question, answer in results.answers.items() %}
-                        <div class="answer-box">
-                            <strong>{{ question }}</strong><br>
-                            <span class="answer">{{ answer }}</span>
-                        </div>
-                    {% endfor %}
-
-                    <div class="d-flex justify-content-center">
-                        <a href="{{ url_for('index') }}" class="btn btn-success btn-lg" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
-                            {{ trans['Explore More Tools'] }}
-                        </a>
+                        {% endfor %}
                     </div>
+                {% endif %}
+            {% endwith %}
 
-                    {% if debug_mode %}
-                        <p class="text-muted mt-3">Debug Info: Results Loaded</p>
-                    {% endif %}
+            <h3>{{ trans[results.personality] }}</h3>
+            <p>{{ results.personality_desc }}</p>
+            <p><strong>{{ trans['Tip'] }}:</strong> {{ results.tip }}</p>
+            <p class="tip">{{ trans['Take this tip to heart for better financial habits!'] }}</p>
+
+            {% if results.badges %}
+                <div class="badges">
+                    <h5>{{ trans['Badges Earned'] }}</h5>
+                    <ul class="list-group">
+                        {% for badge in results.badges %}
+                            <li class="list-group-item">{{ badge }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
+            {% endif %}
+
+            {% if results.summary_chart %}
+                <div class="chart-section">
+                    <h5>{{ trans['Your Answers Summary'] }}</h5>
+                    <div class="chart-container">
+                        {{ results.summary_chart | safe }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="answers">
+                <h5>{{ trans['Your Answers'] }}</h5>
+                {% for question, answer in results.answers.items() %}
+                    <div class="answer-box">
+                        <strong>{{ question }}</strong>
+                        <span class="answer">{{ answer }}</span>
+                    </div>
+                {% endfor %}
             </div>
+
+            <div class="d-flex justify-content-center">
+                <a href="{{ base_url }}/index" class="btn btn-primary">{{ trans['Explore More Tools'] }}</a>
+            </div>
+
+            {% if debug_mode %}
+                <p class="text-muted mt-3">Debug Info: Results Loaded</p>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<footer class="mt-5 text-center" style="color: #666; padding: 20px;">
-    <hr class="my-4">
+<footer>
+    <hr>
+    <p>{{ trans['About Ficore Africa'] }}: {{ trans['Empowering financial growth across Africa since 2023'] }}</p>
     <p>
-        {{ trans['About Ficore Africa'] }}: 
-        {{ trans['Empowering financial growth across Africa since 2023'] }}
+        <a href="{{ LINKEDIN_URL }}">LinkedIn</a> |
+        <a href="{{ TWITTER_URL }}">Twitter</a> |
+        <a href="{{ FACEBOOK_URL }}">Facebook</a>
     </p>
     <p>
-        <a href="{{ LINKEDIN_URL }}" style="color: #0288D1; text-decoration: none;">LinkedIn</a> |
-        <a href="{{ TWITTER_URL }}" style="color: #0288D1; text-decoration: none;">Twitter</a> |
-        <a href="{{ FACEBOOK_URL }}" style="color: #0288D1; text-decoration: none;">Facebook</a>
-    </p>
-    <p>
-        <a href="/cdn-cgi/l/email-protection#0e7d7b7e7e617c7a4e68676d617c6b6f687c676d6f206d6163" style="color: #0288D1; text-decoration: none;">
-            {{ trans['Click to Email for support'] }}
-        </a> |
-        <a href="{{ FEEDBACK_FORM_URL }}" style="color: #0288D1; text-decoration: none;">{{ trans['Provide Feedback'] }}</a> |
-        <a href="{{ url_for('logout') }}" style="color: #0288D1; text-decoration: none;">{{ trans['Logout'] }}</a>
+        <a href="/cdn-cgi/l/email-protection#0e7d7b7e7e617c7a4e68676d617c6b6f687c676d6f206d6163">{{ trans['Click to Email for support'] }}</a> |
+        <a href="{{ FEEDBACK_FORM_URL }}">{{ trans['Provide Feedback'] }}</a> |
+        <a href="{{ base_url }}/logout">{{ trans['Logout'] }}</a>
     </p>
 </footer>
 {% endblock %}
