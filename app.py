@@ -37,9 +37,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
-app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 app.config['DEBUG'] = False  # Set to True during development
+app.config['SERVER_NAME'] = 'ficore-africa.onrender.com'
+app.config['APPLICATION_ROOT'] = '/'
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 mail = Mail(app)
 if not app.config['SECRET_KEY']:
     logger.critical("FLASK_SECRET_KEY not set.")
@@ -78,9 +80,9 @@ app.config['SESSION_PERMANENT'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_COOKIE_NAME'] = 'session_id'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
+app.config['SESSION_COOKIE_SECURE'] = True  # Align with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF via third-party sites
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Create and verify SESSION_FILE_DIR
@@ -840,6 +842,12 @@ def send_budget_email_async(to_email, user_name, user_data, language):
     with app.app_context():
         send_budget_email(to_email, user_name, user_data, language)
 
+@app.before_request
+def setup_csrf():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = os.urandom(16).hex()
+    app.config['WTF_CSRF_SECRET_KEY'] = app.config['SECRET_KEY']
+
 # Routes
 @app.route('/change_language', methods=['POST'])
 def change_language():
@@ -1414,37 +1422,31 @@ def quiz_step1():
         for i, q in enumerate(QUIZ_QUESTIONS[:4])
     ]
 
-    form = QuizForm(questions=preprocessed_questions, language=language, formdata=request.form if request.method == 'POST' else None)
-    logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
-    logger.debug(f"Preprocessed questions: {preprocessed_questions}")
+form = QuizForm(questions=preprocessed_questions, language=language)
+logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
+logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
-    if request.method == 'POST':
-        logger.debug(f"POST data: {request.form}")
-        if form.validate_on_submit():
-            session['quiz_data'] = session.get('quiz_data', {})
-            try:
-                session['quiz_data'].update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
-                })
-                session['language'] = form.language.data
-                session.modified = True
-                logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
-                return redirect(url_for('quiz_step2'))
-            except KeyError as e:
-                logger.error(f"KeyError in quiz_step1 form processing: {e}")
-                flash(trans['Form processing error. Please try again.'], 'error')
-        else:
-            logger.error(f"Form validation failed: {form.errors}")
-            flash(trans['Please correct the errors below'], 'error')
+# Pre-populate form with session data if available
+if 'quiz_data' in session:
+    for q in preprocessed_questions:
+        if q['id'] in session['quiz_data']:
+            form._fields[q['id']].data = session['quiz_data'][q['id']]
 
-    if 'quiz_data' in session:
-        for q in preprocessed_questions:
-            if q['id'] in session['quiz_data']:
-                try:
-                    getattr(form, q['id']).data = session['quiz_data'][q['id']]
-                except AttributeError:
-                    logger.warning(f"Field {q['id']} not found in form")
-
+if request.method == 'POST':
+    logger.debug(f"POST data: {request.form}")
+    if form.validate_on_submit():
+        session['quiz_data'] = session.get('quiz_data', {})
+        session['quiz_data'].update({
+            q['id']: form._fields[q['id']].data for q in preprocessed_questions
+        })
+        session['language'] = form.language.data
+        session.modified = True
+        logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
+        return redirect(url_for('quiz_step2'))
+    else:
+        logger.error(f"Form validation failed: {form.errors}")
+        flash(trans['Please correct the errors below'], 'error')
+        
     progress = (4 / len(QUIZ_QUESTIONS)) * 100
     logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
