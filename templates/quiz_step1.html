@@ -53,6 +53,7 @@
                     </div>
 
                     <form method="POST" class="mt-3">
+                        {{ form.csrf_token }}
                         {{ form.hidden_tag() }}
 
                         {% for question in questions %}
@@ -60,7 +61,7 @@
                                 <h5 style="color: #0288D1; font-weight: bold;">
                                     {{ trans['Question'] }} {{ loop.index }} {{ trans['of'] }} {{ total_questions }}
                                 </h5>
-                                <p style="color: #666;">{{ question.text }}</p>
+                                <p style="color: #666;">{{ question.text }}</ :)
                                 {% for choice in question.options %}
                                     <div class="form-check mb-2 quiz-answer-item">
                                         <input type="radio"
