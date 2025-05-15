@@ -676,7 +676,6 @@ class QuizForm(FlaskForm):
         for q in self.questions:
             field_name = q['id']
             translated_text = self.trans.get(q['text'], q['text'])
-            # Ensure choices match the submitted values exactly
             translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
             field = RadioField(
                 translated_text,
@@ -686,7 +685,6 @@ class QuizForm(FlaskForm):
             )
             setattr(self, field_name, field)
             self._fields[field_name] = field  # Ensure field is in _fields
-            field.process(formdata)  # Explicitly process formdata
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
         # Update labels with translations
@@ -696,7 +694,7 @@ class QuizForm(FlaskForm):
         self.auto_email.label.text = self.trans.get('Receive Email Report', 'Receive Email Report')
         self.submit.label.text = self.trans.get('Next', 'Next')
         self.back.label.text = self.trans.get('Previous', 'Previous')
-
+        
     def validate(self, extra_validators=None):
         logger.debug(f"Validating QuizForm with fields: {list(self._fields.keys())}")
         rv = super().validate(extra_validators)
