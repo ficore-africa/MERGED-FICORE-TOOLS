@@ -1,127 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Personality Quiz Results</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .form-check {
-            margin-bottom: 0.75rem;
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
         }
-        .form-check label {
-            margin-left: 0.5rem;
-        }
-        .btn-primary {
-            background: linear-gradient(to right, #0e8a3d, #0284c7);
-            border: none;
-            font-weight: bold;
-            border-radius: 5px;
-        }
-        .logo-container {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .card {
-            border-radius: 10px;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        footer a {
-            margin: 0 0.5rem;
-            text-decoration: none;
-            color: #007bff;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <header class="container">
-        <div class="logo-container">
-            <img src="/static/img/ficore_logo.png" alt="Ficore Africa Logo" class="img-fluid" style="max-width: 200px;">
-        </div>
-        <h1 class="text-center">{{ trans.get('Financial Personality Quiz Results', 'Financial Personality Quiz Results') }}</h1>
-        <p class="text-center">{{ trans.get('Your Financial Personality', 'Your Financial Personality') }}</p>
-    </header>
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
 
-    <main class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="mb-4">
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
 
-                <div class="card mb-4 shadow-sm p-3">
-                    <h5 class="card-title">{{ trans.get('Your Results', 'Your Results') }}</h5>
-                    <p class="card-text">
-                        {% if results.first_name %}
-                            {{ trans.get('Hello', 'Hello') }} {{ results.first_name }},
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" style="max-width: 200px; height: auto;">
+    </div>
+    <h1 class="text-center" style="color: #01579B; font-weight: bold; background: linear-gradient(90deg, #0288D1, #2E7D32); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        {{ trans['Your Financial Personality'] }}
+    </h1>
+    <p class="text-center" style="color: #666;">
+        {{ trans['Here’s how you manage your finances'] }}
+    </p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow" style="border-radius: 15px; border: none;">
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="alert-container mb-4">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         {% endif %}
-                        {{ trans.get('Your financial personality is', 'Your financial personality is') }} <strong>{{ results.personality }}</strong>.
-                    </p>
-                    <p class="card-text">{{ results.personality_desc }}</p>
-                    <h6>{{ trans.get('Financial Tip', 'Financial Tip') }}</h6>
-                    <p class="card-text">{{ results.tip }}</p>
+                    {% endwith %}
+
+                    <h3 style="color: #0288D1; font-weight: bold;">{{ results.personality }}</h3>
+                    <p style="color: #666;">{{ results.personality_desc }}</p>
+                    <p style="color: #666;"><strong>{{ trans['Tip'] }}:</strong> {{ results.tip }}</p>
+
                     {% if results.badges %}
-                        <h6>{{ trans.get('Badges Earned', 'Badges Earned') }}</h6>
-                        <ul>
+                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Badges Earned'] }}</h5>
+                        <ul class="list-group mb-4">
                             {% for badge in results.badges %}
-                                <li>{{ badge }}</li>
+                                <li class="list-group-item" style="border: none; color: #666;">{{ badge }}</li>
                             {% endfor %}
                         </ul>
                     {% endif %}
-                </div>
 
-                <div class="card mb-4 shadow-sm p-3">
-                    <h5 class="card-title">{{ trans.get('Your Answers', 'Your Answers') }}</h5>
-                    <ul class="list-group list-group-flush">
+                    {% if results.summary_chart %}
+                        <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Answer Summary'] }}</h5>
+                        <div class="mb-4">
+                            {{ results.summary_chart | safe }}
+                        </div>
+                    {% endif %}
+
+                    <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Your Answers'] }}</h5>
+                    <ul class="list-group mb-4">
                         {% for question, answer in results.answers.items() %}
-                            <li class="list-group-item">
-                                <strong>{{ question }}</strong>: {{ answer }}
+                            <li class="list-group-item" style="border: none; color: #666;">
+                                <strong>{{ trans[question] }}</strong>: {{ trans[answer] }}
                             </li>
                         {% endfor %}
                     </ul>
-                </div>
 
-                {% if results.summary_chart %}
-                    <div class="card mb-4 shadow-sm p-3">
-                        <h5 class="card-title">{{ trans.get('Summary Chart', 'Summary Chart') }}</h5>
-                        <img src="{{ results.summary_chart }}" alt="Summary Chart" class="img-fluid">
+                    <div class="d-flex justify-content-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
+                            {{ trans['Back to Home'] }}
+                        </a>
                     </div>
-                {% endif %}
 
-                <a href="{{ url_for('quiz_step1') }}" class="btn btn-primary w-100 mt-3">{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a>
-
-                {% if debug_mode %}
-                    <p class="text-danger mt-3">Debug Info: Results Loaded</p>
-                {% endif %}
+                    {% if debug_mode %}
+                        <p class="text-muted mt-3">Debug Info: Results Loaded</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </main>
+    </div>
+</div>
 
-    <footer class="container text-center mt-5">
-        <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
-        <div class="mb-2">
-            <a href="{{ LINKEDIN_URL }}">LinkedIn</a>
-            <a href="{{ TWITTER_URL }}">Twitter</a>
-            <a href="{{ FACEBOOK_URL }}">Facebook</a>
-        </div>
-        <div>
-            <a href="{{ CONSULTANCY_FORM_URL }}">{{ trans.get('Click to Email for support', 'Click to Email for support') }}</a> |
-            <a href="{{ FEEDBACK_FORM_URL }}">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
-            <a href="#">{{ trans.get('Logout', 'Logout') }}</a>
-        </div>
-    </footer>
-</body>
-</html>
+<footer class="mt-5 text-center" style="color: #666; padding: 20px;">
+    <p>
+        {{ trans['About Ficore Africa'] }}: 
+        {{ trans['Empowering financial growth across Africa since 2023'] }}
+    </p>
+    <p>
+        <a href="{{ LINKEDIN_URL }}" style="color: #0288D1; text-decoration: none;">LinkedIn</a> |
+        <a href="{{ TWITTER_URL }}" style="color: #0288D1; text-decoration: none;">Twitter</a> |
+        <a href="{{ FACEBOOK_URL }}" style="color: #0288D1; text-decoration: none;">Facebook</a>
+    </p>
+    <p>
+        <a href="mailto:support@ficoreafrica.com" style="color: #0288D1; text-decoration: none;">
+            {{ trans['Click to Email for support'] }}
+        </a> |
+        <a href="{{ FEEDBACK_FORM_URL }}" style="color: #0288D1; text-decoration: none;">{{ trans['Provide Feedback'] }}</a> |
+        <a href="{{ url_for('logout') }}" style="color: #0288D1; text-decoration: none;">{{ trans['Logout'] }}</a>
+    </p>
+</footer>
+{% endblock %}
