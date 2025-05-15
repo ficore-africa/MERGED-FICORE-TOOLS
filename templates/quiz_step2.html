@@ -53,6 +53,7 @@
                     </div>
 
                     <form method="POST" class="mt-3">
+                        {{ form.csrf_token }}
                         {{ form.hidden_tag() }}
 
                         {% for question in questions %}
