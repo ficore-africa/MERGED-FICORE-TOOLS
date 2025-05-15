@@ -758,6 +758,10 @@ def generate_quiz_summary_chart(answers, language='en'):
         labels = list(answer_counts.keys())
         values = list(answer_counts.values())
         trans = get_translations(language)
+        
+        # Calculate max value for Y-axis, default to 1 if no values
+        max_value = max(values) if values else 1
+        
         fig = px.bar(
             x=labels,
             y=values,
@@ -766,15 +770,21 @@ def generate_quiz_summary_chart(answers, language='en'):
         )
         fig.update_layout(
             margin=dict(l=20, r=20, t=30, b=20),
-            height=300,
+            height=400,  # Match the chart-section height in the template
             paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor='rgba(0,0,0,0)',
+            yaxis=dict(range=[0, max_value + 1]),  # Fix Y-axis to start at 0
+            font=dict(color='#666'),
+            title_font=dict(color='#01579B', size=18),
+            xaxis_title_font=dict(color='#666', size=14),
+            yaxis_title_font=dict(color='#666', size=14),
+            bargap=0.2
         )
+        fig.update_traces(marker_color='#0288D1', marker_line_color='#01579B', marker_line_width=1)
         return fig.to_html(full_html=False, include_plotlyjs=False)
     except Exception as e:
         logger.error(f"Error generating quiz summary chart: {e}")
         return None
-
 def send_quiz_email(to_email, user_name, personality, personality_desc, tip, language):
     try:
         trans = get_translations(language)
