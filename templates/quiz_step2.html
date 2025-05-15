@@ -37,7 +37,47 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script>{% extends "base.html" %}
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+{% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-5">
@@ -80,8 +120,8 @@
                                 <h5 style="color: #0288D1; font-weight: bold;">
                                     {{ trans['Question'] }} {{ loop.index + 4 }} {{ trans['of'] }} {{ total_questions }}
                                 </h5>
-                                <p style="color: #666;">{{ trans[question.text] }}</p>
-                                {% for choice in question.choices %}
+                                <p style="color: #666;">{{ question.text }}</p>
+                                {% for choice in question.options %}
                                     <div class="form-check mb-2">
                                         <input type="radio"
                                                name="{{ question.id }}"
@@ -91,7 +131,7 @@
                                                {{ 'checked' if form[question.id].data == choice }}
                                                required>
                                         <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}" style="color: #666;">
-                                            {{ trans[choice] }}
+                                            {{ choice }}
                                         </label>
                                     </div>
                                 {% endfor %}
@@ -135,7 +175,7 @@
         <a href="{{ FACEBOOK_URL }}" style="color: #0288D1; text-decoration: none;">Facebook</a>
     </p>
     <p>
-        <a href="mailto:support@ficoreafrica.com" style="color: #0288D1; text-decoration: none;">
+        <a href="/cdn-cgi/l/email-protection#81f2f4f1f1eef3f5c1e7e8e2eef3e4e0e7f3e8e2e0afe2eeec" style="color: #0288D1; text-decoration: none;">
             {{ trans['Click to Email for support'] }}
         </a> |
         <a href="{{ FEEDBACK_FORM_URL }}" style="color: #0288D1; text-decoration: none;">{{ trans['Provide Feedback'] }}</a> |
