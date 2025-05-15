@@ -663,32 +663,50 @@ class QuizForm(FlaskForm):
         self.trans = get_translations(language)
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
-        if self.questions:
-            for i, q in enumerate(self.questions, 1):
-                field_name = f'question_{i}'
+        
+        # Dynamically add question fields with translated labels and options
+        for i, q in enumerate(self.questions, 1):
+            field_name = f'question_{i}'
+            if field_name not in self._fields:
+                # Translate question text and options
+                translated_text = self.trans.get(q['text'], q['text'])
+                translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
                 field = RadioField(
-                    q['text'],
+                    translated_text,
                     validators=[DataRequired() if q.get('required', True) else Optional()],
-                    choices=[(opt, opt) for opt in q['options']],
+                    choices=translated_options,
                     id=field_name
                 )
                 setattr(self.__class__, field_name, field)
-                logger.debug(f"Added field {field_name} with choices {q['options']}")
-                if field_name in kwargs.get('formdata', {}):
-                    getattr(self, field_name).data = kwargs['formdata'][field_name]
+                self._fields[field_name] = field
+                logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
+            else:
+                logger.warning(f"Field {field_name} already exists in form fields")
+
+        # Update labels with translations
+        self.first_name.label.text = self.trans.get('First Name', 'First Name')
+        self.email.label.text = self.trans.get('Email', 'Email')
+        self.language.label.text = self.trans.get('Language', 'Language')
+        self.auto_email.label.text = self.trans.get('Receive Email Report', 'Receive Email Report')
+        self.submit.label.text = self.trans.get('Next', 'Next')
+        self.back.label.text = self.trans.get('Previous', 'Previous')
     
     def validate(self, extra_validators=None):
         logger.debug(f"Validating QuizForm with fields: {list(self._fields.keys())}")
-        return super().validate(extra_validators)
-
+        rv = super().validate(extra_validators)
+        if not rv:
+            logger.error(f"Validation failed with errors: {self.errors}")
+        return rv
+        
 # Personality, Badges, Chart, and Email Functions
 def assign_personality(answers, language='en'):
     trans = get_translations(language)
     score = 0
     for q, a in answers:
         weight = q.get('weight', 1)
-        positive = q.get('positive_answers', ['Yes', 'Always'])
-        negative = q.get('negative_answers', ['No', 'Never'])
+        # Translate positive and negative answers based on the current language
+        positive = [trans.get(opt, opt) for opt in q.get('positive_answers', ['yes'])]
+        negative = [trans.get(opt, opt) for opt in q.get('negative_answers', ['no'])]
         if a in positive:
             score += weight
         elif a in negative:
@@ -703,7 +721,7 @@ def assign_personality(answers, language='en'):
         return 'Spender', trans.get('Spender', 'You enjoy spending.'), trans.get('Spender Tip', 'Track your expenses.')
     else:
         return 'Avoider', trans.get('Avoider', 'You avoid financial planning.'), trans.get('Avoider Tip', 'Start with a simple plan.')
-
+        
 def assign_badges_quiz(user_df, all_users_df):
     badges = []
     if user_df.empty:
@@ -1379,9 +1397,9 @@ def quiz_step1():
     preprocessed_questions = [
         {
             'id': f'question_{i+1}',
-            'text': q['text'],
+            'text': trans.get(q['text'], q['text']),
             'type': q['type'],
-            'options': q['options'],
+            'options': [trans.get(opt, opt) for opt in q['options']],
             'required': q.get('required', True)
         }
         for i, q in enumerate(QUIZ_QUESTIONS[:4])
@@ -1389,6 +1407,7 @@ def quiz_step1():
 
     form = QuizForm(questions=preprocessed_questions, language=language)
     logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
+    logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
     if request.method == 'POST':
         logger.debug(f"POST data: {request.form}")
@@ -1396,7 +1415,7 @@ def quiz_step1():
             session['quiz_data'] = session.get('quiz_data', {})
             try:
                 session['quiz_data'].update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form
+                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
                 })
                 session['language'] = form.language.data
                 session.modified = True
@@ -1431,8 +1450,7 @@ def quiz_step1():
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
         language=language,
-        progress=progress,
-        debug_mode=app.config['DEBUG']
+        progress=progress
     )
 
 @app.route('/quiz_step2', methods=['GET', 'POST'])
@@ -1447,9 +1465,9 @@ def quiz_step2():
     preprocessed_questions = [
         {
             'id': f'question_{i+1}',
-            'text': q['text'],
+            'text': trans.get(q['text'], q['text']),
             'type': q['type'],
-            'options': q['options'],
+            'options': [trans.get(opt, opt) for opt in q['options']],
             'required': q.get('required', True)
         }
         for i, q in enumerate(QUIZ_QUESTIONS[4:7])
@@ -1467,7 +1485,7 @@ def quiz_step2():
                 return redirect(url_for('quiz_step1'))
             try:
                 session['quiz_data'].update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form
+                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
                 })
                 session['language'] = form.language.data
                 session.modified = True
@@ -1502,8 +1520,7 @@ def quiz_step2():
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
         language=language,
-        progress=progress,
-        debug_mode=app.config['DEBUG']
+        progress=progress
     )
 
 @app.route('/quiz_step3', methods=['GET', 'POST'])
@@ -1518,9 +1535,9 @@ def quiz_step3():
     preprocessed_questions = [
         {
             'id': f'question_{i+1}',
-            'text': q['text'],
+            'text': trans.get(q['text'], q['text']),
             'type': q['type'],
-            'options': q['options'],
+            'options': [trans.get(opt, opt) for opt in q['options']],
             'required': q.get('required', True)
         }
         for i, q in enumerate(QUIZ_QUESTIONS[7:10])
@@ -1540,7 +1557,7 @@ def quiz_step3():
                 
                 quiz_data = session['quiz_data']
                 quiz_data.update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form
+                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
                 })
                 quiz_data.update({
                     'first_name': sanitize_input(form.first_name.data) if form.first_name.data else '',
@@ -1553,6 +1570,7 @@ def quiz_step3():
                 session.modified = True
                 logger.info(f"Quiz step 3 validated successfully")
 
+                # Use original QUIZ_QUESTIONS for answers to ensure correct indexing
                 answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in quiz_data.items() if k.startswith('question_')]
                 personality, personality_desc, tip = assign_personality(answers, language)
                 user_df = pd.DataFrame([{
@@ -1561,7 +1579,7 @@ def quiz_step3():
                     'email': quiz_data.get('email', ''),
                     'language': quiz_data.get('language', 'en'),
                     'personality': personality,
-                    **{f'question_{i}': QUIZ_QUESTIONS[i-1].get('text', '') for i in range(1, 11)},
+                    **{f'question_{i}': trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)},
                     **{f'answer_{i}': quiz_data.get(f'question_{i}', '') for i in range(1, 11)}
                 }])
                 all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
@@ -1572,7 +1590,7 @@ def quiz_step3():
                     quiz_data.get('first_name', ''),
                     quiz_data.get('email', ''),
                     quiz_data.get('language', 'en'),
-                    *[QUIZ_QUESTIONS[i-1].get('text', '') for i in range(1, 11)],
+                    *[trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)],
                     *[quiz_data.get(f'question_{i}', '') for i in range(1, 11)],
                     personality,
                     ','.join(badges),
@@ -1589,7 +1607,7 @@ def quiz_step3():
                     'personality_desc': personality_desc,
                     'tip': tip,
                     'badges': badges,
-                    'answers': {q['text']: a for q, a in answers},
+                    'answers': {trans.get(q['text'], q['text']): a for q, a in answers},
                     'summary_chart': generate_quiz_summary_chart(answers, language)
                 }
                 session['quiz_results'] = results
@@ -1620,10 +1638,6 @@ def quiz_step3():
                     getattr(form, q['id']).data = session['quiz_data'][q['id']]
                 except AttributeError:
                     logger.warning(f"Field {q['id']} not found in form")
-        form.first_name.data = session['quiz_data'].get('first_name', '')
-        form.email.data = session['quiz_data'].get('email', '')
-        form.language.data = session['quiz_data'].get('language', 'en')
-        form.auto_email.data = session['quiz_data'].get('auto_email', False)
 
     progress = (10 / len(QUIZ_QUESTIONS)) * 100
     return render_template(
@@ -1639,10 +1653,9 @@ def quiz_step3():
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
         language=language,
-        progress=progress,
-        debug_mode=app.config['DEBUG']
+        progress=progress
     )
-
+    
 @app.route('/quiz_results', methods=['GET'])
 def quiz_results():
     language = session.get('language', 'en')
