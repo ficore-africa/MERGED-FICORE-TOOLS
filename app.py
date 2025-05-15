@@ -37,6 +37,9 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+app.config['SERVER_NAME'] = os.getenv('SERVER_NAME', 'localhost:5000')  # Fallback for local dev
+app.config['APPLICATION_ROOT'] = os.getenv('APPLICATION_ROOT', '/')
+app.config['PREFERRED_URL_SCHEME'] = os.getenv('PREFERRED_URL_SCHEME', 'http')  # Use 'https' in production
 app.config['DEBUG'] = False  # Set to True during development
 mail = Mail(app)
 if not app.config['SECRET_KEY']:
