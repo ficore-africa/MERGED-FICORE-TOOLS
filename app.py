@@ -658,8 +658,8 @@ class QuizForm(FlaskForm):
     submit = SubmitField('Next')
     back = SubmitField('Back')
 
-    def __init__(self, questions=None, language='en', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, questions=None, language='en', formdata=None, **kwargs):
+        super().__init__(formdata=formdata, **kwargs)
         self.trans = get_translations(language)
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
@@ -667,10 +667,8 @@ class QuizForm(FlaskForm):
         # Dynamically add question fields with translated labels and options
         for i, q in enumerate(self.questions, 1):
             field_name = f'question_{i}'
-            # Translate question text and options
             translated_text = self.trans.get(q['text'], q['text'])
             translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
-            # Create a bound field instance
             field = RadioField(
                 translated_text,
                 validators=[DataRequired() if q.get('required', True) else Optional()],
@@ -679,6 +677,8 @@ class QuizForm(FlaskForm):
             )
             # Bind the field to the form instance
             bound_field = field.bind(self, field_name)
+            # Process the field with formdata to set the data attribute
+            bound_field.process(formdata, self.data.get(field_name) if self.data else None)
             self._fields[field_name] = bound_field
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
