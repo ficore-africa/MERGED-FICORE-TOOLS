@@ -674,17 +674,22 @@ class QuizForm(FlaskForm):
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
 
         for q in self.questions:
-            field_name = q['id']
+            field_name = q['id']  # e.g., question_1, question_5, question_8
             translated_text = self.trans.get(q['text'], q['text'])
             translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
-            field = RadioField(
+            # Create an unbound RadioField
+            unbound_field = RadioField(
                 translated_text,
                 validators=[DataRequired() if q.get('required', True) else Optional()],
                 choices=translated_options,
                 id=field_name
             )
+            # Bind the field to the form instance
+            field = unbound_field.bind(self, field_name)
             setattr(self, field_name, field)
             self._fields[field_name] = field  # Ensure field is in _fields
+            # Process form data with fallback for GET requests
+            field.process(formdata, self.data.get(field_name) if self.data else None)
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
         # Update labels with translations
