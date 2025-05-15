@@ -247,8 +247,8 @@ def get_translations(language='en'):
             'Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!': 'Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!',
             'Want to learn more? Check this course:': 'Want to learn more? Check this course:',
             'Please provide feedback on your experience:': 'Please provide feedback on your experience:',
-            'Want Smart Insights? Join the waitlist for Ficore Premium': 'Want Smart Insights? Join the waitlist for Ficore Premium:',
-            'Need personalized advice? Book Consultancy': 'Need personalized advice? Book Consultancy:',
+            'Want Smart Insights? Join the waitlist for Ficore Premium': 'Want Smart Insights? Join the waitlist for Ficore Premium',
+            'Need personalized advice? Book Consultancy': 'Need personalized advice? Book Consultancy',
             'Best regards,': 'Best regards,',
             'The Ficore Africa Team': 'The Ficore Africa Team',
             'Follow us on LinkedIn and Twitter for updates': 'Follow us on LinkedIn and Twitter for updates',
@@ -440,7 +440,7 @@ def get_translations(language='en'):
             'Income': 'Kuɗin Shiga',
             'Monthly Income': 'Kuɗin Shiga na Wata',
             'e.g. ₦150,000': 'misali ₦150,000',
-            'Your monthly pay or income.': 'Albashinka na wata ko ku� \%$,000',
+            'Your monthly pay or income.': 'Albashinka na wata ko kuɗin shiga.',
             'Valid amount!': 'Adadin da ya dace!',
             'Invalid Number': 'Lamba Ba daidai ba',
             'Back': 'Koma',
@@ -746,6 +746,5 @@ def get_translations(language='en'):
             'Your Information': 'Bayanan Ku',
             'Take Quiz Again': 'Sake Ɗaukar Tambayar',
         }
- Regulations.gov
     }
     return translations.get(language, translations['en'])
