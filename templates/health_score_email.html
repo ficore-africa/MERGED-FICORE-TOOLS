@@ -1,82 +1,100 @@
-<!DOCTYPE html>
-<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}</title>
-    <style>
-        body { font-family: 'Poppins', Arial, sans-serif; background: #F5F7FA; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #2E7D32, #0288D1); padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
-        .header h2 { color: #FFFFFF; margin: 0; font-size: 24px; }
-        .header p { font-style: italic; color: #E0F7FA; font-size: 14px; margin: 5px 0 0 0; }
-        .content { padding: 20px; }
-        .summary-box { border: 2px solid #2E7D32; background: #E8F5E9; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .section-header { color: #2E7D32; font-weight: 600; font-size: 18px; margin-bottom: 15px; }
-        .button { display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #2E7D32, #0288D1); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 10px 0; }
-        .button:hover { background: linear-gradient(135deg, #1B5E20, #01579B); color: #FFFFFF; }
-        .footer { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 0 0 12px 12px; }
-        .footer p { color: #0288D1; font-size: 14px; margin: 0; }
-        .footer-links a { color: #2E7D32; margin: 0 10px; font-size: 14px; text-decoration: none; }
-        .footer-links a:hover { text-decoration: underline; }
-        ul { list-style: none; padding: 0; }
-        li { margin-bottom: 10px; font-size: 16px; }
-        li strong { color: #0288D1; }
-        @media only screen and (max-width: 600px) {
-            body { padding: 10px; }
-            .container { max-width: 100%; }
-            .content { padding: 15px; }
-            .summary-box { padding: 15px; }
-            .button { padding: 10px 20px; font-size: 14px; }
-        }
-    </style>
+    <title>{{ trans.get('Ficore Africa Financial Health Score', 'Ficore Africa Financial Health Score') }}</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h2>{{ trans.get('Ficore Africa Financial Health Score', 'Ficore Africa Financial Health Score') }}</h2>
-            <p>{{ trans.get('Financial growth passport for Africa', 'Financial growth passport for Africa') }}</p>
-        </div>
-        <div class="content">
-            <p>{{ trans.get('Dear', 'Dear') }} {{ user_name }},</p>
-            <p>{{ trans.get('We have calculated your Ficore Africa Financial Health Score based on your recent submission.', 'We have calculated your Ficore Africa Financial Health Score based on your recent submission.') }}</p>
-            <div class="summary-box" role="region" aria-labelledby="summary-header">
-                <h3 id="summary-header" class="section-header">{{ trans.get('Your Financial Health Summary', 'Your Financial Health Summary') }}</h3>
-                <ul>
-                    <li><strong>{{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}:</strong> {{ health_score }}/100</li>
-                    <li><strong>{{ trans.get('Advice', 'Advice') }}:</strong> {{ score_description }}</li>
-                    <li><strong>{{ trans.get('Ranked', 'Ranked') }}:</strong> #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}</li>
-                </ul>
-            </div>
-            <p>{{ trans.get('Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!', 'Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!') }}</p>
-            <p style="margin-bottom: 10px;">
-                {{ trans.get('Want to learn more? Check this course:', 'Want to learn more? Check this course:') }}
-                <a href="{{ course_url }}" class="button" role="button" aria-label="{{ trans.get('Enroll Now', 'Enroll Now') }}">{{ course_title }}</a>
-            </p>
-            <p style="margin-bottom: 10px;">
-                {{ trans.get('Please provide feedback on your experience:', 'Please provide feedback on your experience:') }}
-                <a href="{{ FEEDBACK_FORM_URL }}" class="button" role="button" aria-label="{{ trans.get('Provide Feedback', 'Provide Feedback') }}">{{ trans.get('Feedback', 'Feedback') }}</a>
-            </p>
-            <p style="margin-bottom: 10px;">
-                {{ trans.get('Want Smart Insights? Join the waitlist for Ficore Premium:', 'Want Smart Insights? Join the waitlist for Ficore Premium:') }}
-                <a href="{{ WAITLIST_FORM_URL }}" class="button" role="button" aria-label="{{ trans.get('Join Waitlist', 'Join Waitlist') }}">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a>
-            </p>
-            <p style="margin-bottom: 10px;">
-                {{ trans.get('Need personalized advice? Book Consultancy:', 'Need personalized advice? Book Consultancy:') }}
-                <a href="{{ CONSULTANCY_FORM_URL }}" class="button" role="button" aria-label="{{ trans.get('Book Consultancy', 'Book Consultancy') }}">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a>
-            </p>
-            <p>{{ trans.get('Best regards,', 'Best regards,') }}</p>
-            <p>{{ trans.get('The Ficore Africa Team', 'The Ficore Africa Team') }}</p>
-        </div>
-        <div class="footer">
-            <p>{{ trans.get('Follow us on LinkedIn and Twitter for updates', 'Follow us on LinkedIn and Twitter for updates') }}</p>
-            <div class="footer-links">
-                <a href="{{ LINKEDIN_URL }}" aria-label="{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a>
-                <a href="{{ FACEBOOK_URL }}" target="_blank" aria-label="{{ trans.get('Follow on Facebook', 'Follow on Facebook') }}"><i class="fab fa-facebook"></i></a>
-                <a href="{{ TWITTER_URL }}" aria-label="{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a>
-            </div>
-        </div>
-    </div>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eaf0dd2e40c430',t:'MTc0NzA2MzY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #F5F5F5; color: #212121;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 20px auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+        <tr>
+            <td style="background: linear-gradient(to right, #0288D1, #2E7D32); padding: 20px; text-align: center;">
+                <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: bold;">{{ trans.get('Ficore Africa Financial Health Score', 'Ficore Africa Financial Health Score') }}</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 30px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px; color: #212121;">{{ trans.get('Dear', 'Dear') }} {{ user_name }},</p>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px; color: #212121;">{{ trans.get('We have calculated your Ficore Africa Financial Health Score based on your recent submission.', 'We have calculated your Ficore Africa Financial Health Score based on your recent submission.') }}</p>
+
+                            <h2 style="font-size: 18px; color: #01579B; margin: 0 0 15px; font-weight: bold;">{{ trans.get('Your Financial Health Summary', 'Your Financial Health Summary') }}</h2>
+                            <ul style="font-size: 14px; line-height: 1.5; margin: 0 0 20px; padding-left: 20px; color: #212121;">
+                                <li>{{ trans.get('Your Financial Health Score', 'Your Financial Health Score') }}: {{ health_score }}/100</li>
+                                <li>{{ trans.get('Advice', 'Advice') }}: {{ score_description }}</li>
+                                <li>{{ trans.get('Ranked', 'Ranked') }}: #{{ rank }} {{ trans.get('out of', 'out of') }} {{ total_users }} {{ trans.get('users', 'users') }}</li>
+                            </ul>
+
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px; color: #212121;">{{ trans.get('Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!', 'Follow the advice above to improve your financial health. We are here to support you every step of the way—take one small action today to grow stronger financially for your business, your goals, and your future!') }}</p>
+
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('Want to learn more? Check this course:', 'Want to learn more? Check this course:') }} <a href="{{ course_url }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ course_title }}</a></p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('Please provide feedback on your experience:', 'Please provide feedback on your experience:') }} <a href="{{ FEEDBACK_FORM_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Feedback', 'Feedback') }}</a></p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('Want Smart Insights? Join the waitlist for Ficore Premium:', 'Want Smart Insights? Join the waitlist for Ficore Premium:') }} <a href="{{ WAITLIST_FORM_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Join Waitlist', 'Join Waitlist') }}</a></p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 20px; color: #212121;">{{ trans.get('Need personalized advice? Book Consultancy:', 'Need personalized advice? Book Consultancy:') }} <a href="{{ CONSULTANCY_FORM_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Book Consultancy', 'Book Consultancy') }}</a></p>
+
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('Best regards,', 'Best regards,') }}</p>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0; color: #212121;">{{ trans.get('The Ficore Africa Team', 'The Ficore Africa Team') }}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; background-color: #FAFAFA; border-top: 1px solid #E0E0E0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('Follow us on LinkedIn and Twitter for updates', 'Follow us on LinkedIn and Twitter for updates') }}</p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0;">
+                                <a href="{{ LINKEDIN_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Connect on LinkedIn', 'Connect on LinkedIn') }}</a> |
+                                <a href="{{ TWITTER_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Follow on Twitter', 'Follow on Twitter') }}</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

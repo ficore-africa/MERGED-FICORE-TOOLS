@@ -38,34 +38,55 @@
         return gk_fileData[filename] || "";
         }
         </script><!DOCTYPE html>
-<html lang="{{ language if language in ['en', 'ha'] else 'en' }}">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ trans.get('Your Quiz Report', 'Your Quiz Report') }}</title>
 </head>
-<body style="font-family: 'Poppins', Arial, sans-serif; background: #F0F2F5; margin: 0; padding: 20px; color: #333;">
-    <div style="max-width: 600px; margin: auto; background: #f6fafe; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
-        <img src="{{ url_for('static', filename='img/ficore_logo.png', _external=True) }}" alt="Ficore Africa Logo" style="max-width: 200px; display: block; margin: 0 auto 1rem;">
-        <h1 style="color: #1C3D5A; text-align: center; font-weight: 600;">{{ trans.get('Your Quiz Report', 'Your Quiz Report') }}</h1>
-        <p style="line-height: 1.6;"><i class="fas fa-user me-2"></i>{{ trans.get('Hello', 'Hello') }}, {{ user_name }}!</p>
-        <p style="line-height: 1.6;"><i class="fas fa-star me-2"></i>{{ trans.get('Your financial personality is', 'Your financial personality is') }}: <strong style="color: #F4C430;">{{ personality }}</strong></p>
-        <p style="line-height: 1.6;">{{ personality_desc }}</p>
-        <p style="line-height: 1.6;"><strong><i class="fas fa-lightbulb me-2"></i>{{ trans.get('Tip', 'Tip') }}:</strong> {{ tip }}</p>
-        <p style="line-height: 1.6; text-align: center;"><a href="{{ url_for('quiz_step1', _external=True) }}" style="display: inline-block; padding: 10px 20px; background: linear-gradient(to right, #28A745, #007BFF); color: #FFFFFF; text-decoration: none; border-radius: 5px; font-weight: 600;"><i class="fas fa-redo me-1"></i>{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a></p>
-        <div style="border-bottom: 1px solid #e0e0e0; margin: 1.5rem 0;"></div>
-        <div style="text-align: center; font-size: 0.9em; color: #333;">
-            <p>{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
-            <div style="margin: 10px 0;">
-                <a href="{{ LINKEDIN_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-linkedin"></i></a>
-                <a href="{{ TWITTER_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-twitter"></i></a>
-                <a href="{{ FACEBOOK_URL }}" target="_blank" style="color: #1C3D5A; margin: 0 10px; font-size: 1.2em; text-decoration: none;"><i class="fab fa-facebook"></i></a>
-            </div>
-            <p>
-                <a href="{{ FEEDBACK_FORM_URL }}" target="_blank" style="color: #1C3D5A; text-decoration: none;">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
-                <a href="{{ CONSULTANCY_FORM_URL }}" target="_blank" style="color: #1C3D5A; text-decoration: none;">{{ trans.get('Book a Consultation', 'Book a Consultation') }}</a>
-            </p>
-        </div>
-    </div>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #F5F5F5; color: #212121;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 20px auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+        <tr>
+            <td style="background: linear-gradient(to right, #0288D1, #2E7D32); padding: 20px; text-align: center;">
+                <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: bold;">{{ trans.get('Your Quiz Report', 'Your Quiz Report') }}</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 30px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px; color: #212121;">{{ trans.get('Hello', 'Hello') }}, {{ user_name }}!</p>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px; color: #212121;">{{ trans.get('Your financial personality is', 'Your financial personality is') }}: <strong style="color: #01579B;">{{ personality }}</strong></p>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 15px; color: #212121;">{{ personality_desc }}</p>
+                            <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px; color: #212121;">{{ trans.get('Tip', 'Tip') }}: {{ tip }}</p>
+                            <p style="margin: 0 0 20px;">
+                                <a href="{{ base_url }}/quiz_step1" style="display: inline-block; padding: 12px 24px; background: linear-gradient(to right, #0288D1, #2E7D32); color: #FFFFFF; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">{{ trans.get('Take Quiz Again', 'Take Quiz Again') }}</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; background-color: #FAFAFA; border-top: 1px solid #E0E0E0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0 0 10px; color: #212121;">{{ trans.get('About Ficore Africa', 'About Ficore Africa') }}: {{ trans.get('Empowering financial growth across Africa since 2023', 'Empowering financial growth across Africa since 2023') }}</p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 0;">
+                                <a href="{{ FEEDBACK_FORM_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Provide Feedback', 'Provide Feedback') }}</a> |
+                                <a href="{{ CONSULTANCY_FORM_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">{{ trans.get('Book a Consultation', 'Book a Consultation') }}</a>
+                            </p>
+                            <p style="font-size: 14px; line-height: 1.5; margin: 10px 0 0;">
+                                <a href="{{ LINKEDIN_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">LinkedIn</a> |
+                                <a href="{{ TWITTER_URL }}" style="color: #01579B; text-decoration: none; font-weight: bold;">Twitter</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
