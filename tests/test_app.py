@@ -3,6 +3,35 @@ from unittest.mock import patch
 from app import app, calculate_health_score
 import pandas as pd
 
+def test_quiz_navigation(client):
+    # Test Step 1
+    response = client.get('/quiz_step1')
+    assert response.status_code == 200
+    assert b'Question 1 of 10' in response.data
+
+    # Test Step 1 to Step 2
+    response = client.post('/quiz_step1', data={
+        'question_1': 'No',
+        'question_2': 'Yes',
+        'question_3': 'No',
+        'question_4': 'Yes',
+        'language': 'en',
+        'submit': 'Next'
+    }, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Question 5 of 10' in response.data
+
+    # Test Step 2 Previous to Step 1
+    response = client.post('/quiz_step2', data={
+        'question_5': 'Yes',
+        'question_6': 'No',
+        'question_7': 'Yes',
+        'language': 'en',
+        'back': 'Back'
+    }, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Question 1 of 10' in response.data
+    
 class TestFicoreApp(unittest.TestCase):
     def setUp(self):
         app.testing = True
@@ -63,3 +92,4 @@ class TestFicoreApp(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
