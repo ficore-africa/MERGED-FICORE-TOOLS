@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .question-item {
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .question-item p {
+        margin-bottom: 10px;
+    }
+    .form-check-label {
+        font-size: 1rem;
+        color: #666;
+    }
+    .quiz-answer-item {
+        margin-bottom: 8px;
+    }
+</style>
+
 <div class="container mt-5">
     <div class="text-center mb-4">
         <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" style="max-width: 200px; height: auto;">
@@ -13,7 +32,7 @@
     </p>
 
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-8 offset-md-2">
             <div class="card shadow" style="border-radius: 15px; border: none;">
                 <div class="card-body p-4">
                     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -37,13 +56,13 @@
                         {{ form.hidden_tag() }}
 
                         {% for question in questions %}
-                            <div class="mb-4">
+                            <div class="mb-4 question-item">
                                 <h5 style="color: #0288D1; font-weight: bold;">
                                     {{ trans['Question'] }} {{ loop.index + 7 }} {{ trans['of'] }} {{ total_questions }}
                                 </h5>
                                 <p style="color: #666;">{{ question.text }}</p>
                                 {% for choice in question.options %}
-                                    <div class="form-check mb-2">
+                                    <div class="form-check mb-2 quiz-answer-item">
                                         <input type="radio"
                                                name="{{ question.id }}"
                                                value="{{ choice }}"
@@ -51,7 +70,7 @@
                                                id="{{ question.id }}_{{ loop.index }}"
                                                {% if form[question.id] is defined and form[question.id].data == choice %}checked{% endif %}
                                                required>
-                                        <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}" style="color: #666;">
+                                        <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">
                                             {{ choice }}
                                         </label>
                                     </div>
