@@ -2,39 +2,152 @@
 
 {% block content %}
 <style>
+    /* General Styles */
+    .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    /* Header */
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .header img {
+        max-width: 200px;
+        height: auto;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        background: linear-gradient(90deg, #0288D1, #2E7D32);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 10px;
+    }
+    .header p {
+        font-size: 16px;
+        color: #666;
+        margin: 0;
+    }
+
+    /* Card */
+    .card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background-color: #FFFFFF;
+    }
+    .card-body {
+        padding: 30px;
+    }
+
+    /* Progress Bar */
+    .progress {
+        height: 24px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        background: linear-gradient(90deg, #0288D1, #2E7D32);
+    }
+
+    /* Questions */
     .question-item {
         border: 1px solid #e0e0e0;
-        padding: 15px;
+        padding: 20px;
         border-radius: 8px;
         margin-bottom: 20px;
     }
-    .question-item p {
+    .question-item h5 {
         margin-bottom: 10px;
+    }
+    .question-item p {
+        margin-bottom: 15px;
     }
     .form-check-label {
         font-size: 1rem;
         color: #666;
     }
     .quiz-answer-item {
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+    }
+
+    /* Form Buttons */
+    .form-buttons {
+        display: flex;
+        justify-content: end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #0288D1, #2E7D32);
+        border: none;
+        font-weight: bold;
+        padding: 10px 20px;
+    }
+
+    /* Footer */
+    footer {
+        text-align: center;
+        padding: 30px 0;
+        color: #666;
+        font-size: 14px;
+        margin-top: 40px;
+    }
+    footer a {
+        color: #0288D1;
+        text-decoration: none;
+        margin: 0 10px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 576px) {
+        .container {
+            padding: 0 15px;
+            margin: 20px auto;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .question-item {
+            padding: 15px;
+        }
+        .quiz-answer-item {
+            margin-bottom: 10px;
+        }
+        .form-buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-primary {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <img src="{{ url_for('static', filename='img/ficore_logo.png') }}" alt="Ficore Africa Logo" style="max-width: 200px; height: auto;">
+<div class="container">
+    <div class="header">
+        <img src="{{ base_url }}/static/img/ficore_logo.png" alt="Ficore Africa Logo">
+        <h1>{{ trans['Financial Personality Quiz'] }}</h1>
+        <p>{{ trans['Discover Your Financial Personality'] }}</p>
     </div>
-    <h1 class="text-center" style="color: #01579B; font-weight: bold; background: linear-gradient(90deg, #0288D1, #2E7D32); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        {{ trans['Financial Personality Quiz'] }}
-    </h1>
-    <p class="text-center" style="color: #666;">
-        {{ trans['Discover Your Financial Personality'] }}
-    </p>
 
     <div class="row justify-content-center">
         <div class="col-md-8 offset-md-2">
-            <div class="card shadow" style="border-radius: 15px; border: none;">
-                <div class="card-body p-4">
+            <div class="card shadow">
+                <div class="card-body">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             <div class="alert-container mb-4">
@@ -48,7 +161,7 @@
                         {% endif %}
                     {% endwith %}
 
-                    <div class="progress mb-4">
+                    <div class="progress">
                         <div class="progress-bar" role="progressbar" style="width: {{ progress }}%; background: linear-gradient(90deg, #0288D1, #2E7D32);" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ "%.0f"|format(progress) }}%</div>
                     </div>
 
@@ -57,11 +170,11 @@
                         {{ form.hidden_tag() }}
 
                         {% for question in questions %}
-                            <div class="mb-4 question-item">
+                            <div class="question-item">
                                 <h5 style="color: #0288D1; font-weight: bold;">
                                     {{ trans['Question'] }} {{ loop.index }} {{ trans['of'] }} {{ total_questions }}
                                 </h5>
-                                <p style="color: #666;">{{ question.text }}</ :)
+                                <p style="color: #666;">{{ question.text }}</p>
                                 {% for choice in question.options %}
                                     <div class="form-check mb-2 quiz-answer-item">
                                         <input type="radio"
@@ -86,8 +199,8 @@
                             </div>
                         {% endfor %}
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="submit" name="submit" class="btn btn-primary" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
+                        <div class="form-buttons">
+                            <button type="submit" name="submit" class="btn btn-primary">
                                 {{ trans['Next'] }}
                             </button>
                         </div>
@@ -102,22 +215,20 @@
     </div>
 </div>
 
-<footer class="mt-5 text-center" style="color: #666; padding: 20px;">
+<footer>
     <p>
         {{ trans['About Ficore Africa'] }}: 
         {{ trans['Empowering financial growth across Africa since 2023'] }}
     </p>
     <p>
-        <a href="{{ LINKEDIN_URL }}" style="color: #0288D1; text-decoration: none;">LinkedIn</a> |
-        <a href="{{ TWITTER_URL }}" style="color: #0288D1; text-decoration: none;">Twitter</a> |
-        <a href="{{ FACEBOOK_URL }}" style="color: #0288D1; text-decoration: none;">Facebook</a>
+        <a href="{{ LINKEDIN_URL }}">LinkedIn</a> |
+        <a href="{{ TWITTER_URL }}">Twitter</a> |
+        <a href="{{ FACEBOOK_URL }}">Facebook</a>
     </p>
     <p>
-        <a href="/cdn-cgi/l/email-protection#c8bbbdbbb4a9afa8cea8a7ada1bca9adaab4afa5a7e6aba7a5" style="color: #0288D1; text-decoration: none;">
-            {{ trans['Click to Email for support'] }}
-        </a> |
-        <a href="{{ FEEDBACK_FORM_URL }}" style="color: #0288D1; text-decoration: none;">{{ trans['Provide Feedback'] }}</a> |
-        <a href="{{ url_for('logout') }}" style="color: #0288D1; text-decoration: none;">{{ trans['Logout'] }}</a>
+        <a href="/cdn-cgi/l/email-protection#c8bbbdbbb4a9afa8cea8a7ada1bca9adaab4afa5a7e6aba7a5">{{ trans['Click to Email for support'] }}</a> |
+        <a href="{{ FEEDBACK_FORM_URL }}">{{ trans['Provide Feedback'] }}</a> |
+        <a href="{{ base_url }}/logout">{{ trans['Logout'] }}</a>
     </p>
 </footer>
 {% endblock %}
