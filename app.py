@@ -677,8 +677,6 @@ class QuizForm(FlaskForm):
             )
             # Bind the field to the form instance
             bound_field = field.bind(self, field_name)
-            # Process the field with formdata to set the data attribute
-            bound_field.process(formdata, self.data.get(field_name) if self.data else None)
             self._fields[field_name] = bound_field
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
@@ -1404,7 +1402,7 @@ def quiz_step1():
         for i, q in enumerate(QUIZ_QUESTIONS[:4])
     ]
 
-    form = QuizForm(questions=preprocessed_questions, language=language)
+    form = QuizForm(questions=preprocessed_questions, language=language, formdata=request.form if request.method == 'POST' else None)
     logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
     logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
