@@ -1,82 +1,3 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-</script>
 {% extends "base.html" %}
 
 {% block content %}
@@ -128,14 +49,14 @@
                                                value="{{ choice }}"
                                                class="form-check-input"
                                                id="{{ question.id }}_{{ loop.index }}"
-                                               {{ 'checked' if form[question.id].data == choice }}
+                                               {% if form[question.id] is defined and form[question.id].data == choice %}checked{% endif %}
                                                required>
                                         <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}" style="color: #666;">
                                             {{ choice }}
                                         </label>
                                     </div>
                                 {% endfor %}
-                                {% if form[question.id].errors %}
+                                {% if form[question.id] is defined and form[question.id].errors %}
                                     <div class="text-danger mt-2">
                                         {% for error in form[question.id].errors %}
                                             {{ error }}<br>
@@ -146,10 +67,10 @@
                         {% endfor %}
 
                         <div class="mb-4">
-                            <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Personal Information'] }}</h5>
-                            <div class="mb-3">
-                                <label for="first_name" class="form-label" style="color: #666;">{{ trans['First Name'] }} ({{ trans['Optional'] }})</label>
-                                {{ form.first_name(class="form-control", style="border-radius: 5px;") }}
+                            <h5 style="color: #0288D1; font-weight: bold;">{{ trans['Personal Information (Optional)'] }}</h5>
+                            <div class="form-group mb-3">
+                                <label for="first_name" style="color: #666;">{{ form.first_name.label }}</label>
+                                {{ form.first_name(class="form-control", placeholder=trans['Enter your first name']) }}
                                 {% if form.first_name.errors %}
                                     <div class="text-danger mt-2">
                                         {% for error in form.first_name.errors %}
@@ -158,9 +79,9 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label" style="color: #666;">{{ trans['Email'] }} ({{ trans['Optional'] }})</label>
-                                {{ form.email(class="form-control", style="border-radius: 5px;") }}
+                            <div class="form-group mb-3">
+                                <label for="email" style="color: #666;">{{ form.email.label }}</label>
+                                {{ form.email(class="form-control", placeholder=trans['Enter your email']) }}
                                 {% if form.email.errors %}
                                     <div class="text-danger mt-2">
                                         {% for error in form.email.errors %}
@@ -169,29 +90,11 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="mb-3">
-                                <label for="language" class="form-label" style="color: #666;">{{ trans['Language'] }}</label>
-                                {{ form.language(class="form-select", style="border-radius: 5px;") }}
-                                {% if form.language.errors %}
-                                    <div class="text-danger mt-2">
-                                        {% for error in form.language.errors %}
-                                            {{ error }}<br>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
                             <div class="form-check mb-3">
                                 {{ form.auto_email(class="form-check-input") }}
                                 <label class="form-check-label" for="auto_email" style="color: #666;">
-                                    {{ trans['Receive Email Report'] }}
+                                    {{ form.auto_email.label }}
                                 </label>
-                                {% if form.auto_email.errors %}
-                                    <div class="text-danger mt-2">
-                                        {% for error in form.auto_email.errors %}
-                                            {{ error }}<br>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
                             </div>
                         </div>
 
@@ -200,7 +103,7 @@
                                 {{ trans['Previous'] }}
                             </button>
                             <button type="submit" name="submit" class="btn btn-primary" style="background: linear-gradient(90deg, #0288D1, #2E7D32); border: none; font-weight: bold; padding: 10px 20px;">
-                                {{ trans['Submit Quiz'] }}
+                                {{ trans['Submit'] }}
                             </button>
                         </div>
                     </form>
@@ -225,7 +128,7 @@
         <a href="{{ FACEBOOK_URL }}" style="color: #0288D1; text-decoration: none;">Facebook</a>
     </p>
     <p>
-        <a href="/cdn-cgi/l/email-protection#5e2d2b2e2e312c2a1e38373d312c3b3f382c373d3f703d3133" style="color: #0288D1; text-decoration: none;">
+        <a href="/cdn-cgi/l/email-protection#81f2f4f1f1eef3f5c1e7e8e2eef3e4e0e7f3e8e2e0afe2eeec" style="color: #0288D1; text-decoration: none;">
             {{ trans['Click to Email for support'] }}
         </a> |
         <a href="{{ FEEDBACK_FORM_URL }}" style="color: #0288D1; text-decoration: none;">{{ trans['Provide Feedback'] }}</a> |
