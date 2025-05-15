@@ -1422,31 +1422,31 @@ def quiz_step1():
         for i, q in enumerate(QUIZ_QUESTIONS[:4])
     ]
 
-form = QuizForm(questions=preprocessed_questions, language=language)
-logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
-logger.debug(f"Preprocessed questions: {preprocessed_questions}")
+    form = QuizForm(questions=preprocessed_questions, language=language)
+    logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
+    logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
-# Pre-populate form with session data if available
-if 'quiz_data' in session:
-    for q in preprocessed_questions:
-        if q['id'] in session['quiz_data']:
-            form._fields[q['id']].data = session['quiz_data'][q['id']]
+    # Pre-populate form with session data if available
+    if 'quiz_data' in session:
+        for q in preprocessed_questions:
+            if q['id'] in session['quiz_data']:
+                form._fields[q['id']].data = session['quiz_data'][q['id']]
 
-if request.method == 'POST':
-    logger.debug(f"POST data: {request.form}")
-    if form.validate_on_submit():
-        session['quiz_data'] = session.get('quiz_data', {})
-        session['quiz_data'].update({
-            q['id']: form._fields[q['id']].data for q in preprocessed_questions
-        })
-        session['language'] = form.language.data
-        session.modified = True
-        logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
-        return redirect(url_for('quiz_step2'))
-    else:
-        logger.error(f"Form validation failed: {form.errors}")
-        flash(trans['Please correct the errors below'], 'error')
-        
+    if request.method == 'POST':
+        logger.debug(f"POST data: {request.form}")
+        if form.validate_on_submit():
+            session['quiz_data'] = session.get('quiz_data', {})
+            session['quiz_data'].update({
+                q['id']: form._fields[q['id']].data for q in preprocessed_questions
+            })
+            session['language'] = form.language.data
+            session.modified = True
+            logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
+            return redirect(url_for('quiz_step2'))
+        else:
+            logger.error(f"Form validation failed: {form.errors}")
+            flash(trans['Please correct the errors below'], 'error')
+
     progress = (4 / len(QUIZ_QUESTIONS)) * 100
     logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
@@ -1461,8 +1461,8 @@ if request.method == 'POST':
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        language=language,
-        progress=progress
+        progress=progress,
+        language=language
     )
 
 @app.route('/quiz_step2', methods=['GET', 'POST'])
