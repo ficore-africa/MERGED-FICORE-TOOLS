@@ -1,92 +1,92 @@
 [
     {
         "text": "impulse_purchases",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["no"],
-        "negative_answers": ["yes"]
+        "positive_answers": ["No"],
+        "negative_answers": ["Yes"]
     },
     {
         "text": "spend_non_essentials",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["no"],
-        "negative_answers": ["yes"]
+        "positive_answers": ["No"],
+        "negative_answers": ["Yes"]
     },
     {
         "text": "use_budgeting_tools",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "save_regularly",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "invest_money",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "track_expenses",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "emergency_fund",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "plan_expenses",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "set_financial_goals",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     },
     {
         "text": "seek_financial_advice",
-        "options": ["yes", "no"],
+        "options": ["Yes", "No"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["yes"],
-        "negative_answers": ["no"]
+        "positive_answers": ["Yes"],
+        "negative_answers": ["No"]
     }
 ]
