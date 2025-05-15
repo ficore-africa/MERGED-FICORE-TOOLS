@@ -59,7 +59,7 @@
                         {% for question in questions %}
                             <div class="mb-4 question-item">
                                 <h5 style="color: #0288D1; font-weight: bold;">
-                                    {{ trans['Question'] }} {{ loop.index + 4 }} {{ trans['of'] }} {{ total_questions }}
+                                    {{ trans['Question'] }} {{ question.id.split('_')[1] }} {{ trans['of'] }} {{ total_questions }}
                                 </h5>
                                 <p style="color: #666;">{{ question.text }}</p>
                                 {% for choice in question.options %}
