@@ -77,6 +77,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_COOKIE_NAME'] = 'session_id'
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF via third-party sites
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Create and verify SESSION_FILE_DIR
@@ -675,9 +677,8 @@ class QuizForm(FlaskForm):
                 choices=translated_options,
                 id=field_name
             )
-            # Bind the field to the form instance
+            # Bind and process the field with formdata
             bound_field = field.bind(self, field_name)
-            # Process the field with formdata to set the data attribute
             bound_field.process(formdata, self.data.get(field_name) if self.data else None)
             self._fields[field_name] = bound_field
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
@@ -1454,16 +1455,16 @@ def quiz_step1():
     )
 @app.route('/quiz_step2', methods=['GET', 'POST'])
 def quiz_step2():
-    if 'quiz_data' not in session or not QUIZ_QUESTIONS:
-        flash(get_translations(session.get('language', 'en'))['Session Expired'], 'error')
-        return redirect(url_for('quiz_step1'))
+    if not QUIZ_QUESTIONS:
+        flash(get_translations(session.get('language', 'en'))['Quiz configuration error. Please try again later.'], 'error')
+        return redirect(url_for('index'))
 
     language = session.get('language', 'en')
     trans = get_translations(language)
     
     preprocessed_questions = [
         {
-            'id': f'question_{i+1}',
+            'id': f'question_{i+5}',  # Adjust indices for step 2 (questions 5-7)
             'text': trans.get(q['text'], q['text']),
             'type': q['type'],
             'options': [trans.get(opt, opt) for opt in q['options']],
@@ -1472,23 +1473,21 @@ def quiz_step2():
         for i, q in enumerate(QUIZ_QUESTIONS[4:7])
     ]
 
-    form = QuizForm(questions=preprocessed_questions, language=language)
-    form.submit.label.text = trans['Next']
-    form.back.label.text = trans['Previous']
+    form = QuizForm(questions=preprocessed_questions, language=language, formdata=request.form if request.method == 'POST' else None)
     logger.debug(f"QuizStep2 form fields: {list(form._fields.keys())}")
+    logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
     if request.method == 'POST':
         logger.debug(f"POST data: {request.form}")
         if form.validate_on_submit():
-            if form.back.data:
-                return redirect(url_for('quiz_step1'))
+            session['quiz_data'] = session.get('quiz_data', {})
             try:
                 session['quiz_data'].update({
                     q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
                 })
                 session['language'] = form.language.data
                 session.modified = True
-                logger.info(f"Quiz step 2 validated successfully")
+                logger.info(f"Quiz step 2 validated successfully, updated session: {session['quiz_data']}")
                 return redirect(url_for('quiz_step3'))
             except KeyError as e:
                 logger.error(f"KeyError in quiz_step2 form processing: {e}")
@@ -1503,9 +1502,10 @@ def quiz_step2():
                 try:
                     getattr(form, q['id']).data = session['quiz_data'][q['id']]
                 except AttributeError:
-                    logger.warning(f"Field {q['id']} not found in form")
+                    logger.warning(f"Field {q['id']} not found in form for pre-population")
 
     progress = (7 / len(QUIZ_QUESTIONS)) * 100
+    logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
         'quiz_step2.html',
         form=form,
@@ -1521,7 +1521,6 @@ def quiz_step2():
         language=language,
         progress=progress
     )
-
 @app.route('/quiz_step3', methods=['GET', 'POST'])
 def quiz_step3():
     if 'quiz_data' not in session or not QUIZ_QUESTIONS:
