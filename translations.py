@@ -36,6 +36,9 @@ def get_translations(language='en'):
             'An unexpected error occurred on the server.': 'An unexpected error occurred on the server.',
             'Error Details': 'Error Details',
             'Return to Home': 'Return to Home',
+            'Form processing error. Please try again.': 'Form processing error. Please try again.',
+            'Please correct the errors below': 'Please correct the errors below.',
+            'Quiz configuration error. Please try again later.': 'Quiz configuration error. Please try again later.',
 
             # Budget Planner
             'Monthly Budget Planner': 'Monthly Budget Planner',
@@ -252,6 +255,7 @@ def get_translations(language='en'):
 
             # Financial Personality Quiz
             'Financial Personality Quiz': 'Financial Personality Quiz',
+            'Financial Quiz': 'Financial Quiz',
             'Discover Your Financial Personality': 'Discover Your Financial Personality',
             'Start Quiz': 'Start Quiz',
             'Question': 'Question',
@@ -269,6 +273,9 @@ def get_translations(language='en'):
             'Share on Twitter': 'Share on Twitter',
             'Learn How to Be a Planner': 'Learn How to Be a Planner',
             'Quiz Report Subject': 'Your Financial Personality Quiz Results',
+            'Receive Email Report': 'Receive Email Report',
+            'Previous': 'Previous',
+            'Progress': 'Progress',
             # Quiz Questions
             'Do you track your expenses weekly?': 'Do you track your expenses weekly?',
             'Do you avoid budgeting?': 'Do you avoid budgeting?',
@@ -280,6 +287,16 @@ def get_translations(language='en'):
             'How often do you review your finances?': 'How often do you review your finances?',
             'How often do you buy on impulse?': 'How often do you buy on impulse?',
             'How often do you join savings groups?': 'How often do you join savings groups?',
+            'impulse_purchases': 'Do you make impulse purchases?',
+            'spend_non_essentials': 'Do you spend on non-essentials?',
+            'use_budgeting_tools': 'Do you use budgeting tools?',
+            'save_regularly': 'Do you save regularly?',
+            'invest_money': 'Do you invest your money?',
+            'track_expenses': 'Do you track your expenses?',
+            'emergency_fund': 'Do you have an emergency fund?',
+            'plan_expenses': 'Do you plan your expenses?',
+            'set_financial_goals': 'Do you set financial goals?',
+            'seek_financial_advice': 'Do you seek financial advice?',
             # Tooltips
             'Tracking: Recording all money spent daily.': 'Tracking: Recording all money spent daily.',
             'Budgeting: Planning how to spend your money.': 'Budgeting: Planning how to spend your money.',
@@ -297,6 +314,8 @@ def get_translations(language='en'):
             'Never': 'Never',
             'Sometimes': 'Sometimes',
             'Always': 'Always',
+            'yes': 'Yes',
+            'no': 'No',
             # Personalities
             'Planner': 'Planner',
             'Saver': 'Saver',
@@ -315,7 +334,6 @@ def get_translations(language='en'):
             'Minimalist Tip': 'Explore saving or investing your surplus funds.',
             'Spender Tip': 'Track expenses and set spending limits.',
             'Avoider Tip': 'Start with simple budgeting and track daily expenses.',
-
             # New Translations
             'Ranking Info': 'Ranking Info',
             'Ranking based on debt, expenses, and income balance.': 'Ranking based on debt, expenses, and income balance.',
@@ -363,9 +381,12 @@ def get_translations(language='en'):
             'Back to Home': 'Koma Sahfin Farko',
             'Provide Feedback': 'Bayar da Ra’ayi',
             'Join Waitlist': 'Shiga Jerin Jira',
+            'Error processing data. Please try again.': 'An samu matsala. A sake gwadawa.',
             'Book Consultancy': 'Yin Rajistar Shawara',
             'Connect on LinkedIn': 'Haɗa a LinkedIn',
             'Follow on Twitter': 'Bi a Twitter',
+            'Avoider Tip': 'Fara da tsara kasafi mai sauƙi kuma bincika kashewar yau da kullum.',
+            'track_bills_tip': 'Bin diddigin biyan kuɗin ka cikin sauƙi',
             'Contact Us': 'Tuntube Mu a',
             'Click to Email': 'Danna Don Tura Sako',
             'for support': 'don tallafi',
@@ -381,13 +402,14 @@ def get_translations(language='en'):
             '500 Error': 'Server Error',
             'Invalid Endpoint': 'Wurin da ake nema ba ya samuwa. Da fatan za a sake gwadawa.',
             'Worksheet Not Found': 'Lambar da ake nema ba ta samu ba. An ƙirƙira ta ta atomatik.',
-            'Avoider Tip': 'Fara da tsara kasafi mai sauƙi kuma bincika kashewar yau da kullum.',
-            'track_bills_tip': 'Bin diddigin biyan kuɗin ka cikin sauƙi',
             'Page Not Found': 'Ba a Samu Shafin Ba',
             'The page you are looking for does not exist.': 'Shafin da kake nema bai wanzu ba.',
             'An unexpected error occurred on the server.': 'Kuskuren da ba a zata ba ya faru a sabar.',
             'Error Details': 'Bayanin Kuskure',
             'Return to Home': 'Koma zuwa Shafin Farko',
+            'Form processing error. Please try again.': 'Kuskuren sarrafa fom. Da fatan za a sake gwadawa.',
+            'Please correct the errors below': 'Da fatan za a gyara kurakuran da ke ƙasa.',
+            'Quiz configuration error. Please try again later.': 'Kuskuren saitin tambayoyin. Da fatan za a sake gwadawa daga baya.',
 
             # Budget Planner
             'Monthly Budget Planner': 'Shirya Kasafin Kuɗi na Wata',
@@ -418,7 +440,7 @@ def get_translations(language='en'):
             'Income': 'Kuɗin Shiga',
             'Monthly Income': 'Kuɗin Shiga na Wata',
             'e.g. ₦150,000': 'misali ₦150,000',
-            'Your monthly pay or income.': 'Albashinka na wata ko kuɗin shiga.',
+            'Your monthly pay or income.': 'Albashinka na wata ko ku� \%$,000',
             'Valid amount!': 'Adadin da ya dace!',
             'Invalid Number': 'Lamba Ba daidai ba',
             'Back': 'Koma',
@@ -604,6 +626,7 @@ def get_translations(language='en'):
 
             # Financial Personality Quiz
             'Financial Personality Quiz': 'Tambayar Halin Kuɗi',
+            'Financial Quiz': 'Tambayoyin Kuɗi',
             'Discover Your Financial Personality': 'Gano Halin Kuɗin Ka',
             'Start Quiz': 'Fara Tambayoyi',
             'Question': 'Tambaya',
@@ -621,6 +644,9 @@ def get_translations(language='en'):
             'Share on Twitter': 'Raba akan Twitter',
             'Learn How to Be a Planner': 'Koyon Yadda Ake Zama Mai Tsarawa',
             'Quiz Report Subject': 'Sakamakon Tambayoyin Halin Kuɗin Ku',
+            'Receive Email Report': 'Karɓi Rahoton Imel',
+            'Previous': 'Baya',
+            'Progress': 'Ci gaba',
             # Quiz Questions
             'Do you track your expenses weekly?': 'Kana bin diddigin kashe kuɗinka kowane mako?',
             'Do you avoid budgeting?': 'Kana guje wa tsara kasafin kuɗi?',
@@ -632,6 +658,16 @@ def get_translations(language='en'):
             'How often do you review your finances?': 'Sau nawa kake duba kuɗin ka?',
             'How often do you buy on impulse?': 'Sau nawa kake siya ba tare da tsari ba?',
             'How often do you join savings groups?': 'Sau nawa kake shiga ƙungiyoyin ajiya?',
+            'impulse_purchases': 'Shin kana yin sayayya ba tare da shiri ba?',
+            'spend_non_essentials': 'Shin kana kashe kudi akan abubuwan da ba su da mahimmanci?',
+            'use_budgeting_tools': 'Shin kana amfani da kayan aikin kasafin kudi?',
+            'save_regularly': 'Shin kana ajiye kudi akai-akai?',
+            'invest_money': 'Shin kana saka kudinka a cikin zuba jari?',
+            'track_expenses': 'Shin kana bin diddigin kashe kudinka?',
+            'emergency_fund': 'Shin kana da asusun gaggawa?',
+            'plan_expenses': 'Shin kana tsara kashe kudinka?',
+            'set_financial_goals': 'Shin kana sanya burin kudi?',
+            'seek_financial_advice': 'Shin kana neman shawarar kudi?',
             # Tooltips
             'Tracking: Recording all money spent daily.': 'Bibiya: Yin rikodin duk kuɗin da aka kashe kowace rana.',
             'Budgeting: Planning how to spend your money.': 'Tsara Kasafi: Tsara yadda za a kashe kuɗin ka.',
@@ -649,6 +685,8 @@ def get_translations(language='en'):
             'Never': 'Ba ko yaushe ba',
             'Sometimes': 'Wani lokaci',
             'Always': 'Koyaushe',
+            'yes': 'Eh',
+            'no': 'A’a',
             # Personalities
             'Planner': 'Mai Tsarawa',
             'Saver': 'Mai Ajiya',
@@ -667,7 +705,6 @@ def get_translations(language='en'):
             'Minimalist Tip': 'Bincika ajiya ko saka hannun jari a ragowar kuɗin ka.',
             'Spender Tip': 'Bincika kashewa kuma saita iyakar kashewa.',
             'Avoider Tip': 'Fara da tsara kasafi mai sauƙi kuma bincika kashewar yau da kullum.',
-
             # New Translations
             'Ranking Info': 'Bayanin Matsayi',
             'Ranking based on debt, expenses, and income balance.': 'Matsayi ya dogara da bashi, kashe kudi, da daidaiton kudin shiga.',
@@ -701,7 +738,6 @@ def get_translations(language='en'):
             'Yes, I spend on extras': 'E, na kashe kuɗi akan abubuwan ƙari',
             'No, I focus on essentials': 'A’a, na mai da hankali kan abubuwan da suke da mahimmanci',
             'Yes, I track my spending': 'E, na binciki kashe kuɗina',
-            'Error processing data. Please try again.': 'An samu matsala. A sake gwadawa.',
             'No, I don’t track spending': 'A’a, ba na binciki kashe kuɗi',
             'Yes, I save consistently': 'E, na ajiye kuɗi akai-akai',
             'No, I don’t save often': 'A’a, ba na ajiya sau da yawa',
@@ -710,5 +746,6 @@ def get_translations(language='en'):
             'Your Information': 'Bayanan Ku',
             'Take Quiz Again': 'Sake Ɗaukar Tambayar',
         }
+ Regulations.gov
     }
     return translations.get(language, translations['en'])
