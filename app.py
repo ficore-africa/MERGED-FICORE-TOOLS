@@ -37,6 +37,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
+app = Flask(__name__)
+
+# Initialize Flask app
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 app.config['DEBUG'] = False  # Set to True during development
 app.config['SERVER_NAME'] = 'ficore-africa.onrender.com'
