@@ -673,6 +673,7 @@ class QuizForm(FlaskForm):
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
 
+        # Create and bind fields without processing data
         for q in self.questions:
             field_name = q['id']  # e.g., question_1, question_5, question_8
             translated_text = self.trans.get(q['text'], q['text'])
@@ -687,9 +688,7 @@ class QuizForm(FlaskForm):
             # Bind the field to the form instance
             field = unbound_field.bind(self, field_name)
             setattr(self, field_name, field)
-            self._fields[field_name] = field  # Ensure field is in _fields
-            # Process form data with fallback for GET requests
-            field.process(formdata, self.data.get(field_name) if self.data else None)
+            self._fields[field_name] = field
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
         # Update labels with translations
@@ -699,7 +698,15 @@ class QuizForm(FlaskForm):
         self.auto_email.label.text = self.trans.get('Receive Email Report', 'Receive Email Report')
         self.submit.label.text = self.trans.get('Next', 'Next')
         self.back.label.text = self.trans.get('Previous', 'Previous')
-        
+
+        # Pre-populate from session data if available
+        if 'quiz_data' in session:
+            for q in self.questions:
+                field_name = q['id']
+                if field_name in session['quiz_data']:
+                    self._fields[field_name].data = session['quiz_data'][field_name]
+                    logger.debug(f"Pre-populated {field_name} with {session['quiz_data'][field_name]}")
+
     def validate(self, extra_validators=None):
         logger.debug(f"Validating QuizForm with fields: {list(self._fields.keys())}")
         rv = super().validate(extra_validators)
@@ -1427,33 +1434,24 @@ def quiz_step1():
         for i, q in enumerate(QUIZ_QUESTIONS[:4])
     ]
 
-    form = QuizForm(questions=preprocessed_questions, language=language)
+    form = QuizForm(questions=preprocessed_questions, language=language, formdata=request.form if request.method == 'POST' else None)
     logger.debug(f"QuizStep1 form fields: {list(form._fields.keys())}")
     logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
-    # Pre-populate form with session data if available
-    if 'quiz_data' in session:
-        for q in preprocessed_questions:
-            if q['id'] in session['quiz_data']:
-                form._fields[q['id']].data = session['quiz_data'][q['id']]
-
-    if request.method == 'POST':
-        logger.debug(f"POST data: {request.form}")
-        if form.validate_on_submit():
-            session['quiz_data'] = session.get('quiz_data', {})
-            session['quiz_data'].update({
-                q['id']: form._fields[q['id']].data for q in preprocessed_questions
-            })
-            session['language'] = form.language.data
-            session.modified = True
-            logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
-            return redirect(url_for('quiz_step2'))
-        else:
-            logger.error(f"Form validation failed: {form.errors}")
-            flash(trans['Please correct the errors below'], 'error')
+    if request.method == 'POST' and form.validate_on_submit():
+        session['quiz_data'] = session.get('quiz_data', {})
+        session['quiz_data'].update({
+            q['id']: form[q['id']].data for q in preprocessed_questions
+        })
+        session['language'] = form.language.data
+        session.modified = True
+        logger.info(f"Quiz step 1 validated successfully, updated session: {session['quiz_data']}")
+        return redirect(url_for('quiz_step2'))
+    elif form.errors:
+        logger.error(f"Form validation failed: {form.errors}")
+        flash(trans['Please correct the errors below'], 'error')
 
     progress = (4 / len(QUIZ_QUESTIONS)) * 100
-    logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
         'quiz_step1.html',
         form=form,
@@ -1494,35 +1492,20 @@ def quiz_step2():
     logger.debug(f"QuizStep2 form fields: {list(form._fields.keys())}")
     logger.debug(f"Preprocessed questions: {preprocessed_questions}")
 
-    if request.method == 'POST':
-        logger.debug(f"POST data: {request.form}")
-        if form.validate_on_submit():
-            session['quiz_data'] = session.get('quiz_data', {})
-            try:
-                session['quiz_data'].update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
-                })
-                session['language'] = form.language.data
-                session.modified = True
-                logger.info(f"Quiz step 2 validated successfully, updated session: {session['quiz_data']}")
-                return redirect(url_for('quiz_step3'))
-            except KeyError as e:
-                logger.error(f"KeyError in quiz_step2 form processing: {e}")
-                flash(trans['Form processing error. Please try again.'], 'error')
-        else:
-            logger.error(f"Form validation failed: {form.errors}")
-            flash(trans['Please correct the errors below'], 'error')
-
-    if 'quiz_data' in session:
-        for q in preprocessed_questions:
-            if q['id'] in session['quiz_data']:
-                try:
-                    form[q['id']].data = session['quiz_data'][q['id']]  # Use form[q['id']] instead of getattr
-                except AttributeError:
-                    logger.warning(f"Field {q['id']} not found in form for pre-population")
+    if request.method == 'POST' and form.validate_on_submit():
+        session['quiz_data'] = session.get('quiz_data', {})
+        session['quiz_data'].update({
+            q['id']: form[q['id']].data for q in preprocessed_questions
+        })
+        session['language'] = form.language.data
+        session.modified = True
+        logger.info(f"Quiz step 2 validated successfully, updated session: {session['quiz_data']}")
+        return redirect(url_for('quiz_step3'))
+    elif form.errors:
+        logger.error(f"Form validation failed: {form.errors}")
+        flash(trans['Please correct the errors below'], 'error')
 
     progress = (7 / len(QUIZ_QUESTIONS)) * 100
-    logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
         'quiz_step2.html',
         form=form,
@@ -1564,101 +1547,82 @@ def quiz_step3():
     form.back.label.text = trans['Previous']
     logger.debug(f"QuizStep3 form fields: {list(form._fields.keys())}")
     logger.debug(f"Preprocessed questions: {preprocessed_questions}")
-    logger.debug(f"CSRF token in session: {session.get('_csrf_token')}")
-    logger.debug(f"CSRF token in form: {form.csrf_token.data}")
 
-    if request.method == 'POST':
-        logger.debug(f"POST data: {request.form}")
-        if form.validate_on_submit():
-            try:
-                if form.back.data:
-                    return redirect(url_for('quiz_step2'))
+    if request.method == 'POST' and form.validate_on_submit():
+        if form.back.data:
+            return redirect(url_for('quiz_step2'))
 
-                session['quiz_data'] = session.get('quiz_data', {})
-                session['quiz_data'].update({
-                    q['id']: form[q['id']].data for q in preprocessed_questions if q['id'] in form._fields
-                })
-                session['quiz_data'].update({
-                    'first_name': sanitize_input(form.first_name.data) if form.first_name.data else '',
-                    'email': sanitize_input(form.email.data) if form.email.data else '',
-                    'language': form.language.data,
-                    'auto_email': form.auto_email.data
-                })
-                session['language'] = form.language.data
-                session.modified = True
-                logger.info(f"Quiz step 3 validated successfully, updated session: {session['quiz_data']}")
+        session['quiz_data'] = session.get('quiz_data', {})
+        session['quiz_data'].update({
+            q['id']: form[q['id']].data for q in preprocessed_questions
+        })
+        session['quiz_data'].update({
+            'first_name': sanitize_input(form.first_name.data) if form.first_name.data else '',
+            'email': sanitize_input(form.email.data) if form.email.data else '',
+            'language': form.language.data,
+            'auto_email': form.auto_email.data
+        })
+        session['language'] = form.language.data
+        session.modified = True
+        logger.info(f"Quiz step 3 validated successfully, updated session: {session['quiz_data']}")
 
-                # Use original QUIZ_QUESTIONS for answers to ensure correct indexing
-                answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in session['quiz_data'].items() if k.startswith('question_')]
-                personality, personality_desc, tip = assign_personality(answers, language)
-                user_df = pd.DataFrame([{
-                    'Timestamp': datetime.utcnow(),
-                    'first_name': session['quiz_data'].get('first_name', ''),
-                    'email': session['quiz_data'].get('email', ''),
-                    'language': session['quiz_data'].get('language', 'en'),
-                    'personality': personality,
-                    **{f'question_{i}': trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)},
-                    **{f'answer_{i}': session['quiz_data'].get(f'question_{i}', '') for i in range(1, 11)}
-                }])
-                all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
-                badges = assign_badges_quiz(user_df, all_users_df)
+        # Use original QUIZ_QUESTIONS for answers to ensure correct indexing
+        answers = [(QUIZ_QUESTIONS[int(k.split('_')[1]) - 1], v) for k, v in session['quiz_data'].items() if k.startswith('question_')]
+        personality, personality_desc, tip = assign_personality(answers, language)
+        user_df = pd.DataFrame([{
+            'Timestamp': datetime.utcnow(),
+            'first_name': session['quiz_data'].get('first_name', ''),
+            'email': session['quiz_data'].get('email', ''),
+            'language': session['quiz_data'].get('language', 'en'),
+            'personality': personality,
+            **{f'question_{i}': trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)},
+            **{f'answer_{i}': session['quiz_data'].get(f'question_{i}', '') for i in range(1, 11)}
+        }])
+        all_users_df = fetch_data_from_sheet(headers=PREDETERMINED_HEADERS_QUIZ, worksheet_name='Quiz')
+        badges = assign_badges_quiz(user_df, all_users_df)
 
-                data = [
-                    datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
-                    session['quiz_data'].get('first_name', ''),
-                    session['quiz_data'].get('email', ''),
-                    session['quiz_data'].get('language', 'en'),
-                    *[trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)],
-                    *[session['quiz_data'].get(f'question_{i}', '') for i in range(1, 11)],
-                    personality,
-                    ','.join(badges),
-                    str(form.auto_email.data).lower()
-                ]
+        data = [
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            session['quiz_data'].get('first_name', ''),
+            session['quiz_data'].get('email', ''),
+            session['quiz_data'].get('language', 'en'),
+            *[trans.get(QUIZ_QUESTIONS[i-1]['text'], QUIZ_QUESTIONS[i-1]['text']) for i in range(1, 11)],
+            *[session['quiz_data'].get(f'question_{i}', '') for i in range(1, 11)],
+            personality,
+            ','.join(badges),
+            str(form.auto_email.data).lower()
+        ]
 
-                if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
-                    flash(trans['Google Sheets Error'], 'error')
-                    return redirect(url_for('quiz_step3'))
+        if not append_to_sheet(data, PREDETERMINED_HEADERS_QUIZ, 'Quiz'):
+            flash(trans['Google Sheets Error'], 'error')
+            return redirect(url_for('quiz_step3'))
 
-                results = {
-                    'first_name': session['quiz_data'].get('first_name', ''),
-                    'personality': personality,
-                    'personality_desc': personality_desc,
-                    'tip': tip,
-                    'badges': badges,
-                    'answers': {trans.get(q['text'], q['text']): a for q, a in answers},
-                    'summary_chart': generate_quiz_summary_chart(answers, language)
-                }
-                session['quiz_results'] = results
-                session.modified = True
+        results = {
+            'first_name': session['quiz_data'].get('first_name', ''),
+            'personality': personality,
+            'personality_desc': personality_desc,
+            'tip': tip,
+            'badges': badges,
+            'answers': {trans.get(q['text'], q['text']): a for q, a in answers},
+            'summary_chart': generate_quiz_summary_chart(answers, language)
+        }
+        session['quiz_results'] = results
+        session.modified = True
 
-                if session['quiz_data'].get('auto_email') and session['quiz_data'].get('email'):
-                    threading.Thread(
-                        target=send_quiz_email_async,
-                        args=(session['quiz_data']['email'], session['quiz_data']['first_name'], personality, personality_desc, tip, language)
-                    ).start()
-                    flash(trans['Check Inbox'], 'success')
+        if session['quiz_data'].get('auto_email') and session['quiz_data'].get('email'):
+            threading.Thread(
+                target=send_quiz_email_async,
+                args=(session['quiz_data']['email'], session['quiz_data']['first_name'], personality, personality_desc, tip, language)
+            ).start()
+            flash(trans['Check Inbox'], 'success')
 
-                flash(trans['Submission Success'], 'success')
-                return redirect(url_for('quiz_results'))
-
-            except Exception as e:
-                logger.error(f"Error processing quiz step 3: {e}")
-                flash(trans['Error processing data. Please try again.'], 'error')
-
-        else:
-            logger.error(f"Form validation failed: {form.errors}")
-            flash(trans['Please correct the errors below'], 'error')
-
-    if 'quiz_data' in session:
-        for q in preprocessed_questions:
-            if q['id'] in session['quiz_data']:
-                try:
-                    form[q['id']].data = session['quiz_data'][q['id']]  # Updated to use form[q['id']].data
-                except AttributeError:
-                    logger.warning(f"Field {q['id']} not found in form for pre-population")
+        flash(trans['Submission Success'], 'success')
+        return redirect(url_for('quiz_results'))
+    elif form.errors:
+        logger.error(f"Form validation failed: {form.errors}")
+        flash(trans['Please correct the errors below'], 'error')
 
     progress = (10 / len(QUIZ_QUESTIONS)) * 100
-    logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
         'quiz_step3.html',
         form=form,
@@ -1673,7 +1637,8 @@ def quiz_step3():
         FACEBOOK_URL=FACEBOOK_URL,
         language=language,
         progress=progress
-    )    
+    )
+    
 @app.route('/quiz_results', methods=['GET'])
 def quiz_results():
     language = session.get('language', 'en')
