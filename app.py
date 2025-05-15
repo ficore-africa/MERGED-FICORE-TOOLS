@@ -1682,6 +1682,7 @@ def quiz_results():
         'quiz_results.html',
         results=results,
         trans=trans,
+        base_url=base_url,
         FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
         WAITLIST_FORM_URL=WAITLIST_FORM_URL,
         CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
