@@ -817,7 +817,6 @@ def send_budget_email(to_email, user_name, user_data, language):
                 trans=trans,
                 user_name=sanitize_input(user_name),
                 user_data=user_data,
-                base_url=base_url,
                 FEEDBACK_FORM_URL=FEEDBACK_FORM_URL,
                 WAITLIST_FORM_URL=WAITLIST_FORM_URL,
                 CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
@@ -1325,7 +1324,6 @@ def health_score_step3():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
-        base_url=base_url,
         language=language
     )
 
