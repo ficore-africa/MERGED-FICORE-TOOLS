@@ -24,6 +24,8 @@ from google.oauth2.service_account import Credentials
 from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 import random
+import plotly.graph_objects as go
+from collections import Counter
 from translations import get_translations
 
 # Configure logging
@@ -744,30 +746,37 @@ def assign_badges_quiz(user_df, all_users_df):
         logger.error(f"Error in assign_badges_quiz: {e}")
         return badges
 
-def generate_quiz_summary_chart(answers, language='en'):
-    try:
-        answer_counts = {}
-        for _, answer in answers:
-            answer_counts[answer] = answer_counts.get(answer, 0) + 1
-        labels = list(answer_counts.keys())
-        values = list(answer_counts.values())
-        trans = get_translations(language)
-        fig = px.bar(
-            x=labels,
-            y=values,
-            title=trans.get('Quiz Summary', 'Quiz Summary'),
-            labels={'x': trans.get('Answer', 'Answer'), 'y': trans.get('Count', 'Count')}
-        )
-        fig.update_layout(
-            margin=dict(l=20, r=20, t=30, b=20),
-            height=300,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        return fig.to_html(full_html=False, include_plotlyjs=False)
-    except Exception as e:
-        logger.error(f"Error generating quiz summary chart: {e}")
-        return None
+import plotly.graph_objects as go
+from collections import Counter
+
+def generate_quiz_summary_chart(answers, language):
+    # Tally "Yes" and "No" answers
+    answer_counts = Counter(answer for _, answer in answers)
+    labels = list(answer_counts.keys())  # e.g., ["Yes", "No"]
+    values = list(answer_counts.values())  # e.g., [7, 3]
+
+    # Create bar chart
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=labels,
+                y=values,
+                marker_color=['#0288D1', '#2E7D32'],  # Blue and green for Yes/No
+            )
+        ]
+    )
+
+    # Add labels and title
+    trans = get_translations(language)
+    fig.update_layout(
+        title=trans.get('Your Quiz Answer Breakdown', 'Your Quiz Answer Breakdown'),
+        xaxis_title=trans.get('Answer Type', 'Answer Type'),
+        yaxis_title=trans.get('Count', 'Count'),
+        bargap=0.2,
+    )
+
+    # Save as HTML string or image (depending on template rendering)
+    return fig.to_html(full_html=False, include_plotlyjs=False)
 
 def send_quiz_email(to_email, user_name, personality, personality_desc, tip, language):
     try:
