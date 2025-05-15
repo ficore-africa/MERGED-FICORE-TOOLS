@@ -789,6 +789,7 @@ def send_quiz_email(to_email, user_name, personality, personality_desc, tip, lan
                 WAITLIST_FORM_URL=WAITLIST_FORM_URL,
                 CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
                 LINKEDIN_URL=LINKEDIN_URL,
+                base_url=base_url,
                 TWITTER_URL=TWITTER_URL,
                 language=language
             )
@@ -820,6 +821,7 @@ def send_budget_email(to_email, user_name, user_data, language):
                 CONSULTANCY_FORM_URL=CONSULTANCY_FORM_URL,
                 LINKEDIN_URL=LINKEDIN_URL,
                 TWITTER_URL=TWITTER_URL,
+                base_url=base_url,
                 language=language
             )
         )
@@ -1312,6 +1314,7 @@ def health_score_step3():
         LINKEDIN_URL=LINKEDIN_URL,
         TWITTER_URL=TWITTER_URL,
         FACEBOOK_URL=FACEBOOK_URL,
+        base_url=base_url,
         language=language
     )
 
