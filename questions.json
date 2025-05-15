@@ -1,92 +1,92 @@
 [
     {
-        "text": "Do you make impulse purchases?",
-        "options": ["Yes", "No"],
+        "text": "impulse_purchases",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["No"],
-        "negative_answers": ["Yes"]
+        "positive_answers": ["no"],
+        "negative_answers": ["yes"]
     },
     {
-        "text": "Do you spend on non-essentials?",
-        "options": ["Yes", "No"],
+        "text": "spend_non_essentials",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["No"],
-        "negative_answers": ["Yes"]
+        "positive_answers": ["no"],
+        "negative_answers": ["yes"]
     },
     {
-        "text": "Do you use budgeting tools?",
-        "options": ["Yes", "No"],
+        "text": "use_budgeting_tools",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you save regularly?",
-        "options": ["Yes", "No"],
+        "text": "save_regularly",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you invest your money?",
-        "options": ["Yes", "No"],
+        "text": "invest_money",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you track your expenses?",
-        "options": ["Yes", "No"],
+        "text": "track_expenses",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you have an emergency fund?",
-        "options": ["Yes", "No"],
+        "text": "emergency_fund",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you plan your expenses?",
-        "options": ["Yes", "No"],
+        "text": "plan_expenses",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you set financial goals?",
-        "options": ["Yes", "No"],
+        "text": "set_financial_goals",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     },
     {
-        "text": "Do you seek financial advice?",
-        "options": ["Yes", "No"],
+        "text": "seek_financial_advice",
+        "options": ["yes", "no"],
         "type": "multiple",
         "required": true,
         "weight": 1,
-        "positive_answers": ["Yes"],
-        "negative_answers": ["No"]
+        "positive_answers": ["yes"],
+        "negative_answers": ["no"]
     }
 ]
