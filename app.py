@@ -673,10 +673,10 @@ class QuizForm(FlaskForm):
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
 
-        # Dynamically add question fields with translated labels and options using question IDs
         for q in self.questions:
-            field_name = q['id']  # Use the question ID (e.g., 'question_5')
+            field_name = q['id']
             translated_text = self.trans.get(q['text'], q['text'])
+            # Ensure choices match the submitted values exactly
             translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
             field = RadioField(
                 translated_text,
@@ -684,10 +684,9 @@ class QuizForm(FlaskForm):
                 choices=translated_options,
                 id=field_name
             )
-            # Bind and process the field with formdata
-            bound_field = field.bind(self, field_name)
-            bound_field.process(formdata, self.data.get(field_name) if self.data else None)
-            self._fields[field_name] = bound_field
+            setattr(self, field_name, field)
+            self._fields[field_name] = field  # Ensure field is in _fields
+            field.process(formdata)  # Explicitly process formdata
             logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
         # Update labels with translations
