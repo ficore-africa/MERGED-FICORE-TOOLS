@@ -43,7 +43,7 @@
     .summary-card {
         border: 1px solid #ddd;
         border-radius: 10px;
-        background-color: #FFFFFF;
+        background-color: #E3F2FD; /* Changed to light blue to match Answers section */
         padding: 20px;
         margin-bottom: 30px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -79,26 +79,6 @@
     }
     .alert .btn-close {
         padding: 10px;
-    }
-
-    /* Quiz Summary Chart Section */
-    .chart-section {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        background-color: #FFFFFF;
-        padding: 20px;
-        margin-bottom: 30px;
-    }
-    .chart-section h5 {
-        font-size: 18px;
-        font-weight: bold;
-        color: #01579B;
-        margin: 0 0 15px;
-    }
-    .chart-section .chart-container {
-        height: 400px;
-        width: 100%;
-        overflow-x: auto;
     }
 
     /* Answers Breakdown */
@@ -219,17 +199,14 @@
         .container {
             padding: 0 15px;
         }
-        .hero-section, .summary-card, .chart-section, .answers-section, .badges-section {
+        .hero-section, .summary-card, .answers-section, .badges-section {
             padding: 15px;
         }
         .hero-section h1 {
             font-size: 24px;
         }
-        .summary-card h3, .chart-section h5, .answers-section h5, .badges-section h5 {
+        .summary-card h3, .answers-section h5, .badges-section h5 {
             font-size: 16px;
-        }
-        .chart-section .chart-container {
-            height: 300px;
         }
         .btn-primary {
             width: 100%;
@@ -267,20 +244,15 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Quiz Summary Chart Section -->
-    {% if results.summary_chart %}
-        <div class="chart-section">
-            <h5>{{ trans.get('Quiz Summary', 'Quiz Summary') }} 📊</h5>
-            <div class="chart-container">
-                {{ results.summary_chart | safe }}
-            </div>
-        </div>
-    {% else %}
-        <div class="chart-section">
-            <h5>{{ trans.get('Quiz Summary', 'Quiz Summary') }} 📊</h5>
-            <div class="chart-container" style="text-align: center; color: #666;">
-                {{ trans.get('No chart data available.', 'No chart data available.') }}
-            </div>
+    <!-- Badges Section (Moved above Answers) -->
+    {% if results.badges %}
+        <div class="badges-section">
+            <h5>{{ trans.get('Badges Earned', 'Badges Earned') }} 🏅</h5>
+            <ul class="list-group">
+                {% for badge in results.badges %}
+                    <li class="list-group-item">{{ badge }}</li>
+                {% endfor %}
+            </ul>
         </div>
     {% endif %}
 
@@ -296,18 +268,6 @@
             </div>
         {% endfor %}
     </div>
-
-    <!-- Badges Section -->
-    {% if results.badges %}
-        <div class="badges-section">
-            <h5>{{ trans.get('Badges Earned', 'Badges Earned') }} 🏅</h5>
-            <ul class="list-group">
-                {% for badge in results.badges %}
-                    <li class="list-group-item">{{ badge }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
 
     <!-- CTA Section -->
     <div class="cta-section">
