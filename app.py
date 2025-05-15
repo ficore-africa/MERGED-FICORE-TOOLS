@@ -663,25 +663,24 @@ class QuizForm(FlaskForm):
         self.trans = get_translations(language)
         self.questions = questions or []
         logger.debug(f"Initializing QuizForm with questions: {[q['id'] for q in self.questions]}")
-        
+
         # Dynamically add question fields with translated labels and options
         for i, q in enumerate(self.questions, 1):
             field_name = f'question_{i}'
-            if field_name not in self._fields:
-                # Translate question text and options
-                translated_text = self.trans.get(q['text'], q['text'])
-                translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
-                field = RadioField(
-                    translated_text,
-                    validators=[DataRequired() if q.get('required', True) else Optional()],
-                    choices=translated_options,
-                    id=field_name
-                )
-                setattr(self.__class__, field_name, field)
-                self._fields[field_name] = field
-                logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
-            else:
-                logger.warning(f"Field {field_name} already exists in form fields")
+            # Translate question text and options
+            translated_text = self.trans.get(q['text'], q['text'])
+            translated_options = [(opt, self.trans.get(opt, opt)) for opt in q['options']]
+            # Create a bound field instance
+            field = RadioField(
+                translated_text,
+                validators=[DataRequired() if q.get('required', True) else Optional()],
+                choices=translated_options,
+                id=field_name
+            )
+            # Bind the field to the form instance
+            bound_field = field.bind(self, field_name)
+            self._fields[field_name] = bound_field
+            logger.debug(f"Added field {field_name} with translated text '{translated_text}' and options {translated_options}")
 
         # Update labels with translations
         self.first_name.label.text = self.trans.get('First Name', 'First Name')
@@ -690,7 +689,7 @@ class QuizForm(FlaskForm):
         self.auto_email.label.text = self.trans.get('Receive Email Report', 'Receive Email Report')
         self.submit.label.text = self.trans.get('Next', 'Next')
         self.back.label.text = self.trans.get('Previous', 'Previous')
-    
+
     def validate(self, extra_validators=None):
         logger.debug(f"Validating QuizForm with fields: {list(self._fields.keys())}")
         rv = super().validate(extra_validators)
@@ -1437,6 +1436,7 @@ def quiz_step1():
                     logger.warning(f"Field {q['id']} not found in form")
 
     progress = (4 / len(QUIZ_QUESTIONS)) * 100
+    logger.debug(f"Form state before rendering: {form._fields}")
     return render_template(
         'quiz_step1.html',
         form=form,
@@ -1452,7 +1452,6 @@ def quiz_step1():
         language=language,
         progress=progress
     )
-
 @app.route('/quiz_step2', methods=['GET', 'POST'])
 def quiz_step2():
     if 'quiz_data' not in session or not QUIZ_QUESTIONS:
