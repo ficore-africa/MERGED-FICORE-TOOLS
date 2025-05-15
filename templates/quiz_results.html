@@ -14,38 +14,56 @@
         padding: 0 20px;
     }
 
-    /* Header */
-    .header {
+    /* Hero Title Section */
+    .hero-section {
+        background: linear-gradient(90deg, #2E7D32, #0288D1);
+        border-radius: 10px;
+        padding: 30px;
         text-align: center;
         margin-bottom: 30px;
     }
-    .header img {
+    .hero-section img {
         max-width: 200px;
         height: auto;
         margin-bottom: 20px;
     }
-    .header h1 {
+    .hero-section h1 {
         font-size: 28px;
         font-weight: bold;
-        background: linear-gradient(90deg, #0288D1, #2E7D32);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #FFFFFF;
         margin: 0 0 10px;
     }
-    .header p {
+    .hero-section p {
         font-size: 16px;
-        color: #666666;
+        color: #E0E0E0;
         margin: 0;
     }
 
-    /* Card */
-    .card {
+    /* Personality Summary Card */
+    .summary-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
         background-color: #FFFFFF;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border: none;
-        padding: 30px;
-        margin-bottom: 40px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .summary-card h3 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
+    }
+    .summary-card p {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #212121;
+        margin: 0 0 10px;
+    }
+    .summary-card .tip {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
     }
 
     /* Alerts */
@@ -63,44 +81,14 @@
         padding: 10px;
     }
 
-    /* Content Sections */
-    .card h3 {
-        font-size: 20px;
-        font-weight: bold;
-        color: #01579B;
-        margin: 0 0 15px;
+    /* Quiz Summary Chart Section */
+    .chart-section {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #FFFFFF;
+        padding: 20px;
+        margin-bottom: 30px;
     }
-    .card p {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #212121;
-        margin: 0 0 15px;
-    }
-    .card p strong {
-        color: #01579B;
-    }
-    .card .tip {
-        font-size: 14px;
-        color: #666666;
-        margin: 0 0 20px;
-    }
-
-    /* Badges */
-    .badges h5 {
-        font-size: 18px;
-        font-weight: bold;
-        color: #01579B;
-        margin: 0 0 15px;
-    }
-    .badges .list-group-item {
-        border: none;
-        font-size: 14px;
-        color: #212121;
-        padding: 8px 0;
-        background: transparent;
-    }
-
-    /* Chart */
     .chart-section h5 {
         font-size: 18px;
         font-weight: bold;
@@ -108,38 +96,83 @@
         margin: 0 0 15px;
     }
     .chart-section .chart-container {
-        margin-bottom: 20px;
-        max-width: 100%;
+        height: 400px;
+        width: 100%;
         overflow-x: auto;
     }
 
-    /* Answers */
-    .answers h5 {
+    /* Answers Breakdown */
+    .answers-section {
+        background-color: #E3F2FD;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .answers-section h5 {
         font-size: 18px;
         font-weight: bold;
         color: #01579B;
         margin: 0 0 15px;
     }
     .answer-box {
-        background: #F8F9FA;
-        border-radius: 8px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #FFFFFF;
         padding: 15px;
         margin-bottom: 15px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .answer-box strong {
+    .answer-box .question-number {
         font-size: 14px;
+        font-weight: bold;
         color: #01579B;
-        display: block;
-        margin-bottom: 5px;
+        flex: 0 0 40px;
     }
-    .answer-box .answer {
+    .answer-box .question-text {
+        font-size: 14px;
+        color: #212121;
+        flex: 1;
+    }
+    .answer-box .answer-text {
         font-size: 14px;
         color: #2E7D32;
-        font-weight: 500;
+        flex: 1;
+    }
+    .answer-box .answer-icon {
+        font-size: 16px;
+        flex: 0 0 20px;
     }
 
-    /* Buttons */
+    /* Badges Section */
+    .badges-section {
+        background-color: #FFF8E1;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .badges-section h5 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #01579B;
+        margin: 0 0 15px;
+    }
+    .badges-section .list-group-item {
+        border: none;
+        font-size: 14px;
+        color: #212121;
+        padding: 8px 0;
+        background: transparent;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        text-align: center;
+        margin-bottom: 40px;
+    }
     .btn-primary {
         background: linear-gradient(90deg, #0288D1, #2E7D32);
         border: none;
@@ -164,7 +197,7 @@
     footer {
         text-align: center;
         padding: 30px 0;
-        color: #666666;
+        color: #666;
         font-size: 14px;
     }
     footer hr {
@@ -186,11 +219,17 @@
         .container {
             padding: 0 15px;
         }
-        .card {
-            padding: 20px;
+        .hero-section, .summary-card, .chart-section, .answers-section, .badges-section {
+            padding: 15px;
         }
-        .header h1 {
+        .hero-section h1 {
             font-size: 24px;
+        }
+        .summary-card h3, .chart-section h5, .answers-section h5, .badges-section h5 {
+            font-size: 16px;
+        }
+        .chart-section .chart-container {
+            height: 300px;
         }
         .btn-primary {
             width: 100%;
@@ -200,73 +239,88 @@
 </style>
 
 <div class="container">
-    <div class="header">
+    <!-- Hero Title Section -->
+    <div class="hero-section">
         <img src="{{ base_url }}/static/img/ficore_logo.png" alt="Ficore Africa Logo">
         <h1>{{ trans['Your Financial Personality'] }}</h1>
-        <p>{{ trans['Here’s how you manage your finances'] }}</p>
+        <p>{{ trans.get('Financial growth passport for Africa', 'Financial growth passport for Africa') }}</p>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="alert-container">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
+    <!-- Personality Summary Card -->
+    <div class="summary-card">
+        <h3>{{ trans.get(results.personality, results.personality) }}</h3>
+        <p>{{ results.personality_desc }}</p>
+        <p class="tip"><strong>{{ trans['Tip'] }} 🎯:</strong> {{ results.tip }}</p>
+    </div>
 
-            <h3>{{ trans[results.personality] }}</h3>
-            <p>{{ results.personality_desc }}</p>
-            <p><strong>{{ trans['Tip'] }}:</strong> {{ results.tip }}</p>
-            <p class="tip">{{ trans['Take this tip to heart for better financial habits!'] }}</p>
-
-            {% if results.badges %}
-                <div class="badges">
-                    <h5>{{ trans['Badges Earned'] }}</h5>
-                    <ul class="list-group">
-                        {% for badge in results.badges %}
-                            <li class="list-group-item">{{ badge }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-
-            {% if results.summary_chart %}
-                <div class="chart-section">
-                    <h5>{{ trans['Your Answers Summary'] }}</h5>
-                    <div class="chart-container">
-                        {{ results.summary_chart | safe }}
-                    </div>
-                </div>
-            {% endif %}
-
-            <div class="answers">
-                <h5>{{ trans['Your Answers'] }}</h5>
-                {% for question, answer in results.answers.items() %}
-                    <div class="answer-box">
-                        <strong>{{ question }}</strong>
-                        <span class="answer">{{ answer }}</span>
+    <!-- Alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             </div>
+        {% endif %}
+    {% endwith %}
 
-            <div class="d-flex justify-content-center">
-                <a href="{{ base_url }}/index" class="btn btn-primary">{{ trans['Explore More Tools'] }}</a>
+    <!-- Quiz Summary Chart Section -->
+    {% if results.summary_chart %}
+        <div class="chart-section">
+            <h5>{{ trans.get('Quiz Summary', 'Quiz Summary') }} 📊</h5>
+            <div class="chart-container">
+                {{ results.summary_chart | safe }}
             </div>
-
-            {% if debug_mode %}
-                <p class="text-muted mt-3">Debug Info: Results Loaded</p>
-            {% endif %}
         </div>
+    {% else %}
+        <div class="chart-section">
+            <h5>{{ trans.get('Quiz Summary', 'Quiz Summary') }} 📊</h5>
+            <div class="chart-container" style="text-align: center; color: #666;">
+                {{ trans.get('No chart data available.', 'No chart data available.') }}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Answers Breakdown -->
+    <div class="answers-section">
+        <h5>{{ trans.get('Your Answers', 'Your Answers') }} ✅</h5>
+        {% for question, answer in results.answers.items() %}
+            <div class="answer-box">
+                <span class="question-number">Q{{ loop.index }}</span>
+                <span class="question-text">{{ question }}</span>
+                <span class="answer-text">{{ answer }}</span>
+                <span class="answer-icon">✅</span>
+            </div>
+        {% endfor %}
     </div>
+
+    <!-- Badges Section -->
+    {% if results.badges %}
+        <div class="badges-section">
+            <h5>{{ trans.get('Badges Earned', 'Badges Earned') }} 🏅</h5>
+            <ul class="list-group">
+                {% for badge in results.badges %}
+                    <li class="list-group-item">{{ badge }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <!-- CTA Section -->
+    <div class="cta-section">
+        <a href="{{ base_url }}/index" class="btn btn-primary">{{ trans['Explore More Tools'] }}</a>
+    </div>
+
+    <!-- Debug Info -->
+    {% if debug_mode %}
+        <p class="text-muted text-center">Debug Info: Results Loaded</p>
+    {% endif %}
 </div>
 
+<!-- Footer -->
 <footer>
     <hr>
     <p>{{ trans['About Ficore Africa'] }}: {{ trans['Empowering financial growth across Africa since 2023'] }}</p>
