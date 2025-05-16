@@ -84,6 +84,9 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF via third-party sites
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
+# Initialize Flask-Session
+Session(app)
+
 # Create and verify SESSION_FILE_DIR
 try:
     os.makedirs(SESSION_FILE_DIR, exist_ok=True)
@@ -638,13 +641,21 @@ class HealthScoreStep3Form(FlaskForm):
     income_revenue = FloatField('Monthly Income/Revenue', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
     expenses_costs = FloatField('Monthly Expenses/Costs', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
     debt_loan = FloatField('Total Debt/Loan Amount', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
-    debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[DataRequired(), NumberRange(min=0, max=100)])
+    debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)])
     submit = SubmitField()
 
     def __init__(self, language=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         trans = get_translations(language or session.get('language', 'en'))
         self.submit.label.text = trans.get('Submit', 'Submit')
+
+    def validate(self, extra_validators=None):
+        rv = super().validate(extra_validators)
+        if rv:
+            # Set debt_interest_rate to 0 if not provided
+            if self.debt_interest_rate.data is None:
+                self.debt_interest_rate.data = 0.0
+        return rv
 
 # Load Quiz Questions
 try:
@@ -1120,9 +1131,10 @@ def budget_dashboard():
         flash(trans['Error retrieving data. Please try again.'], 'error')
         return redirect(url_for('budget_step1'))
 
+# Health Score Routes with Optimized Session Usage
+
 @app.route('/health_score_step1', methods=['GET', 'POST'])
 def health_score_step1():
-    logger.debug(f"Session before: {session}")
     language = session.get('language', 'en')
     form = HealthScoreStep1Form(language=language)
     trans = get_translations(language)
@@ -1215,29 +1227,26 @@ def health_score_step3():
             income_revenue = float(request.form.get('income_revenue', '0').replace(',', ''))
             expenses_costs = float(request.form.get('expenses_costs', '0').replace(',', ''))
             debt_loan = float(request.form.get('debt_loan', '0').replace(',', ''))
-            debt_interest_rate = float(request.form.get('debt_interest_rate', '0').replace(',', ''))
+            debt_interest_rate = float(form.debt_interest_rate.data or 0.0)  # Use form data directly
 
             health_data = session['health_data']
             health_data.update({
-                'income_revenue': float(income_revenue),
-                'expenses_costs': float(expenses_costs),
-                'debt_loan': float(debt_loan),
-                'debt_interest_rate': float(debt_interest_rate)
+                'income_revenue': income_revenue,
+                'expenses_costs': expenses_costs,
+                'debt_loan': debt_loan,
+                'debt_interest_rate': debt_interest_rate
             })
-            session['health_data'] = {
-                key: float(val) if isinstance(val, (np.int64, np.float64)) else int(val) if isinstance(val, np.int64) else val
-                for key, val in health_data.items()
-            }
+            session['health_data'] = health_data
             session.modified = True
             logger.info(f"Health score step 3 validated successfully")
 
             data = [
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 health_data.get('business_name', ''),
-                float(health_data.get('income_revenue', 0.0)),
-                float(health_data.get('expenses_costs', 0.0)),
-                float(health_data.get('debt_loan', 0.0)),
-                float(health_data.get('debt_interest_rate', 0.0)),
+                health_data.get('income_revenue', 0.0),
+                health_data.get('expenses_costs', 0.0),
+                health_data.get('debt_loan', 0.0),
+                health_data.get('debt_interest_rate', 0.0),
                 str(health_data.get('auto_email', False)).lower(),
                 '',
                 health_data.get('first_name', ''),
@@ -1278,6 +1287,7 @@ def health_score_step3():
                 for key, val in user_row.to_dict().items()
             }
 
+            # Store minimal data in session, avoid large objects like plots
             session['dashboard_data'] = {
                 'first_name': health_data['first_name'],
                 'email': health_data['email'],
@@ -1289,8 +1299,6 @@ def health_score_step3():
                 'rank': int(rank),
                 'total_users': int(total_users),
                 'badges': badges,
-                'breakdown_plot': generate_breakdown_plot(user_df),
-                'comparison_plot': generate_comparison_plot(user_df, all_users_df),
                 'user_data': user_row_dict
             }
 
@@ -1374,6 +1382,7 @@ def health_dashboard():
         rank = (all_scores >= user_row['HealthScore']).sum()
         total_users = len(all_scores)
 
+        # Generate plots on demand instead of storing in session
         breakdown_plot = generate_breakdown_plot(user_df)
         comparison_plot = generate_comparison_plot(user_df, all_users_df)
 
