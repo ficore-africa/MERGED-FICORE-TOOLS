@@ -773,7 +773,7 @@ def get_translations(language='en'):
             'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa': 'Dukkan Kayan aiki da Kuke Bukata don Kiyaye Lafiyar Kuɗinku, Ku Kadai, ko da Iyali, ko kuma Ƙananan Kasuwanci, a duk faɗin Afirka.',
             'No, I don’t track spending': 'A’a, ba na binciki kashe kuɗi',
             'Aims to cover 3-6 months of expenses for financial security': 'Yana saukake gano yawan kudin gaggawa da za,a ajiye don samun tsaro lokacin matsaloli ko rashin lafiya.',
-            'Track income, net worth, bills, and make budgets, to grow with confidence.': 'Bibiyi shigar kudinku, dukiyarku, kuɗin biyan bashi, kuma ku tsara kasafin kuɗinku, don bunkasa arziki cikin kwarin gwiwa.',
+            'Track income, net worth, bills, and make budgets, to grow with confidence.': 'Bibiyi samun kudinku, tattalin dukiyarku, kuɗin biyan bashi, tsara kasafin kuɗinku, da samun tunatarwa akansu, don bunkasa arziki cikin kwarin gwiwa.',
             'Yes, I save consistently': 'Eh, na ajiye kuɗi akai-akai',
             'Log and edit expenses for spending insights': 'Rubuta kuma a bi diddigin kuɗin da aka kashe don samun haske kan yadda ake kashe kuɗin.',
             'Expense Tracker': 'Tantance Kashe Kudi',
