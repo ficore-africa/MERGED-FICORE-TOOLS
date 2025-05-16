@@ -385,7 +385,7 @@ def get_translations(language='en'):
             'emergency_fund': 'Do you have an emergency fund?',
             'plan_expenses': 'Do you plan your expenses?',
             'set_financial_goals': 'Do you set financial goals?',
-            'seek_financial Augusta': 'Do you seek financial advice?',
+            'seek_financial_advice': 'Do you seek financial advice?',
             # Tooltips
             'Tracking: Recording all money spent daily.': 'Tracking: Recording all money spent daily.',
             'Budgeting: Planning how to spend your money.': 'Budgeting: Planning how to spend your money.',
