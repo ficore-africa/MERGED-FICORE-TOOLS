@@ -20,10 +20,15 @@
             padding: 20px;
             box-sizing: border-box;
             color: #333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
         }
         .container {
             max-width: 900px;
-            margin: auto;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
         header {
             background: linear-gradient(45deg, #2E7D32, #0288D1);
@@ -32,7 +37,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
             text-align: center;
-_hook_            color: white;
+            color: white;
         }
         .logo-container img {
             max-width: 200px;
@@ -83,15 +88,23 @@ _hook_            color: white;
         .btn-back {
             background: #6c757d;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 16px;
             font-weight: 600;
             border-radius: 8px;
             color: white;
             transition: transform 0.2s ease;
+            font-size: 0.9rem;
+            min-width: 120px;
         }
         .btn-back:hover {
             transform: scale(1.05);
             background: #5a6268;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
         .alert {
             border-radius: 8px;
@@ -238,9 +251,9 @@ _hook_            color: white;
                             {{ form.monthly_income(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦150,000', 'e.g. ₦150,000'), aria_required="true", aria_label=trans.get('Monthly Income', 'Monthly Income'), value=session.get('budget_data', {}).get('monthly_income', '')|string) }}
                             <p class="note-text">{{ trans.get('Your monthly pay or income.', 'Your monthly pay or income.') }}</p>
                         </div>
-                        <div class="step-navigation">
-                            <a href="{{ url_for('budget_step1') }}" class="btn btn-back" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <div class="button-container">
                             {{ form.submit(class="btn btn-primary", **{'aria-label': trans.get('Continue to Expenses', 'Continue to Expenses')}) }}
+                            <a href="{{ url_for('budget_step1') }}" class="btn btn-back" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         </div>
                     </form>
                     {% for error in form.monthly_income.errors %}
