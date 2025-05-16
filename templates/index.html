@@ -47,25 +47,39 @@
         .navbar .nav-right {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
             gap: 10px;
         }
-        .navbar form {
+        .navbar .nav-controls {
             display: flex;
             align-items: center;
+            border: 2px solid #0288D1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .navbar form {
+            margin: 0;
         }
         .navbar select {
             padding: 8px;
-            border-radius: 5px;
-            border: 2px solid #0288D1;
+            border: none;
+            border-radius: 0;
             max-width: 120px;
             min-width: 100px;
             font-size: 0.9rem;
+            background: transparent;
+            color: white;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+        }
+        .navbar select:focus {
+            outline: none;
         }
         .navbar .refresh-button {
             padding: 8px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 0 5px 5px 0;
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             cursor: pointer;
@@ -73,6 +87,7 @@
             align-items: center;
             white-space: nowrap;
             font-size: 0.9rem;
+            border-left: 2px solid #0288D1;
         }
         .navbar .refresh-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -93,6 +108,7 @@
             color: white;
             padding: 20px;
             box-sizing: border-box;
+            margin-top: 60px; /* Adjust for fixed navbar */
         }
         .hero h2 {
             font-size: 2.5rem;
@@ -123,7 +139,11 @@
             border-radius: 5px;
             font-weight: 600;
             font-size: 1.2rem;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 100%;
+            width: 280px;
+            box-sizing: border-box;
         }
         .hero .cta-button:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -362,16 +382,16 @@
                 align-items: flex-end;
                 width: auto;
             }
-            .navbar form {
-                margin-bottom: 10px;
+            .navbar .nav-controls {
                 width: 100%;
+                margin-bottom: 10px;
             }
             .navbar select {
                 width: 100%;
                 max-width: 150px;
             }
             .navbar .refresh-button {
-                width: auto;
+                width: 100%;
                 padding: 8px 12px;
                 font-size: 0.85rem;
             }
@@ -419,8 +439,8 @@
                 font-size: 1rem;
                 padding: 10px 20px;
                 max-width: 90%;
-                word-wrap: break-word;
-                display: inline-block;
+                width: 240px;
+                word-break: break-word;
                 box-sizing: border-box;
             }
             .tools-section h2 {
@@ -437,14 +457,15 @@
                 align-items: flex-end;
                 width: 100%;
             }
-            .navbar form {
+            .navbar .nav-controls {
                 width: 100%;
-                margin-bottom: 10px;
+                flex-direction: column;
             }
             .navbar select {
                 width: 100%;
                 max-width: 100%;
                 min-width: 0;
+                margin-bottom: 5px;
             }
             .navbar .refresh-button {
                 width: 100%;
@@ -452,6 +473,7 @@
                 padding: 8px 12px;
                 font-size: 0.85rem;
                 box-sizing: border-box;
+                border-radius: 5px;
             }
         }
     </style>
@@ -460,24 +482,26 @@
     <nav class="navbar">
         <h1>Ficore Africa</h1>
         <div class="nav-right">
-            <form action="{{ url_for('index') }}" method="GET">
-                <input type="hidden" name="tool" value="{{ tool | default('') }}">
-                <label for="language-select" class="visually-hidden">{{ trans.get('Choose your language', 'Choose your language') }}</label>
-                <select id="language-select" name="language" onchange="this.form.submit()" aria-label="{{ trans.get('Choose your language', 'Choose your language') }}">
-                    <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
-                    <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
-                </select>
-            </form>
-            <button class="refresh-button" onclick="window.location.reload()" title="{{ trans.get('Reload the page', 'Reload the page') }}">
-                <i class="fas fa-sync-alt"></i> {{ trans.get('Refresh', 'Refresh') }}
-            </button>
+            <div class="nav-controls">
+                <form action="{{ url_for('index') }}" method="GET">
+                    <input type="hidden" name="tool" value="{{ tool | default('') }}">
+                    <label for="language-select" class="visually-hidden">{{ trans.get('Choose your language', 'Choose your language') }}</label>
+                    <select id="language-select" name="language" onchange="this.form.submit()" aria-label="{{ trans.get('Choose your language', 'Choose your language') }}">
+                        <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
+                        <option value="ha" {% if language == 'ha' %}selected{% endif %}>Hausa</option>
+                    </select>
+                </form>
+                <button class="refresh-button" onclick="window.location.reload()" title="{{ trans.get('Reload the page', 'Reload the page') }}">
+                    <i class="fas fa-sync-alt"></i> {{ trans.get('Refresh', 'Refresh') }}
+                </button>
+            </div>
         </div>
     </nav>
 
     <section class="hero">
         <h2>{{ trans.get('Your All-in-One Toolkit for Personal & SME Financial Health Across Africa', 'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa') }}</h2>
-        <p>{{ trans.get('Track income, calculate net worth, plan budgets, and grow with confidence.', 'Track income, calculate net worth, plan budgets, and grow with confidence.') }}</p>
-        <a href="{{ url_for('health_score_step1') }}" class="cta-button">{{ trans.get('Where to Start? Get Free Health Score', 'Where to Start? Get Free Health Score') }}</a>
+        <p>{{ trans.get('Track income, calculate net worth, plan budgets, and grow with confidence.', 'Track income, net worth, bills, and make budgets, to grow with confidence.') }}</p>
+        <a href="{{ url_for('health_score_step1') }}" class="cta-button">{{ trans.get('Where to Start? Get Your Free Health Score', 'Where to Start? Get Your Free Health Score') }}</a>
     </section>
 
     <section class="tools-section">
