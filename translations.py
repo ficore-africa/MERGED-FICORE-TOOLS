@@ -8,6 +8,7 @@ def get_translations(language='en'):
             # General
             'Home': 'Home',
             'Back to Home': 'Back to Home',
+            'Back' : 'Back',
             'Provide Feedback': 'Provide Feedback',
             'Join Waitlist': 'Join Waitlist',
             'Explore More Tools' : 'Explore More Tools from Ficore',
