@@ -20,10 +20,15 @@
             padding: 20px;
             box-sizing: border-box;
             color: #333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
         }
         .container {
             max-width: 900px;
-            margin: auto;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
         header {
             background: linear-gradient(45deg, #2E7D32, #0288D1);
@@ -83,15 +88,23 @@
         .btn-back {
             background: #6c757d;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 16px;
             font-weight: 600;
             border-radius: 8px;
             color: white;
             transition: transform 0.2s ease;
+            font-size: 0.9rem;
+            min-width: 120px;
         }
         .btn-back:hover {
             transform: scale(1.05);
             background: #5a6268;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
         .alert {
             border-radius: 8px;
@@ -274,9 +287,9 @@
                             {{ form.other_expenses(class="form-control number-input", type="text", placeholder=trans.get('e.g. ₦20,000', 'e.g. ₦20,000'), aria_required="true", aria_label=trans.get('Other Expenses', 'Other Expenses'), value=session.get('budget_data', {}).get('other_expenses', '')) }}
                             <p class="note-text">{{ trans.get('Internet, clothes, or other spending.', 'Internet, clothes, or other spending.') }}</p>
                         </div>
-                        <div class="step-navigation">
-                            <a href="{{ url_for('budget_step2') }}" class="btn btn-back" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
+                        <div class="button-container">
                             {{ form.submit(class="btn btn-primary", aria_label=trans.get('Continue to Savings & Review', 'Continue to Savings & Review')) }}
+                            <a href="{{ url_for('budget_step2') }}" class="btn btn-back" aria-label="{{ trans.get('Back', 'Back') }}">{{ trans.get('Back', 'Back') }}</a>
                         </div>
                     </form>
                     {% for field in [form.housing_expenses, form.food_expenses, form.transport_expenses, form.other_expenses] %}
