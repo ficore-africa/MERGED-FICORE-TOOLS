@@ -423,7 +423,7 @@ def get_translations(language='en'):
             'Ranking Info': 'Ranking Info',
             'Ranking based on debt, expenses, and income balance.': 'Ranking based on debt, expenses, and income balance.',
             'See your Income Breakdown': 'See your Income Breakdown',
-            'Cash Flow Info': ' Ascot: 'Cash Flow Info',
+            'Cash Flow Info': 'Cash Flow Info',
             'What’s left after your spending.': 'What’s left after your spending.',
             'This is your monthly surplus (Income minus Expenses).': 'This is your monthly surplus (Income minus Expenses).',
             'Debt-to-Income Info': 'Debt-to-Income Info',
