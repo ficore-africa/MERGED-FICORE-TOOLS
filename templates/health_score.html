@@ -242,6 +242,9 @@
             background: linear-gradient(135deg, #2E7D32, #0288D1);
             color: white;
             border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            min-width: 140px;
         }
         .btn-next:hover {
             background: linear-gradient(135deg, #1B5E20, #01579B);
@@ -251,6 +254,9 @@
             background: linear-gradient(135deg, #B0BEC5, #78909C);
             color: white;
             border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            min-width: 120px;
         }
         .btn-prev:hover {
             background: linear-gradient(135deg, #90A4AE, #607D8B);
@@ -311,7 +317,18 @@
                 // Format with commas on blur
                 input.addEventListener('blur', function (e) {
                     let value = e.target.value.replace(/[^0-9.]/g, ''); // Remove all but digits and dot
-                    if (value === '') value = '0';
+                    if (value === '') {
+                        value = '0';
+                    } else {
+                        const numValue = parseFloat(value);
+                        // Ensure the value is within the allowed range (0 to 10 billion for most fields, 0 to 100 for interest rate)
+                        const maxValue = e.target.id === 'debt_interest_rate' ? 100 : 10000000000;
+                        if (numValue > maxValue) {
+                            value = maxValue.toString();
+                        } else if (numValue < 0) {
+                            value = '0';
+                        }
+                    }
                     const formatted = parseFloat(value).toLocaleString('en-US', {
                         maximumFractionDigits: 0
                     });
@@ -391,12 +408,22 @@
                         <span class="book-label">{{ trans.get('New to finances? Click here to get guided tips on how to fill this form.', 'New to finances? Click here to get guided tips on how to fill this form.') }}</span>
                     </div>
                     <div class="guide-section">
-                        <h4>{{ trans.get('Getting Started with Ficore Africa', 'Getting Started with Ficore Africa') }}</h4>
+                        <h4>{{ trans.get('Tips for Filling the Form', 'Tips for Filling the Form') }}</h4>
                         <ul>
-                            <li><strong>{{ trans.get('Personal Information', 'Personal Information') }}</strong>: {{ trans.get('Fill in your name and email. Choose your language—English or Hausa.', 'Fill in your name and email. Choose your language—English or Hausa.') }}</li>
-                            <li><strong>{{ trans.get('User Information', 'User Information') }}</strong>: {{ trans.get('Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.', 'Enter your business name, or your personal name if you don’t have a business. Select if you’re an individual or a business.') }}</li>
-                            <li><strong>{{ trans.get('Financial Information', 'Financial Information') }}</strong>: {{ trans.get('Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.', 'Add your monthly money details. Hover or tap the ℹ️ icons for help on what to enter.') }}</li>
-                            <li><strong>{{ trans.get('Submit', 'Submit') }}</strong>: {{ trans.get('Double-check your details, then click Submit to get your financial health score!', 'Double-check your details, then click Submit to get your financial health score!') }}</li>
+                            {% if step == 1 %}
+                            <li><strong>{{ trans.get('First Name', 'First Name') }}</strong>: {{ trans.get('Enter your legal first name as it appears on official documents.', 'Enter your legal first name as it appears on official documents.') }}</li>
+                            <li><strong>{{ trans.get('Email', 'Email') }}</strong>: {{ trans.get('Use an active email address you check regularly for updates.', 'Use an active email address you check regularly for updates.') }}</li>
+                            <li><strong>{{ trans.get('Auto Email', 'Auto Email') }}</strong>: {{ trans.get('Check this box if you want your financial health score sent to your email.', 'Check this box if you want your financial health score sent to your email.') }}</li>
+                            <li><strong>{{ trans.get('Language', 'Language') }}</strong>: {{ trans.get('Select English or Hausa based on your preference for communication.', 'Select English or Hausa based on your preference for communication.') }}</li>
+                            {% elif step == 2 %}
+                            <li><strong>{{ trans.get('Business Name', 'Business Name') }}</strong>: {{ trans.get('If you have a business, enter its registered name; otherwise, use your personal name.', 'If you have a business, enter its registered name; otherwise, use your personal name.') }}</li>
+                            <li><strong>{{ trans.get('User Type', 'User Type') }}</strong>: {{ trans.get('Choose Business if you’re representing a company, or Individual if this is for personal finance.', 'Choose Business if you’re representing a company, or Individual if this is for personal finance.') }}</li>
+                            {% elif step == 3 %}
+                            <li><strong>{{ trans.get('Income/Revenue', 'Income/Revenue') }}</strong>: {{ trans.get('Include all regular income sources like salary, sales, or side hustles (e.g., 150,000).', 'Include all regular income sources like salary, sales, or side hustles (e.g., 150,000).') }}</li>
+                            <li><strong>{{ trans.get('Expenses/Costs', 'Expenses/Costs') }}</strong>: {{ trans.get('Sum up all monthly expenses like rent, utilities, and food (e.g., 60,000).', 'Sum up all monthly expenses like rent, utilities, and food (e.g., 60,000).') }}</li>
+                            <li><strong>{{ trans.get('Debt/Loan', 'Debt/Loan') }}</strong>: {{ trans.get('Enter the total amount you owe, such as loans or borrowings (e.g., 25,000).', 'Enter the total amount you owe, such as loans or borrowings (e.g., 25,000).') }}</li>
+                            <li><strong>{{ trans.get('Debt Interest Rate', 'Debt Interest Rate') }}</strong>: {{ trans.get('Input the annual or monthly interest rate on your debt as a percentage (e.g., 10 for 10%); enter 0 if interest-free.', 'Input the annual or monthly interest rate on your debt as a percentage (e.g., 10 for 10%); enter 0 if interest-free.') }}</li>
+                            {% endif %}
                         </ul>
                     </div>
 
@@ -441,7 +468,7 @@
                             {% endfor %}
                         </div>
                         <div class="step-navigation">
-                            <a href="{{ url_for('index') }}" class="btn btn-back" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
+                            <a href="{{ url_for('index') }}" class="btn btn-nav btn-prev" aria-label="{{ trans.get('Back to Home', 'Back to Home') }}">{{ trans.get('Back', 'Back') }}</a>
                             {{ form.submit(class="btn btn-nav btn-next", **{'aria-label': trans.get('Next', 'Next')}) }}
                         </div>
                     </form>
@@ -530,7 +557,7 @@
                                     <span class="tooltip-text">{{ trans.get('Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.', 'Extra percentage you pay on a loan, usually per year or month. It’s usually something like 12% or 7%.') }}</span>
                                 </span>
                             </div>
-                            {{ form.debt_interest_rate(class="form-control number-input", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_data', {}).get('debt_interest_rate', '')) }}
+                            {{ form.debt_interest_rate(class="form-control number-input", id="debt_interest_rate", placeholder=trans.get('e.g. 10', 'e.g. 10'), type="text", required=True, value=session.get('health_data', {}).get('debt_interest_rate', '')) }}
                             {% for error in form.debt_interest_rate.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
