@@ -640,7 +640,7 @@ class HealthScoreStep2Form(FlaskForm):
 class HealthScoreStep3Form(FlaskForm):
     income_revenue = FloatField('Monthly Income/Revenue', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
     expenses_costs = FloatField('Monthly Expenses/Costs', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
-    debt_loan = FloatField('Total Debt/Loan Amount', validators=[DataRequired(), NumberRange(min=0, max=10000000000)])
+    debt_loan = FloatField('Total Debt/Loan Amount', validators=[Optional(), NumberRange(min=0, max=10000000000)])
     debt_interest_rate = FloatField('Debt Interest Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)])
     submit = SubmitField()
 
