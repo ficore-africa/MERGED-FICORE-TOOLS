@@ -115,7 +115,7 @@
             color: white;
             padding: 20px;
             box-sizing: border-box;
-            margin-top: 60px; /* Adjust for fixed navbar */
+            margin-top: 60px;
         }
         .hero h2 {
             font-size: 2.5rem;
@@ -463,7 +463,7 @@
                 font-size: 0.8rem;
             }
             .hero {
-                margin-top: 80px; /* Adjust for taller navbar */
+                margin-top: 80px;
                 padding: 15px;
             }
             .hero h2 {
@@ -511,13 +511,11 @@
             </div>
         </div>
     </nav>
-
     <section class="hero">
         <h2>{{ trans.get('Your All-in-One Toolkit for Personal & SME Financial Health Across Africa', 'Your All-in-One Toolkit for Personal & SME Financial Health Across Africa') }}</h2>
         <p>{{ trans.get('Use Ficore to Track your income, net worth, budgets, and bills, to grow your money with confidence.', 'Use Ficore to Track your income, net worth, budgets, and bills, to grow your money with confidence.') }}</p>
         <a href="{{ url_for('health_score_step1') }}" class="cta-button">{{ trans.get('Where to Start? Get Your Free Health Score', 'Where to Start? Get Your Free Health Score') }}</a>
     </section>
-
     <section class="tools-section">
         <h2>{{ trans.get('Choose a Tool', 'Choose a Tool') }}</h2>
         <div class="tools-grid">
@@ -537,6 +535,11 @@
                 <a href="{{ url_for('quiz_step1') }}" aria-label="{{ trans.get('Start Personality Quiz', 'Start Personality Quiz') }}">{{ trans.get('Start', 'Start') }}</a>
             </div>
             <div class="tool-card">
+                <h3>{{ trans.get('Bill Planner', 'Bill Planner') }}</h3>
+                <p>{{ trans.get('Manage and mark bills as paid', 'Manage and mark bills as paid') }}</p>
+                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}" title="{{ trans.get('track_bills_tip', 'Track your bill payments easily') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
+            </div>
+            <div class="tool-card">
                 <h3>{{ trans.get('Net Worth Calculator', 'Net Worth Calculator') }}</h3>
                 <p>{{ trans.get('Net worth is assets minus liabilities', 'Net worth is assets minus liabilities') }}</p>
                 <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
@@ -547,14 +550,9 @@
                 <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
             <div class="tool-card">
-                <h3>{{ trans.get('Expense Tracker', 'Expense Tracker') }}</h3>
-                <p>{{ trans.get('Log and edit expenses for spending insights', 'Log and edit expenses for spending insights') }}</p>
+                <h3>{{ trans.get('Mini SME Accounting Tool', 'Mini SME Accounting Tool') }}</h3>
+                <p>{{ trans.get('Built for micro and small businesses to track income, costs, profit, and growth', 'Built for micro and small businesses to track income, costs, profit, and growth') }}</p>
                 <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
-            </div>
-            <div class="tool-card">
-                <h3>{{ trans.get('Bill Planner', 'Bill Planner') }}</h3>
-                <p>{{ trans.get('Manage and mark bills as paid', 'Manage and mark bills as paid') }}</p>
-                <a href="{{ WAITLIST_FORM_URL }}" class="notify-me" aria-label="{{ trans.get('Coming Soon', 'Coming Soon') }}" title="{{ trans.get('track_bills_tip', 'Track your bill payments easily') }}">{{ trans.get('Coming Soon', 'Coming Soon') }}</a>
             </div>
         </div>
         <div class="testimonials-section">
@@ -574,7 +572,6 @@
             <p>{{ trans.get('Learn more about budgeting!', 'Learn more about budgeting!') }}</p>
         </div>
     </section>
-
     <section class="why-section">
         <h2>{{ trans.get('Why Ficore Africa?', 'Why Ficore Africa?') }}</h2>
         <ul class="why-list">
@@ -583,11 +580,9 @@
             <li><i class="fas fa-check-circle"></i>{{ trans.get('Provides actionable insights for better financial decisions', 'Provides actionable insights for better financial decisions') }}</li>
         </ul>
     </section>
-
     <section class="about-section">
         <p>{{ trans.get('About Ficore Africa: Empowering financial growth across Africa since 2025', 'About Ficore Africa: Empowering financial growth across Africa since 2025') }}</p>
     </section>
-
     <footer class="footer">
         <p>{{ trans.get('Contact Us', 'Contact Us') }}: <a href="mailto:ficoreafrica@gmail.com">{{ trans.get('Click to Email', 'Click to Email') }}</a> ficoreafrica@gmail.com {{ trans.get('for support', 'for support') }}</p>
         <div class="social-icons">
@@ -603,7 +598,6 @@
             <a href="{{ url_for('logout') }}">{{ trans.get('Logout', 'Logout') }}</a>
         </div>
     </footer>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tips = [
